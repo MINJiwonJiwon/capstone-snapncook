@@ -9,7 +9,7 @@
 | 브랜치 이름              | 역할                          | 담변자 |
 |--------------------------|-------------------------------|--------|
 | feature/backend-dbapi    | DB 설계 및 레시피 API         | 지원   |
-| feature/backend-mlapi    | 이미지 처리, AI 연동          | 백어드2|
+| feature/backend-mlapi    | 이미지 처리, AI 연동          | 백엔드2|
 | feature/ai-model         | YOLO 학습/추로                | AI팀   |
 | feature/frontend-web     | 웹 프론트                     | 프론트1|
 | feature/frontend-app     | 앱 프론트                     | 프론트2|
