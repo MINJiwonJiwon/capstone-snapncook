@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:15
+    container_name: capstone-postgres
+    environment:
+      POSTGRES_USER: capstone
+      POSTGRES_PASSWORD: capstone10
+      POSTGRES_DB: capstone_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
