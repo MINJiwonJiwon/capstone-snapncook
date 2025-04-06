@@ -19,7 +19,3 @@ build/
 # Mac/Windows 시스템
 .DS_Store
 Thumbs.db
-
-# poetry
-pyproject.toml
-poetry.lock
