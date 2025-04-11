@@ -1,0 +1,147 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #2c3e50;
+}
+
+h2 {
+  margin-bottom: 20px;
+  color: #3498db;
+}
+
+/* 메인 컨테이너 스타일 */
+.mainContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 업로드 영역 스타일 */
+.uploadContainer {
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.uploadArea {
+  border: 2px dashed #3498db;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.uploadArea:hover, .uploadArea.dragover {
+  background-color: #f0f8ff;
+}
+
+.previewContainer {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.previewImage {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+/* 히스토리 갤러리 스타일 */
+.historyContainer {
+  width: 100%;
+}
+
+.historyGallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.historyItem {
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+}
+
+.historyItem:hover {
+  transform: scale(1.05);
+}
+
+.historyItem img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+/* 버튼 스타일 */
+.buttonGroup {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #2980b9;
+}
+
+.cancelButton {
+  background-color: #e74c3c;
+}
+
+.cancelButton:hover {
+  background-color: #c0392b;
+}
+
+.clearHistory {
+  margin-top: 20px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.clearHistory:hover {
+  background-color: #c0392b;
+}
+
+/* 반응형 스타일 */
+@media (min-width: 768px) {
+  .mainContainer {
+    flex-direction: row;
+    gap: 30px;
+  }
+  
+  .uploadContainer {
+    width: 50%;
+    margin-bottom: 0;
+  }
+  
+  .historyContainer {
+    width: 50%;
+  }
+}

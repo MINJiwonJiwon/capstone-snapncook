@@ -1,0 +1,136 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Navbar 스타일 */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #2c3e50;
+  color: white;
+  padding: 1rem 2rem;
+  margin-bottom: 20px;
+}
+
+.logo a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* 인증 폼 스타일 */
+.authContainer {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.authTabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.authTab {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+.authTab.active {
+  color: #3498db;
+  border-bottom: 2px solid #3498db;
+}
+
+.authForm {
+  padding: 20px 0;
+}
+
+.formGroup {
+  margin-bottom: 15px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 5px;
+  color: #2c3e50;
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.authButton {
+  width: 100%;
+  padding: 12px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.authButton:hover {
+  background-color: #2980b9;
+}
+
+.oauthContainer {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.oauthContainer p {
+  color: #7f8c8d;
+  margin-bottom: 10px;
+}
+
+.oauthButtons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.oauthButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.oauthButton.google {
+  background-color: #DB4437;
+}
+
+.oauthButton.facebook {
+  background-color: #4267B2;
+}
+
+.oauthButton.naver {
+  background-color: #03C75A;
+}
+
+.oauthButton.kakao {
+  background-color: #FEE500;
+  color: #3C1E1E;
+}

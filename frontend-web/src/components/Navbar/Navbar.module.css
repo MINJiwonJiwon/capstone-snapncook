@@ -1,0 +1,83 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #2c3e50;
+  color: white;
+  padding: 1rem 2rem;
+  margin-bottom: 20px;
+  width: 100%;
+  position: relative;
+  z-index: 100;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+}
+
+.logoLink {
+  color: white;
+  text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.navLinks {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navItem {
+  position: relative;
+  margin-left: 20px;
+}
+
+.navItem a, .navItem span {
+  color: white;
+  text-decoration: none;
+  transition: color 0.3s;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  display: block;
+  padding: 5px 0;
+}
+
+.navItem a:hover {
+  color: #3498db;
+}
+
+/* 드롭다운 메뉴 스타일 */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #2c3e50;
+  min-width: 150px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 10;
+  border-top: 2px solid #3498db; /* 구분선 */
+  padding: 5px 0;
+}
+
+.dropdown a {
+  padding: 10px 15px;
+  display: block;
+}
+
+.dropdown a:hover {
+  background-color: #34495e;
+}
+
+.navItem:hover .dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
