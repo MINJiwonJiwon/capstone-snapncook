@@ -1,7 +1,8 @@
 # backend/routers/user.py
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from backend import crud, schemas
+from backend import crud, models, schemas
 from backend.db import get_db
 
 router = APIRouter(
@@ -29,3 +30,12 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
+
+@router.get(
+    "/", 
+    response_model=List[schemas.UserOut], 
+    summary="전체 유저 목록 조회", 
+    description="DB에 저장된 전체 유저 리스트를 반환합니다."
+)
+def get_all_users(db: Session = Depends(get_db)):
+    return db.query(models.User).all()

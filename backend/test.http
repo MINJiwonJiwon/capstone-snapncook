@@ -1,0 +1,100 @@
+########################
+### 🔍 GET 요청 모음 ###
+########################
+
+### 전체 유저 목록
+GET http://localhost:8000/users/
+Accept: application/json
+
+### 특정 유저 조회 (id=3)
+GET http://localhost:8000/users/3
+Accept: application/json
+
+### 전체 음식 목록
+GET http://localhost:8000/foods/
+Accept: application/json
+
+### 특정 음식 조회 (id=3)
+GET http://localhost:8000/foods/3
+Accept: application/json
+
+### 전체 레시피 목록
+GET http://localhost:8000/recipes/
+Accept: application/json
+
+### 특정 레시피 조회 (id=3)
+GET http://localhost:8000/recipes/3
+Accept: application/json
+
+### 특정 유저의 탐지 결과 (id=3)
+GET http://localhost:8000/detection-results/user/3
+Accept: application/json
+
+### 특정 유저의 리뷰 목록
+GET http://localhost:8000/reviews/user/3
+Accept: application/json
+
+
+
+########################
+### ✍️ POST 요청 모음 ###
+########################
+
+### 유저 생성
+POST http://localhost:8000/users/
+Content-Type: application/json
+
+{
+  "email": "kim123@example.com",
+  "nickname": "김코딩",
+  "password_hash": "supersecret"
+}
+
+
+### 음식 생성
+POST http://localhost:8000/foods/
+Content-Type: application/json
+
+{
+  "name": "떡볶이",
+  "description": "매콤달콤한 분식 대표 메뉴",
+  "image_url": "https://example.com/tteokbokki.jpg"
+}
+
+
+### 레시피 생성
+POST http://localhost:8000/recipes/
+Content-Type: application/json
+
+{
+  "food_id": 8,
+  "source_type": "manual",
+  "title": "떡볶이 만들기",
+  "ingredients": "떡, 고추장, 어묵, 양파",
+  "instructions": "모든 재료를 넣고 끓입니다.",
+  "source_detail": "엄마의 손맛"
+}
+
+
+### 리뷰 작성
+POST http://localhost:8000/reviews/
+Content-Type: application/json
+
+{
+  "user_id": 3,
+  "food_id": 3,
+  "content": "진짜 맛있고 양도 많아요!",
+  "rating": 5
+}
+
+
+### 음식 탐지 결과 저장
+POST http://localhost:8000/detection-results/
+Content-Type: application/json
+
+{
+  "user_id": 3,
+  "food_id": 3,
+  "image_path": "/images/test_dish.jpg",
+  "confidence": 0.92
+}

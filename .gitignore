@@ -1,21 +1,28 @@
-# Python
+# ───── Python 관련 ─────
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
 .env
+.venv/
+env/
+venv/
 
-# VS Code
+# ───── VS Code ─────
 .vscode/
 
-# Node (React 등)
+# ───── Node.js (React, React Native 등) ─────
 node_modules/
 dist/
 build/
 
-# Jupyter
+# ───── Jupyter Notebook ─────
 .ipynb_checkpoints/
 
-# Mac/Windows 시스템
+# ───── 시스템 파일 ─────
 .DS_Store
 Thumbs.db
+
+# ───── Alembic ─────
+alembic/versions/__pycache__/
+alembic/versions/*.pyc
