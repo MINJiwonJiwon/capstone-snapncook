@@ -98,3 +98,37 @@ Content-Type: application/json
   "image_path": "/images/test_dish.jpg",
   "confidence": 0.92
 }
+
+
+
+########################
+### 🔑 로그인 모음 ###
+########################
+
+### 회원가입
+POST http://localhost:8000/auth/signup
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password_hash": "abc1234",
+  "nickname": "User1"
+}
+
+
+### 로그인
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "user1@example.com",
+  "password": "abc1234"
+}
+
+
+# 복사한 토큰
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5IiwiZXhwIjoxNzQ0OTg5NDUyfQ.cPW9YWCTRgfo2cuDQndzktNzz4A-JTd2vFsb9LPO_WQ
+
+### 인증된 유저 정보
+GET http://localhost:8000/auth/me
+Authorization: Bearer {{token}}

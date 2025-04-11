@@ -159,3 +159,14 @@ class UserIngredientInputRecipeOut(UserIngredientInputRecipeBase):
 
     class Config:
         from_attributes = True
+
+# ------------ UserLogin ----------------
+# 로그인 요청용
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+# 토큰 반환용
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
