@@ -13,6 +13,8 @@ sqlalchemy = "^2.0.40"
 psycopg2-binary = "^2.9.10"
 python-dotenv = "^1.1.0"
 faker = "^37.1.0"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.4.0"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
