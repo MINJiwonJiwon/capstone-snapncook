@@ -132,3 +132,43 @@ Content-Type: application/json
 ### 인증된 유저 정보
 GET http://localhost:8000/auth/me
 Authorization: Bearer {{token}}
+
+
+
+########################
+### 🔑 OAuth 모음 ####
+########################
+
+
+### Google 로그인
+GET http://localhost:8000/oauth/google/login
+Content-Type: application/json
+
+### Kakao 로그인
+GET http://localhost:8000/oauth/kakao/login
+Content-Type: application/json
+
+### Naver 로그인
+GET http://localhost:8000/oauth/naver/login
+Content-Type: application/json
+
+### Google 콜백
+GET http://localhost:8000/oauth/google/callback?code=YOUR_AUTH_CODE
+Content-Type: application/json
+
+### Kakao 콜백
+GET http://localhost:8000/oauth/kakao/callback?code=YOUR_AUTH_CODE
+Content-Type: application/json
+
+### Naver 콜백
+GET http://localhost:8000/oauth/naver/callback?code=YOUR_AUTH_CODE
+Content-Type: application/json
+
+### JWT 토큰 테스트
+GET http://localhost:8000/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMSIsImV4cCI6MTc0NTE2Njc2MH0.NLhRn7kGKwJaQhSUVlScjldA05RNIXGUTHPpA7wrlRM
+
+
+
+### 로그아웃 테스트
+POST http://localhost:8000/auth/logout

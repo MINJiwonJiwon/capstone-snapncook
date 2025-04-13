@@ -1,5 +1,6 @@
 # backend/routers/auth.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from backend import schemas
 from backend.db import get_db
@@ -20,3 +21,10 @@ def login(credentials: schemas.UserLogin, db: Session = Depends(get_db)):
 @router.get("/me", response_model=schemas.UserOut)
 def get_me(current_user=Depends(get_current_user)):
     return current_user
+
+@router.post("/logout")
+async def logout(request: Request):
+    # 세션 기반 로그인 대비용 (지금은 의미 없음)
+    request.session.clear()
+    
+    return JSONResponse(content={"message": "Logged out successfully"})

@@ -11,6 +11,13 @@ class UserBase(BaseModel):
     oauth_provider: Optional[str] = None
     oauth_id: Optional[str] = None
 
+class SocialAccountRead(BaseModel):
+    provider: str
+    oauth_id: str
+
+    class Config:
+        from_attributes = True
+
 class UserCreate(UserBase):
     password_hash: Optional[str] = None  # 소셜 로그인 시에는 생략 가능
 
@@ -18,6 +25,7 @@ class UserOut(UserBase):
     id: int
     created_at: datetime
     updated_at: datetime
+    social_accounts: List[SocialAccountRead] = []
 
     class Config:
         from_attributes = True

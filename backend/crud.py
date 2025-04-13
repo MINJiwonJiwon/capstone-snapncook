@@ -14,6 +14,17 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
 def get_user(db: Session, user_id: int) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.id == user_id).first()
 
+def get_user_by_oauth(db: Session, provider: str, oauth_id: str):
+    return (
+        db.query(models.User)
+        .join(models.SocialAccount)
+        .filter(
+            models.SocialAccount.provider == provider,
+            models.SocialAccount.oauth_id == oauth_id
+        )
+        .first()
+    )
+
 # ---------- Food ----------
 def create_food(db: Session, food: schemas.FoodCreate) -> models.Food:
     db_food = models.Food(**food.model_dump())

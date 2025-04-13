@@ -25,6 +25,17 @@ class User(Base, TimestampMixin):
     reviews = relationship("Review", back_populates="user")
     logs = relationship("UserLog", back_populates="user")
     ingredient_inputs = relationship("UserIngredientInput", back_populates="user")
+    social_accounts = relationship("SocialAccount", back_populates="user")
+
+class SocialAccount(Base):
+    __tablename__ = "social_accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    provider = Column(String, nullable=False)  # 'google', 'kakao', 'naver'
+    oauth_id = Column(String, nullable=False)
+
+    user = relationship("User", back_populates="social_accounts")
 
 class Food(Base, TimestampMixin):
     __tablename__ = "foods"
