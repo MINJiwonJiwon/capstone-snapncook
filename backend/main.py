@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from backend.db import SessionLocal, get_db 
@@ -5,13 +6,22 @@ from backend.routers import user, food, recipe, recipestep, detectionresult, rev
 from backend.routers import auth_routes as auth
 from backend.routers import oauth_routes as oauth
 from starlette.middleware.sessions import SessionMiddleware
+from backend.app.tasks.scheduler import start_scheduler
 import os
 
-app = FastAPI()
+# ✅ lifespan context
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_scheduler()
+    yield
 
+# ✅ FastAPI 앱 생성 시 lifespan 지정
+app = FastAPI(lifespan=lifespan)
+
+# ✅ 미들웨어 추가
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY", "super-secret"))
 
-# DB 연결 확인
+# ✅ DB 연결 확인용 테스트 엔드포인트
 @app.get("/")
 def read_root(db: Session = Depends(get_db)):
     return {"message": "DB 연결 테스트 성공!"}

@@ -19,6 +19,7 @@ class SocialAccountRead(BaseModel):
         from_attributes = True
 
 class UserCreate(UserBase):
+    password: str
     password_hash: Optional[str] = None  # 소셜 로그인 시에는 생략 가능
 
 class UserOut(UserBase):
@@ -29,6 +30,21 @@ class UserOut(UserBase):
 
     class Config:
         from_attributes = True
+
+# ------------ UserLogin ----------------
+# 로그인 요청용
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+# 토큰 반환용
+class Token(BaseModel):
+    access_token: str
+    refresh_token: Optional[str] = None
+    token_type: str = "bearer"
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 # ---------- Food ----------
 class FoodBase(BaseModel):
@@ -167,14 +183,3 @@ class UserIngredientInputRecipeOut(UserIngredientInputRecipeBase):
 
     class Config:
         from_attributes = True
-
-# ------------ UserLogin ----------------
-# 로그인 요청용
-class UserLogin(BaseModel):
-    email: str
-    password: str
-
-# 토큰 반환용
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"

@@ -110,9 +110,9 @@ POST http://localhost:8000/auth/signup
 Content-Type: application/json
 
 {
-  "email": "user1@example.com",
-  "password_hash": "abc1234",
-  "nickname": "User1"
+  "email": "kim123@example.com",
+  "password": "abc1234",
+  "nickname": "김코딩"
 }
 
 
@@ -121,17 +121,27 @@ POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
-  "email": "user1@example.com",
+  "email": "kim123@example.com",
   "password": "abc1234"
 }
 
-
+###
 # 복사한 토큰
 @token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5IiwiZXhwIjoxNzQ0OTg5NDUyfQ.cPW9YWCTRgfo2cuDQndzktNzz4A-JTd2vFsb9LPO_WQ
 
 ### 인증된 유저 정보
 GET http://localhost:8000/auth/me
 Authorization: Bearer {{token}}
+
+
+###
+POST http://localhost:8000/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "726d301c-3d19-400d-a535-76262f34afca"
+}
+
 
 
 
@@ -172,3 +182,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMSIsImV4c
 
 ### 로그아웃 테스트
 POST http://localhost:8000/auth/logout
+
+{
+  "refresh_token": "726d301c-3d19-400d-a535-76262f34afca"
+}
+
+###
