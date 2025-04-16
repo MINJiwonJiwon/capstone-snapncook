@@ -18,10 +18,17 @@ const Home = () => {
     const loginStatus = localStorage.getItem('isLoggedIn') === 'true';
     setIsLoggedIn(loginStatus);
     
-    // 로컬 스토리지에서 이미지 히스토리 가져오기
-    const storedHistory = JSON.parse(localStorage.getItem('imageHistory')) || [];
-    setImageHistory(storedHistory);
-  }, []);
+    // 로그인 상태일 때만 이미지 히스토리 가져오기
+    if (loginStatus) {
+      const storedHistory = JSON.parse(localStorage.getItem('imageHistory')) || [];
+      setImageHistory(storedHistory);
+    } else {
+      // 로그인 상태가 아닐 경우 이미지 히스토리와 미리보기 초기화
+      setImageHistory([]);
+      setFile(null);
+      setPreviewUrl('');
+    }
+  }, [isLoggedIn]); // isLoggedIn이 변경될 때마다 실행
   
   const handleFileChange = (e) => {
     if (!isLoggedIn) {
@@ -115,7 +122,7 @@ const Home = () => {
 
   return (
     <>
-      <Navbar />
+      <Navbar setIsLoggedIn={setIsLoggedIn} /> {/* Navbar에 setIsLoggedIn props 전달 */}
       <RankingRecommendation />
       
       <div className={styles.container}>
