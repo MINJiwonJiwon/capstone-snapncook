@@ -1,9 +1,10 @@
 # backend/schemas.py
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 
 # ---------- User ----------
+# 공통 유저 속성 (Base)
 class UserBase(BaseModel):
     email: str
     nickname: str
@@ -11,6 +12,7 @@ class UserBase(BaseModel):
     oauth_provider: Optional[str] = None
     oauth_id: Optional[str] = None
 
+# 소셜 계정 정보
 class SocialAccountRead(BaseModel):
     provider: str
     oauth_id: str
@@ -18,10 +20,28 @@ class SocialAccountRead(BaseModel):
     class Config:
         from_attributes = True
 
-class UserCreate(UserBase):
-    password: str
-    password_hash: Optional[str] = None  # 소셜 로그인 시에는 생략 가능
+# ✅ 일반 회원가입용 - 비밀번호 필수 + 유효성 검사 포함
+class UserCreateWithPassword(UserBase):
+    password: str = Field(
+        ..., min_length=8, max_length=128,
+        description="비밀번호는 8자 이상이며, 숫자와 특수문자를 포함해야 합니다."
+    )
+    password_hash: Optional[str] = None
 
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v):
+        if not any(char.isdigit() for char in v):
+            raise ValueError("비밀번호에는 최소 1개의 숫자가 포함되어야 합니다.")
+        if not any(char in "@$!%*#?&" for char in v):
+            raise ValueError("비밀번호에는 최소 1개의 특수문자(@$!%*#?&)가 포함되어야 합니다.")
+        return v
+
+# ✅ 소셜 로그인용 - 비밀번호 없이 생성
+class UserCreateOAuth(UserBase):
+    password_hash: Optional[str] = None
+
+# 응답용 유저 정보
 class UserOut(UserBase):
     id: int
     created_at: datetime
@@ -31,13 +51,12 @@ class UserOut(UserBase):
     class Config:
         from_attributes = True
 
-# ------------ UserLogin ----------------
 # 로그인 요청용
 class UserLogin(BaseModel):
     email: str
     password: str
 
-# 토큰 반환용
+# 토큰 관련
 class Token(BaseModel):
     access_token: str
     refresh_token: Optional[str] = None

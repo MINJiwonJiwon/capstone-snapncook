@@ -110,9 +110,9 @@ POST http://localhost:8000/auth/signup
 Content-Type: application/json
 
 {
-  "email": "kim123@example.com",
-  "password": "abc1234",
-  "nickname": "김코딩"
+  "email": "testuser@example.com",
+  "nickname": "테스트유저",
+  "password": "test1234!"
 }
 
 
@@ -121,8 +121,8 @@ POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
-  "email": "kim123@example.com",
-  "password": "abc1234"
+  "email": "testuser@example.com",
+  "password": "test1234!"
 }
 
 ###

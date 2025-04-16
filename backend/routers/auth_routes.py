@@ -9,7 +9,7 @@ from backend.app.auth.dependencies import get_current_user
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/signup", response_model=schemas.UserOut)
-def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def signup(user: schemas.UserCreateWithPassword, db: Session = Depends(get_db)):
     return service.signup_user(user, db)
 
 @router.post("/login", response_model=schemas.Token)

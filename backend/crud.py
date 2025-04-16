@@ -4,7 +4,7 @@ from typing import Optional
 from backend import models, schemas
 
 # ---------- User ----------
-def create_user(db: Session, user: schemas.UserCreate) -> models.User:
+def create_user(db: Session, user: schemas.UserCreateWithPassword) -> models.User:
     db_user = models.User(**user.model_dump(exclude={"password"}))
     db.add(db_user)
     db.commit()

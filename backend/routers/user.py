@@ -16,7 +16,7 @@ router = APIRouter(
     summary="Create a new user", 
     description="사용자로부터 입력받은 정보를 기반으로 새로운 유저를 생성합니다. 생성된 유저의 정보를 반환합니다."
 )
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def create_user(user: schemas.UserCreateWithPassword, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
 @router.get(

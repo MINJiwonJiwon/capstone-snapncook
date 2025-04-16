@@ -9,7 +9,7 @@ from backend.app.auth.token_utils import (
     revoke_refresh_token,
 )
 
-def signup_user(user: schemas.UserCreate, db: Session) -> models.User:
+def signup_user(user: schemas.UserCreateWithPassword, db: Session) -> models.User:
     if db.query(models.User).filter(models.User.email == user.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
     user.password_hash = utils.hash_password(user.password)
