@@ -8,24 +8,6 @@
   flex: 1;
 }
 
-/* Navbar 스타일 */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #2c3e50;
-  color: white;
-  padding: 1rem 2rem;
-  margin-bottom: 20px;
-}
-
-.logo a {
-  color: white;
-  text-decoration: none;
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
 /* 인증 폼 스타일 */
 .authContainer {
   max-width: 500px;
@@ -33,13 +15,13 @@
   padding: 20px;
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px var(--border-color);
 }
 
 .authTabs {
   display: flex;
   margin-bottom: 20px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .authTab {
@@ -53,8 +35,8 @@
 }
 
 .authTab.active {
-  color: #3498db;
-  border-bottom: 2px solid #3498db;
+  color: var(--secondary-color);
+  border-bottom: 2px solid var(--secondary-color);
 }
 
 .authForm {
@@ -68,22 +50,28 @@
 .formGroup label {
   display: block;
   margin-bottom: 5px;
-  color: #2c3e50;
+  color: var(--main-color);
 }
 
 .formGroup input {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 16px;
+}
+
+.formGroup input:focus {
+  outline: none;
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 2px rgba(226, 114, 91, 0.2);
 }
 
 .authButton {
   width: 100%;
   padding: 12px;
-  background-color: #3498db;
-  color: white;
+  background-color: var(--secondary-color);
+  color: var(--light-text);
   border: none;
   border-radius: 4px;
   font-size: 16px;
@@ -92,7 +80,7 @@
 }
 
 .authButton:hover {
-  background-color: #2980b9;
+  background-color: var(--hover-secondary);
 }
 
 .oauthContainer {

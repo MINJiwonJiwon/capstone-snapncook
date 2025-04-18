@@ -5,18 +5,18 @@
   padding: 20px;
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px var(--border-color);
 }
 
 h1 {
   text-align: center;
   margin-bottom: 20px;
-  color: #2c3e50;
+  color: var(--main-color);
 }
 
 h2 {
   margin: 20px 0 10px;
-  color: #3498db;
+  color: var(--secondary-color);
   font-size: 1.3rem;
 }
 
@@ -34,20 +34,20 @@ h2 {
 
 .formGroup label {
   font-weight: bold;
-  color: #2c3e50;
+  color: var(--main-color);
 }
 
 .formGroup input {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1rem;
 }
 
 .formGroup input:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 2px rgba(226, 114, 91, 0.2);
 }
 
 .buttonGroup {
@@ -68,12 +68,12 @@ h2 {
 }
 
 .saveButton {
-  background-color: #3498db;
-  color: white;
+  background-color: var(--secondary-color);
+  color: var(--light-text);
 }
 
 .saveButton:hover {
-  background-color: #2980b9;
+  background-color: var(--hover-secondary);
 }
 
 .saveButton:disabled {
@@ -82,12 +82,12 @@ h2 {
 }
 
 .cancelButton {
-  background-color: #e74c3c;
-  color: white;
+  background-color: var(--text-color);
+  color: var(--light-text);
 }
 
 .cancelButton:hover {
-  background-color: #c0392b;
+  background-color: #222222;
 }
 
 .cancelButton:disabled {
@@ -98,7 +98,7 @@ h2 {
 .divider {
   margin: 20px 0;
   border: none;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-color);
 }
 
 .helperText {
@@ -114,15 +114,15 @@ h2 {
 }
 
 .errorMessage {
-  background-color: #fadbd8;
-  color: #c0392b;
-  border: 1px solid #e74c3c;
+  background-color: rgba(198, 79, 56, 0.2);
+  color: var(--error-color);
+  border: 1px solid var(--error-color);
 }
 
 .successMessage {
-  background-color: #d4efdf;
-  color: #27ae60;
-  border: 1px solid #2ecc71;
+  background-color: rgba(107, 142, 35, 0.2);
+  color: var(--success-color);
+  border: 1px solid var(--success-color);
 }
 
 /* 반응형 스타일 */

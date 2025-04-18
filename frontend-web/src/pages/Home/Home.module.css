@@ -4,19 +4,19 @@
   margin: 0;
   padding: 20px;
   box-sizing: border-box;
-  background-color: white;
+  background-color: var(--background-color);
   flex: 1;
 }
 
 h1 {
   text-align: center;
   margin-bottom: 30px;
-  color: #2c3e50;
+  color: var(--main-color);
 }
 
 h2 {
   margin-bottom: 20px;
-  color: #3498db;
+  color: var(--secondary-color);
 }
 
 /* 메인 컨테이너 스타일 */
@@ -37,7 +37,7 @@ h2 {
 }
 
 .uploadArea {
-  border: 2px dashed #3498db;
+  border: 2px dashed var(--secondary-color);
   border-radius: 8px;
   padding: 40px;
   text-align: center;
@@ -50,7 +50,7 @@ h2 {
 }
 
 .uploadArea:hover, .uploadArea.dragover {
-  background-color: #f0f8ff;
+  background-color: var(--accent-color);
 }
 
 .previewContainer {
@@ -80,12 +80,14 @@ h2 {
   cursor: pointer;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px var(--border-color);
   transition: transform 0.3s;
+  border: 1px solid transparent; /* 기본 투명 테두리 추가 */
 }
 
 .historyItem:hover {
   transform: scale(1.05);
+  border: 1px solid var(--secondary-color);
 }
 
 .historyItem img {
@@ -104,8 +106,8 @@ h2 {
 
 button {
   padding: 10px 20px;
-  background-color: #3498db;
-  color: white;
+  background-color: var(--secondary-color);
+  color: var(--light-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -113,21 +115,21 @@ button {
 }
 
 button:hover {
-  background-color: #2980b9;
+  background-color: var(--hover-secondary);
 }
 
 .cancelButton {
-  background-color: #e74c3c;
+  background-color: var(--text-color);
 }
 
 .cancelButton:hover {
-  background-color: #c0392b;
+  background-color: black;
 }
 
 .clearHistory {
   margin-top: 20px;
-  background-color: #e74c3c;
-  color: white;
+  background-color: var(--secondary-color);
+  color: var(--light-text);
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
@@ -136,7 +138,7 @@ button:hover {
 }
 
 .clearHistory:hover {
-  background-color: #c0392b;
+  background-color: var(--hover-secondary);
 }
 
 /* 반응형 스타일 */
