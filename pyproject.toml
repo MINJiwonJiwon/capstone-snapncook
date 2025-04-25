@@ -21,6 +21,9 @@ itsdangerous = "^2.2.0"
 apscheduler = "^3.11.0"
 pytz = "^2025.2"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
