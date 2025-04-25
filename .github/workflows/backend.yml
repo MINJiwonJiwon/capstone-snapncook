@@ -30,6 +30,7 @@ jobs:
       POSTGRES_DB: capstone_db
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
+      DATABASE_URL: postgresql://capstone:capstone10@localhost:5432/capstone_db
       SESSION_SECRET_KEY: a9dd5364c0a914047d7df00efc02c050dd72155e3fcd1c2ec63fefb9d597eb9e
 
     steps:
@@ -50,6 +51,10 @@ jobs:
         run: |
           poetry install --no-root
 
+      - name: Run Alembic migrations
+        run: |
+          poetry run alembic upgrade head
+        
       - name: Run backend tests
         run: |
           poetry run pytest backend/tests
