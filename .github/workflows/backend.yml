@@ -30,10 +30,10 @@ jobs:
       POSTGRES_DB: capstone_db
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
-      SESSION_SECRET_KEY: super-secret
+      SESSION_SECRET_KEY: a9dd5364c0a914047d7df00efc02c050dd72155e3fcd1c2ec63fefb9d597eb9e
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -41,14 +41,15 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install Poetry
         run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies with Poetry
+        run: |
+          poetry install --no-root
 
       - name: Run backend tests
         run: |
-          source venv/bin/activate
-          pytest backend/tests
+          poetry run pytest backend/tests
