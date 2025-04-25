@@ -50,10 +50,6 @@ jobs:
       - name: Install dependencies with Poetry
         run: |
           poetry install --no-root
-
-      - name: Create tables before Alembic (temporary fix)
-        run: |
-          poetry run python -c "from backend.models import Base; from backend.db import engine; Base.metadata.create_all(bind=engine)"
         
       - name: Run Alembic migrations
         run: |
