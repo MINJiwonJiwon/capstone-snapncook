@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 from backend.main import app
 from backend.db import get_db
+from uuid import uuid4
 from sqlalchemy.orm import Session
 
 client = TestClient(app)
@@ -17,7 +18,7 @@ def db_session():
 
 def test_create_user(db_session: Session):
     user_data = {
-        "email": "testuser{uuid4()}@example.com",
+        "email": f"testuser{uuid4()}@example.com",
         "password": "Password123!",  # 특수문자와 숫자가 포함된 비밀번호
         "nickname": "테스트유저"
     }
