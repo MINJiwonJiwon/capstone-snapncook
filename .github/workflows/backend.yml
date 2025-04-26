@@ -50,7 +50,14 @@ jobs:
       - name: Install dependencies with Poetry
         run: |
           poetry install --no-root
-        
+
+      - name: Wait for Postgres to be ready
+        run: |
+          until pg_isready -h localhost -p 5432; do
+            echo "Waiting for Postgres..."
+            sleep 1
+          done
+
       - name: Run Alembic migrations
         run: |
           poetry run alembic upgrade head
