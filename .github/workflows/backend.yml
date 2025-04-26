@@ -61,6 +61,7 @@ jobs:
 
       - name: Run Alembic migrations
         run: |
+          set -e
           for i in {1..5}; do
             poetry run alembic upgrade head && break
             echo "Alembic migration failed, retrying in 3s..."
