@@ -17,7 +17,7 @@ def db_session():
 
 def test_create_user(db_session: Session):
     user_data = {
-        "email": "testuser@example.com",
+        "email": "testuser{uuid4()}@example.com",
         "password": "Password123!",  # 특수문자와 숫자가 포함된 비밀번호
         "nickname": "테스트유저"
     }

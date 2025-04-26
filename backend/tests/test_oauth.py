@@ -1,28 +1,35 @@
 # backend/tests/test_oauth.py
 
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from backend.main import app
-from backend.db import get_db
-from sqlalchemy.orm import Session
 
 client = TestClient(app)
 
-@pytest.fixture(scope="function")
-def db_session():
-    db: Session = next(get_db())
-    db.begin()
-    yield db
-    db.rollback()
+# Google OAuth 테스트
+@patch("backend.app.oauth.google.oauth.google.authorize_redirect")
+def test_oauth_login_google(mock_authorize_redirect, db_session):
+    mock_authorize_redirect.return_value = "mocked_redirect_response"
 
-def test_oauth_login_google(db_session: Session):
     response = client.get("/oauth/google/login")
-    assert response.status_code == 200
+    assert response.status_code == 200 or response.status_code == 307  # FastAPI가 Redirect하면 307 가능
+    assert response.text == 'mocked_redirect_response'
 
-def test_oauth_login_kakao(db_session: Session):
+# Kakao OAuth 테스트
+@patch("backend.app.oauth.kakao.oauth.kakao.authorize_redirect")
+def test_oauth_login_kakao(mock_authorize_redirect, db_session):
+    mock_authorize_redirect.return_value = "mocked_redirect_response"
+
     response = client.get("/oauth/kakao/login")
-    assert response.status_code == 200
+    assert response.status_code == 200 or response.status_code == 307
+    assert response.text == 'mocked_redirect_response'
 
-def test_oauth_login_naver(db_session: Session):
+# Naver OAuth 테스트
+@patch("backend.app.oauth.naver.oauth.naver.authorize_redirect")
+def test_oauth_login_naver(mock_authorize_redirect, db_session):
+    mock_authorize_redirect.return_value = "mocked_redirect_response"
+
     response = client.get("/oauth/naver/login")
-    assert response.status_code == 200
+    assert response.status_code == 200 or response.status_code == 307
+    assert response.text == 'mocked_redirect_response'
