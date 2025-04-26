@@ -14,7 +14,7 @@ def test_oauth_login_google(mock_authorize_redirect):
 
     response = client.get("/oauth/google/login")
     assert response.status_code == 200 or response.status_code == 307
-    assert response.text == 'mocked_redirect_response'
+    assert response.text == "mocked_redirect_response"  # 쌍따옴표로 통일
 
 # Kakao OAuth 테스트
 @patch("backend.app.oauth.kakao.oauth.kakao.authorize_redirect")
@@ -23,7 +23,7 @@ def test_oauth_login_kakao(mock_authorize_redirect):
 
     response = client.get("/oauth/kakao/login")
     assert response.status_code == 200 or response.status_code == 307
-    assert response.text == 'mocked_redirect_response'
+    assert response.text == "mocked_redirect_response"  # 쌍따옴표로 통일
 
 # Naver OAuth 테스트
 @patch("backend.app.oauth.naver.oauth.naver.authorize_redirect")
@@ -32,4 +32,4 @@ def test_oauth_login_naver(mock_authorize_redirect):
 
     response = client.get("/oauth/naver/login")
     assert response.status_code == 200 or response.status_code == 307
-    assert response.text == 'mocked_redirect_response'
+    assert response.text == "mocked_redirect_response"  # 쌍따옴표로 통일

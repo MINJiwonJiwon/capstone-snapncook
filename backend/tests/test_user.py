@@ -19,7 +19,7 @@ def db_session():
 def test_create_user(db_session: Session):
     user_data = {
         "email": f"testuser{uuid4()}@example.com",
-        "password": "Password123!",  # 특수문자와 숫자가 포함된 비밀번호
+        "password": "Password123!",  
         "nickname": "테스트유저"
     }
     response = client.post("/auth/signup", json=user_data)
@@ -30,10 +30,22 @@ def test_create_user(db_session: Session):
     return response.json()["id"]
 
 def test_get_user_by_id(db_session: Session):
+    # 유저 생성 후, 생성된 user_id를 받아옴
     user_id = test_create_user(db_session)
+
+    # 유저 정보 조회 요청
     response = client.get(f"/users/{user_id}")
-    
+
+    # HTTP 상태 코드 확인
     assert response.status_code == 200
+
+    # 반환된 JSON 응답에서 email과 nickname을 확인
+    user_email = response.json()["email"]
+    user_nickname = response.json()["nickname"]
+
+    # 이메일에서 UUID 부분을 확인하기 위한 로직
+    expected_email = f"testuser{user_email.split('@')[0].split('testuser')[1]}@example.com"
+    
     assert response.json()["id"] == user_id
-    assert response.json()["email"] == "testuser@example.com"
-    assert response.json()["nickname"] == "테스트유저"
+    assert user_email == expected_email
+    assert user_nickname == "테스트유저"

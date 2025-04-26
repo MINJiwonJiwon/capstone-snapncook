@@ -1,5 +1,7 @@
 # backend/tests/test_userlog.py
 
+import datetime
+from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 from backend.main import app
@@ -17,24 +19,53 @@ def db_session():
 
 def test_create_user_log(db_session: Session):
     user_data = {
-        "email": "testuser@example.com",
-        "password": "password123",
+        "email": f"testuser{uuid4()}@example.com",  # 유니크한 이메일 생성
+        "password": "Password123!",  # 특수문자와 숫자가 포함된 비밀번호
         "nickname": "테스트유저"
     }
+
+    # 회원가입
     create_user_response = client.post("/auth/signup", json=user_data)
-    user_id = create_user_response.json()["id"]
     
-    log_data = {
-        "user_id": user_id,
-        "action": "Login",
-        "target_id": 1,
-        "target_type": "User"
+    # 응답에서 ID를 가져오기 전에 확인
+    assert create_user_response.status_code == 200 or create_user_response.status_code == 201, \
+        f"Expected 200 or 201, got {create_user_response.status_code}"
+    
+    response_json = create_user_response.json()
+    assert "id" in response_json, "User ID is missing in response"
+    
+    user_id = response_json["id"]
+
+    # user_id를 사용하여 로그 생성
+    user_log_data = {
+        "user_id": user_id,  # 생성된 유저의 ID
+        "action": "회원가입",  # 예: 회원가입을 했다는 로그
+        "target_id": None,  # 회원가입에는 관련된 대상이 없음
+        "target_type": "user",  # 'user' 타입으로 설정
+        "meta": {"additional_info": "회원가입 완료 로그"},  # 선택적인 메타데이터
+        "created_at": datetime.utcnow()  # 현재 시간
     }
-    response = client.post("/user-logs/", json=log_data)
+
+    # 로그 생성
+    response = client.post("/user-logs/", json=user_log_data)
+    
     assert response.status_code == 200
-    assert response.json()["action"] == log_data["action"]
+    assert response.json()["user_id"] == user_id
+    assert response.json()["action"] == "회원가입"
 
 def test_get_user_logs(db_session: Session):
-    response = client.get("/user-logs/user/1")
+    # 유저를 동적으로 생성한 후, 그 유저의 ID를 사용
+    user_data = {
+        "email": f"testuser{uuid4()}@example.com",  # 유니크한 이메일 생성
+        "password": "Password123!",  # 비밀번호
+        "nickname": "테스트유저"
+    }
+    
+    create_user_response = client.post("/auth/signup", json=user_data)
+    assert create_user_response.status_code in [200, 201]
+    user_id = create_user_response.json()["id"]  # 생성된 유저의 ID를 사용
+
+    # 유저 로그 조회
+    response = client.get(f"/user-logs/user/{user_id}")
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
+    assert isinstance(response.json(), list)  # 유저의 로그 목록이 잘 반환되는지 확인

@@ -1,5 +1,6 @@
 # backend/tests/test_signup.py
 
+from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 from backend.main import app
@@ -17,8 +18,8 @@ def db_session():
 
 def test_signup_user():
     user_data = {
-        "email": "testuser@example.com",
-        "password": "password123",
+        "email": f"testuser{uuid4()}@example.com",
+        "password": "Password123!", 
         "nickname": "테스트유저"
     }
     response = client.post("/auth/signup", json=user_data)
