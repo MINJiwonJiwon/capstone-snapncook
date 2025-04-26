@@ -28,6 +28,7 @@ Thumbs.db
 # ───── Alembic ─────
 alembic/versions/__pycache__/
 alembic/versions/*.pyc
+alembic/old_versions/
 
 # ───── 테스트 요청 파일 (.http) 무시 ─────
 *.http
