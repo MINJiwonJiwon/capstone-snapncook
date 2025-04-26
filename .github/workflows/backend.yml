@@ -57,11 +57,16 @@ jobs:
             echo "Waiting for Postgres..."
             sleep 1
           done
+          echo "Postgres is ready"
 
       - name: Run Alembic migrations
         run: |
-          poetry run alembic upgrade head
-        
+          for i in {1..5}; do
+            poetry run alembic upgrade head && break
+            echo "Alembic migration failed, retrying in 3s..."
+            sleep 3
+          done
+
       - name: Run backend tests
         run: |
           poetry run pytest backend/tests
