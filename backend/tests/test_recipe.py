@@ -22,15 +22,18 @@ def test_create_recipe(db_session: Session):
     food_id = test_create_food(db_session)
     user_id = test_create_user(db_session)
     recipe_data = {
-        "food_id": food_id,  
+        "food_id": food_id,
         "source_type": "User",
-        "title": "김치찌개 레시피",  
+        "title": "김치찌개 레시피",
         "ingredients": "김치, 돼지고기, 두부, 고춧가루",
         "instructions": "김치를 볶고 돼지고기와 두부를 넣고 끓인다.",
     }
     response = client.post("/recipes/", json=recipe_data)
     assert response.status_code == 200
     assert response.json()["title"] == recipe_data["title"]
+
+    # ✅ recipe_id를 리턴해야 한다!
+    return response.json()["id"]
 
 def test_get_recipe_by_id(db_session: Session):
     # food 생성
