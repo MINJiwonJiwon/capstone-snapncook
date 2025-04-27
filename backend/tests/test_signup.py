@@ -30,7 +30,7 @@ def test_signup_user():
 def test_signup_duplicate_user():
     user_data = {
         "email": "duplicateuser@example.com",
-        "password": "password123",
+        "password": "password123!",
         "nickname": "중복유저"
     }
     # 첫 번째 회원가입
