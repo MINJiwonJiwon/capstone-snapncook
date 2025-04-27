@@ -19,9 +19,9 @@ def db_session():
 
 # 탐지 결과 생성 테스트
 def test_create_detection_result(db_session: Session):
-    user_id = test_create_user(db_session)  # 유저 생성 후 user_id 사용
-    food_id = test_create_food(db_session)  # 음식 생성 후 food_id 사용
-    
+    user_id = test_create_user(db_session)
+    food_id = test_create_food(db_session)
+
     detection_data = {
         "user_id": user_id,
         "food_id": food_id,
@@ -34,6 +34,22 @@ def test_create_detection_result(db_session: Session):
 
 # 탐지 결과 조회 테스트
 def test_get_detection_results(db_session: Session):
-    response = client.get("/detection-results/user/1")
+    # 여기서도 user + food + detection_result 생성
+    user_id = test_create_user(db_session)
+    food_id = test_create_food(db_session)
+
+    detection_data = {
+        "user_id": user_id,
+        "food_id": food_id,
+        "image_path": "/path/to/image2.jpg",
+        "confidence": 0.85
+    }
+    create_response = client.post("/detection-results/", json=detection_data)
+    assert create_response.status_code == 200
+
+    # 생성한 유저 id로 조회
+    response = client.get(f"/detection-results/user/{user_id}")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
+    assert len(response.json()) >= 1
+    
