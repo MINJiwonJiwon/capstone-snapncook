@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from backend.db import SessionLocal, get_db 
-from backend.routers import user, food, recipe, recipestep, detectionresult, review, userlog, useringredientinput, useringredientinputrecipe
+from backend.routers import user, food, recipe, recipestep, detectionresult, review, userlog, useringredientinput, useringredientinputrecipe, recommend
 from backend.routers import auth_routes as auth
 from backend.routers import oauth_routes as oauth
 from starlette.middleware.sessions import SessionMiddleware
@@ -36,5 +36,6 @@ app.include_router(review.router)  # review 라우터 등록
 app.include_router(userlog.router)  # userlog 라우터 등록
 app.include_router(useringredientinput.router)  # useringredientinput 라우터 등록
 app.include_router(useringredientinputrecipe.router)  # useringredientinputrecipe 라우터 등록
-app.include_router(auth.router) # auth 라우터 등록
-app.include_router(oauth.router) # oauth 라우터 등록
+app.include_router(auth.router)  # auth 라우터 등록
+app.include_router(oauth.router)  # oauth 라우터 등록
+app.include_router(recommend.router)  # recommend 라우터 등록
