@@ -56,6 +56,11 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+# 프로필 수정 용도
+class UserUpdateProfile(BaseModel):
+    nickname: Optional[str] = None
+    profile_image_url: Optional[str] = None
+
 # 토큰 관련
 class Token(BaseModel):
     access_token: str

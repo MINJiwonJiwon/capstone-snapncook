@@ -19,7 +19,7 @@ def db_session():
 
 # 탐지 결과 생성 테스트
 def test_create_detection_result(db_session: Session):
-    user_id = test_create_user(db_session)
+    user_id, _ = test_create_user(db_session)
     food_id = test_create_food(db_session)
 
     detection_data = {
@@ -35,7 +35,7 @@ def test_create_detection_result(db_session: Session):
 # 탐지 결과 조회 테스트
 def test_get_detection_results(db_session: Session):
     # 여기서도 user + food + detection_result 생성
-    user_id = test_create_user(db_session)
+    user_id, _ = test_create_user(db_session)
     food_id = test_create_food(db_session)
 
     detection_data = {
@@ -52,4 +52,3 @@ def test_get_detection_results(db_session: Session):
     assert response.status_code == 200
     assert isinstance(response.json(), list)
     assert len(response.json()) >= 1
-    

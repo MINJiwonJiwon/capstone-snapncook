@@ -20,7 +20,7 @@ def db_session():
 
 def test_create_recipe(db_session: Session):
     food_id = test_create_food(db_session)
-    user_id = test_create_user(db_session)
+    user_id, _ = test_create_user(db_session)
     recipe_data = {
         "food_id": food_id,
         "source_type": "User",

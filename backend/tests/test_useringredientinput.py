@@ -29,13 +29,13 @@ def create_user_ingredient_input(db_session, user_id):
 
 def test_create_user_ingredient_input(db_session: Session):
     """user_ingredient_input 데이터 생성 테스트"""
-    user_id = test_create_user(db_session)  # 유저 생성
+    user_id, _ = test_create_user(db_session)  # 유저 생성
     input_id = create_user_ingredient_input(db_session, user_id)  # 입력 생성
     assert input_id is not None  # 생성된 입력 데이터의 ID가 존재하는지 확인
 
 def test_get_user_ingredient_input(db_session: Session):
     """특정 user_ingredient_input을 가져오는 테스트"""
-    user_id = test_create_user(db_session)  # 유저 생성
+    user_id, _ = test_create_user(db_session)  # 유저 생성
     input_id = create_user_ingredient_input(db_session, user_id)  # 입력 생성
     response = client.get(f"/user-ingredient-inputs/{input_id}")
     assert response.status_code == 200

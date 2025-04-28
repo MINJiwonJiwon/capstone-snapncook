@@ -18,8 +18,8 @@ def db_session():
 
 def test_create_user(db_session: Session):
     user_data = {
-        "email": f"testuser{uuid4()}@example.com",
-        "password": "Password123!",  
+        "email": f"testuser{uuid4().hex[:8]}@example.com",
+        "password": "Password123!",
         "nickname": "테스트유저"
     }
     response = client.post("/auth/signup", json=user_data)
@@ -27,11 +27,11 @@ def test_create_user(db_session: Session):
     assert response.json()["email"] == user_data["email"], "Email doesn't match"
     assert response.json()["nickname"] == user_data["nickname"], "Nickname doesn't match"
     
-    return response.json()["id"]
+    return response.json()["id"], user_data["email"]
 
 def test_get_user_by_id(db_session: Session):
     # 유저 생성 후, 생성된 user_id를 받아옴
-    user_id = test_create_user(db_session)
+    user_id, _ = test_create_user(db_session)
 
     # 유저 정보 조회 요청
     response = client.get(f"/users/{user_id}")

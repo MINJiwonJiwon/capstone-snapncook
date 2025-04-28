@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from backend import crud, models, schemas
 from backend.db import get_db
+from backend.app.auth.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/users",
@@ -39,3 +40,28 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 )
 def get_all_users(db: Session = Depends(get_db)):
     return db.query(models.User).all()
+
+@router.patch(
+    "/me",
+    response_model=schemas.UserOut,
+    summary="프로필 수정 (닉네임/프로필 이미지)",
+    description="현재 로그인한 사용자의 닉네임과 프로필 이미지를 수정합니다."
+)
+def update_profile(
+    profile_update: schemas.UserUpdateProfile,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    user = db.query(models.User).filter(models.User.id == current_user.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if profile_update.nickname is not None:
+        user.nickname = profile_update.nickname
+    if profile_update.profile_image_url is not None:
+        user.profile_image_url = profile_update.profile_image_url
+
+    db.commit()
+    db.refresh(user)
+
+    return user

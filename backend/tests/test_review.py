@@ -19,7 +19,7 @@ def db_session():
     db.rollback()
 
 def test_create_review(db_session: Session):
-    user_id = test_create_user(db_session)
+    user_id, _ = test_create_user(db_session)
     food_id = test_create_food(db_session)
     review_data = {
         "user_id": user_id,

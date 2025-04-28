@@ -21,7 +21,7 @@ def db_session():
 # user_ingredient_input과 user_ingredient_input_recipe 데이터 생성 테스트
 def test_create_user_ingredient_input_recipe(db_session: Session):
     # 1. user 생성
-    user_id = test_create_user(db_session)
+    user_id, _ = test_create_user(db_session)
     assert user_id is not None, "user_id 생성 실패"
 
     # 2. user_ingredient_input 생성
