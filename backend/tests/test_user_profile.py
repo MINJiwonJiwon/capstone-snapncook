@@ -75,3 +75,24 @@ def test_update_profile_image_only(db_session: Session):
     assert response.status_code == 200
     data = response.json()
     assert data["profile_image_url"] == image_update["profile_image_url"]
+
+def test_delete_current_user(db_session: Session):
+    # 1. 유저 생성 및 로그인
+    access_token = get_access_token(db_session)
+
+    # 2. 회원 탈퇴 요청
+    response = client.delete(
+        "/users/me",
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+
+    # 3. 응답 코드 확인
+    assert response.status_code == 204
+
+    # 4. 탈퇴 후 다시 내 정보 조회 시 401 Unauthorized 기대
+    response_after_delete = client.get(
+        "/users/me",
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+    assert response_after_delete.status_code in [401, 404, 422]
+    

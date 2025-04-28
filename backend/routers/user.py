@@ -1,6 +1,6 @@
 # backend/routers/user.py
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from backend import crud, models, schemas
 from backend.db import get_db
@@ -65,3 +65,24 @@ def update_profile(
     db.refresh(user)
 
     return user
+
+@router.delete(
+    "/me",
+    summary="회원 탈퇴 (Delete my account)",
+    description="현재 로그인한 사용자의 계정과 관련된 모든 Refresh Token을 삭제합니다."
+)
+def delete_current_user(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    # 1. 해당 유저의 Refresh Token 삭제
+    db.query(models.RefreshToken).filter(models.RefreshToken.user_id == current_user.id).delete()
+
+    # 2. 해당 유저 삭제
+    db.delete(current_user)
+
+    # 3. 커밋
+    db.commit()
+
+    # 4. 응답 반환
+    return Response(status_code=204)
