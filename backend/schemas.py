@@ -61,6 +61,11 @@ class UserUpdateProfile(BaseModel):
     nickname: Optional[str] = None
     profile_image_url: Optional[str] = None
 
+# 비밀번호 수정 용도
+class UserUpdatePassword(BaseModel):
+    current_password: str
+    new_password: str
+
 # 토큰 관련
 class Token(BaseModel):
     access_token: str

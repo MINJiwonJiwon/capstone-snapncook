@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from backend import crud, models, schemas
+from backend.app.auth.utils import hash_password, verify_password
 from backend.db import get_db
 from backend.app.auth.dependencies import get_current_user
 
@@ -86,3 +87,23 @@ def delete_current_user(
 
     # 4. 응답 반환
     return Response(status_code=204)
+
+@router.patch(
+    "/me/password",
+    summary="비밀번호 변경",
+    description="현재 로그인한 사용자가 본인의 비밀번호를 변경합니다."
+)
+def change_password(
+    password_update: schemas.UserUpdatePassword,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if not verify_password(password_update.current_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="현재 비밀번호가 일치하지 않습니다.")
+
+    new_password_hash = hash_password(password_update.new_password)
+    current_user.password_hash = new_password_hash
+
+    db.commit()
+
+    return {"message": "Password updated successfully"}

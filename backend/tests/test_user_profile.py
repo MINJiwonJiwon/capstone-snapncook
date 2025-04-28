@@ -95,4 +95,33 @@ def test_delete_current_user(db_session: Session):
         headers={"Authorization": f"Bearer {access_token}"}
     )
     assert response_after_delete.status_code in [401, 404, 422]
-    
+
+def test_change_password(db_session: Session):
+    # 1. 유저 생성 및 로그인
+    user_id, email = test_create_user(db_session)
+
+    login_response = client.post("/auth/login", json={
+        "email": email,
+        "password": "Password123!"
+    })
+    assert login_response.status_code == 200
+    access_token = login_response.json()["access_token"]
+
+    # 2. 비밀번호 변경 요청
+    response = client.patch(
+        "/users/me/password",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={
+            "current_password": "Password123!",
+            "new_password": "NewPassword456!"
+        }
+    )
+    assert response.status_code == 200
+    assert response.json()["message"] == "Password updated successfully"
+
+    # 3. 새 비밀번호로 로그인 시도
+    login_response_after = client.post("/auth/login", json={
+        "email": email,
+        "password": "NewPassword456!"
+    })
+    assert login_response_after.status_code == 200
