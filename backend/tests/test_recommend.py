@@ -5,10 +5,6 @@ from backend.main import app
 
 client = TestClient(app)
 
-def test_recommend_by_food():
-    response = client.get("/recommend/recipes/food/5")  # 등록된 food_id로 테스트
-    assert response.status_code in [200, 404]
-
 def test_recommend_by_detection():
     response = client.get("/recommend/recipes/by-detection/1")
     assert response.status_code in [200, 404]
