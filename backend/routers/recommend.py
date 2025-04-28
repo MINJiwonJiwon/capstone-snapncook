@@ -11,20 +11,7 @@ router = APIRouter(
     tags=["Recommendation"]
 )
 
-# 1. 음식 ID로 레시피 추천
-@router.get(
-    "/recipes/food/{food_id}",
-    response_model=List[schemas.RecipeOut],
-    summary="음식 ID로 레시피 추천",
-    description="특정 음식(food_id)에 대해 등록된 레시피들을 추천합니다."
-)
-def recommend_recipes_by_food(food_id: int, db: Session = Depends(get_db)):
-    recipes = db.query(models.Recipe).filter(models.Recipe.food_id == food_id).all()
-    if not recipes:
-        raise HTTPException(status_code=404, detail="No recipes found for this food")
-    return recipes
-
-# 2. 탐지 결과 ID로 레시피 추천
+# 탐지 결과 ID로 레시피 추천
 @router.get(
     "/recipes/by-detection/{detection_id}",
     response_model=List[schemas.RecipeOut],
@@ -40,7 +27,7 @@ def recommend_recipes_by_detection(detection_id: int, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="No recipes found for detected food")
     return recipes
 
-# 3. 재료 입력 ID로 레시피 추천
+# 재료 입력 ID로 레시피 추천
 @router.get(
     "/recipes/by-ingredient/{input_id}",
     response_model=List[schemas.RecipeOut],

@@ -202,3 +202,27 @@ class UserIngredientInputRecipeOut(UserIngredientInputRecipeBase):
 
     class Config:
         from_attributes = True
+
+# ---------- Recipe Detail 통합 응답 ----------
+
+class FoodSummary(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+
+class RecipeSummary(BaseModel):
+    id: int
+    title: Optional[str] = None
+    ingredients: Optional[str] = None
+    instructions: Optional[str] = None
+
+class RecipeStepSummary(BaseModel):
+    step_order: int
+    description: str
+    image_url: Optional[str] = None
+
+class RecipeDetailResponse(BaseModel):
+    food: FoodSummary
+    recipe: RecipeSummary
+    steps: List[RecipeStepSummary]
