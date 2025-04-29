@@ -18,7 +18,10 @@ def db_session():
     yield db
     db.rollback()
 
-def test_create_recipe(db_session: Session):
+def test_create_recipe(db_session: Session, food_id: int = None):
+    if food_id is None:
+        food_id = test_create_food(db_session)
+
     food_id = test_create_food(db_session)
     user_id, _ = test_create_user(db_session)
     recipe_data = {

@@ -1,5 +1,5 @@
 # backend/models.py
-from sqlalchemy import Boolean, Column, Integer, String, Text, Float, ForeignKey, DateTime, JSON
+from sqlalchemy import Boolean, Column, Integer, String, Text, Float, ForeignKey, DateTime, JSON, func
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime, timezone
 
@@ -26,6 +26,7 @@ class User(Base, TimestampMixin):
     logs = relationship("UserLog", back_populates="user")
     ingredient_inputs = relationship("UserIngredientInput", back_populates="user")
     social_accounts = relationship("SocialAccount", back_populates="user")
+    bookmarks = relationship("Bookmark", back_populates="user", cascade="all, delete-orphan")
 
 class SocialAccount(Base):
     __tablename__ = "social_accounts"
@@ -75,6 +76,7 @@ class Recipe(Base, TimestampMixin):
     food = relationship("Food", back_populates="recipes")
     steps = relationship("RecipeStep", back_populates="recipe")
     recommended_by_inputs = relationship("UserIngredientInputRecipe", back_populates="recipe")
+    bookmarks = relationship("Bookmark", back_populates="recipe", cascade="all, delete-orphan")
 
 class RecipeStep(Base):
     __tablename__ = "recipe_steps"
@@ -146,3 +148,15 @@ class UserIngredientInputRecipe(Base):
 
     input = relationship("UserIngredientInput", back_populates="recommended_recipes")
     recipe = relationship("Recipe", back_populates="recommended_by_inputs")
+
+class Bookmark(Base):
+    __tablename__ = "bookmarks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="bookmarks")
+    recipe = relationship("Recipe", back_populates="bookmarks")
+    

@@ -236,3 +236,19 @@ class RecipeDetailResponse(BaseModel):
     food: FoodSummary
     recipe: RecipeSummary
     steps: List[RecipeStepSummary]
+
+
+# ---------- Bookmark ----------
+
+class BookmarkBase(BaseModel):
+    recipe_id: int
+
+class BookmarkCreate(BookmarkBase):
+    pass
+
+class BookmarkOut(BookmarkBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
