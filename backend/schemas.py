@@ -20,7 +20,7 @@ class SocialAccountRead(BaseModel):
     class Config:
         from_attributes = True
 
-# ✅ 일반 회원가입용 - 비밀번호 필수 + 유효성 검사 포함
+# 일반 회원가입용 - 비밀번호 필수 + 유효성 검사 포함
 class UserCreateWithPassword(UserBase):
     password: str = Field(
         ..., min_length=8, max_length=128,
@@ -37,7 +37,7 @@ class UserCreateWithPassword(UserBase):
             raise ValueError("비밀번호에는 최소 1개의 특수문자(@$!%*#?&)가 포함되어야 합니다.")
         return v
 
-# ✅ 소셜 로그인용 - 비밀번호 없이 생성
+# 소셜 로그인용 - 비밀번호 없이 생성
 class UserCreateOAuth(UserBase):
     password_hash: Optional[str] = None
 
@@ -163,6 +163,10 @@ class ReviewOut(ReviewBase):
 
     class Config:
         from_attributes = True
+
+class ReviewUpdate(BaseModel):
+    content: Optional[str] = None
+    rating: Optional[int] = None
 
 # ---------- User Log ----------
 class UserLogBase(BaseModel):
