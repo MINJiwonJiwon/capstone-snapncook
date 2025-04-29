@@ -17,6 +17,14 @@ def create_bookmark(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    existing_bookmark = db.query(models.Bookmark).filter_by(
+        user_id=current_user.id,
+        recipe_id=bookmark.recipe_id
+    ).first()
+
+    if existing_bookmark:
+        raise HTTPException(status_code=400, detail="Already bookmarked this recipe.")
+
     db_bookmark = models.Bookmark(user_id=current_user.id, recipe_id=bookmark.recipe_id)
     db.add(db_bookmark)
     db.commit()

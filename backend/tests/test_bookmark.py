@@ -65,3 +65,28 @@ def test_bookmark_flow(db_session: Session):
     )
     assert response.status_code == 200
     assert all(bm["id"] != bookmark_id for bm in response.json())
+
+def test_duplicate_bookmark(db_session: Session):
+    # 유저 생성 및 로그인
+    access_token, user_id = get_access_token(db_session)
+
+    # 음식 & 레시피 생성
+    food_id = test_create_food(db_session)
+    recipe_id = test_create_recipe(db_session, food_id=food_id)
+
+    # 1차 북마크: 성공
+    response = client.post(
+        "/bookmarks/",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"recipe_id": recipe_id}
+    )
+    assert response.status_code == 200
+
+    # 2차 북마크: 중복 → 실패 (400)
+    response = client.post(
+        "/bookmarks/",
+        headers={"Authorization": f"Bearer {access_token}"},
+        json={"recipe_id": recipe_id}
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Already bookmarked this recipe."
