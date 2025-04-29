@@ -237,7 +237,6 @@ class RecipeDetailResponse(BaseModel):
     recipe: RecipeSummary
     steps: List[RecipeStepSummary]
 
-
 # ---------- Bookmark ----------
 
 class BookmarkBase(BaseModel):
@@ -252,3 +251,28 @@ class BookmarkOut(BookmarkBase):
 
     class Config:
         from_attributes = True
+
+# ---------- Mypage ----------
+
+class BookmarkSummary(BaseModel):
+    id: int
+    recipe_id: int
+    recipe_title: Optional[str] = None
+    recipe_thumbnail: Optional[str] = None
+
+class DetectionResultSummary(BaseModel):
+    id: int
+    food_name: Optional[str] = None
+    image_path: str
+    confidence: float
+
+class ReviewSummary(BaseModel):
+    id: int
+    food_name: Optional[str] = None
+    content: str
+    rating: int
+
+class MypageSummaryResponse(BaseModel):
+    bookmarks: List[BookmarkSummary]
+    detection_results: List[DetectionResultSummary]
+    reviews: List[ReviewSummary]
