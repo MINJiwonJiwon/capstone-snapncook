@@ -72,3 +72,6 @@ def test_mypage_summary(db_session: Session):
     assert len(data["detection_results"]) == 1
     assert len(data["detection_results"]) <= 5
     assert len(data["reviews"]) == 1
+
+    assert "recipe_thumbnail" in data["bookmarks"][0]
+    assert "food_image_url" in data["reviews"][0]

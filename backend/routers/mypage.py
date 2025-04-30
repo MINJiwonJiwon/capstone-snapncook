@@ -55,7 +55,8 @@ def get_mypage_summary(
                 id=rv.id,
                 food_name=rv.food.name,
                 content=rv.content,
-                rating=rv.rating
+                rating=rv.rating,
+                food_image_url=rv.food.image_url if rv.food else None
             )
             for rv in reviews
         ]

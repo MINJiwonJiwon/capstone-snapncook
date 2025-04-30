@@ -275,6 +275,7 @@ class ReviewSummary(BaseModel):
     food_name: Optional[str] = None
     content: str
     rating: int
+    food_image_url: Optional[str] = None
 
 class MypageSummaryResponse(BaseModel):
     bookmarks: List[BookmarkSummary]
