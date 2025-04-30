@@ -70,4 +70,5 @@ def test_mypage_summary(db_session: Session):
 
     assert len(data["bookmarks"]) == 1
     assert len(data["detection_results"]) == 1
+    assert len(data["detection_results"]) <= 5
     assert len(data["reviews"]) == 1

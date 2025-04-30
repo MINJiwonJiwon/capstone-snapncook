@@ -24,7 +24,7 @@ def get_mypage_summary(
     # Detection 결과 가져오기
     detections = db.query(models.DetectionResult).join(models.Food).filter(
         models.DetectionResult.user_id == current_user.id
-    ).order_by(models.DetectionResult.created_at.desc()).all()
+    ).order_by(models.DetectionResult.created_at.desc()).limit(5).all()
 
     # 리뷰 가져오기
     reviews = db.query(models.Review).join(models.Food).filter(
