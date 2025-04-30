@@ -1,7 +1,10 @@
 # backend/tests/test_user_profile.py
 
+from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
+from backend import models
+from backend.app.auth.utils import create_access_token
 from backend.main import app
 from backend.db import get_db
 from backend.tests.test_user import test_create_user
@@ -125,3 +128,62 @@ def test_change_password(db_session: Session):
         "password": "NewPassword456!"
     })
     assert login_response_after.status_code == 200
+
+def test_get_social_status(db_session: Session):
+    access_token = get_access_token(db_session)
+
+    response = client.get(
+        "/users/me/social",
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+
+    # 일반 로그인 유저면 null이 반환됨
+    assert "oauth_provider" in data
+    assert "oauth_id" in data
+    assert data["oauth_provider"] is None
+    assert data["oauth_id"] is None
+
+def test_disconnect_social_account_fails_for_non_social_user(db_session: Session):
+    access_token = get_access_token(db_session)
+
+    # 일반 로그인 유저는 연동이 없으므로 실패해야 함
+    response = client.delete(
+        "/users/me/social/google",
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "No such social provider connected"
+
+def test_disconnect_social_account_success(db_session: Session):
+    unique_email = f"socialuser{uuid4()}@example.com"
+
+    user = models.User(
+        email=unique_email,
+        oauth_provider="google",
+        oauth_id="mock-oauth-id",
+        nickname="소셜유저"
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    token = create_access_token({"sub": str(user.id)})
+
+    response = client.delete(
+        "/users/me/social/google",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 200
+    assert response.json()["message"] == "google 연동이 해제되었습니다."
+
+    response_check = client.get(
+        "/users/me/social",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    data = response_check.json()
+    assert data["oauth_provider"] is None
+    assert data["oauth_id"] is None
+    
