@@ -107,3 +107,36 @@ def change_password(
     db.commit()
 
     return {"message": "Password updated successfully"}
+
+@router.get(
+    "/me/social",
+    summary="소셜 연동 상태 확인",
+    description="현재 로그인한 유저가 연동된 소셜 계정의 provider와 ID를 반환합니다."
+)
+def get_social_status(
+    current_user: models.User = Depends(get_current_user)
+):
+    return {
+        "oauth_provider": current_user.oauth_provider,
+        "oauth_id": current_user.oauth_id
+    }
+
+@router.delete(
+    "/me/social/{provider}",
+    summary="소셜 연동 해제",
+    description="현재 로그인한 유저가 연동된 소셜 계정을 해제합니다."
+)
+def disconnect_social_account(
+    provider: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.oauth_provider != provider:
+        raise HTTPException(status_code=400, detail="No such social provider connected")
+
+    current_user.oauth_provider = None
+    current_user.oauth_id = None
+    db.commit()
+    db.refresh(current_user)
+
+    return {"message": f"{provider} 연동이 해제되었습니다."}
