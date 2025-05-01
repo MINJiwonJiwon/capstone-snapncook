@@ -1,4 +1,5 @@
 # backend/routers/user.py
+
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
@@ -12,6 +13,7 @@ router = APIRouter(
     tags=["User"]
 )
 
+# ✅ 회원가입
 @router.post(
     "/", 
     response_model=schemas.UserOut, 
@@ -21,27 +23,17 @@ router = APIRouter(
 def create_user(user: schemas.UserCreateWithPassword, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
+# ✅ 내 정보 조회
 @router.get(
-    "/{user_id}", 
+    "/me", 
     response_model=schemas.UserOut, 
-    summary="Get user by ID", 
-    description="지정한 user_id를 통해 해당 유저 정보를 조회합니다. 유저가 존재하지 않으면 404 에러를 반환합니다."
+    summary="내 정보 조회", 
+    description="현재 로그인한 유저의 정보를 조회합니다."
 )
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    db_user = crud.get_user(db, user_id=user_id)
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return db_user
+def get_my_profile(current_user: models.User = Depends(get_current_user)):
+    return current_user
 
-@router.get(
-    "/", 
-    response_model=List[schemas.UserOut], 
-    summary="전체 유저 목록 조회", 
-    description="DB에 저장된 전체 유저 리스트를 반환합니다."
-)
-def get_all_users(db: Session = Depends(get_db)):
-    return db.query(models.User).all()
-
+# ✅ 프로필 수정
 @router.patch(
     "/me",
     response_model=schemas.UserOut,
@@ -64,9 +56,9 @@ def update_profile(
 
     db.commit()
     db.refresh(user)
-
     return user
 
+# ✅ 회원 탈퇴
 @router.delete(
     "/me",
     summary="회원 탈퇴 (Delete my account)",
@@ -76,18 +68,12 @@ def delete_current_user(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    # 1. 해당 유저의 Refresh Token 삭제
     db.query(models.RefreshToken).filter(models.RefreshToken.user_id == current_user.id).delete()
-
-    # 2. 해당 유저 삭제
     db.delete(current_user)
-
-    # 3. 커밋
     db.commit()
-
-    # 4. 응답 반환
     return Response(status_code=204)
 
+# ✅ 비밀번호 변경
 @router.patch(
     "/me/password",
     summary="비밀번호 변경",
@@ -105,9 +91,9 @@ def change_password(
     current_user.password_hash = new_password_hash
 
     db.commit()
-
     return {"message": "Password updated successfully"}
 
+# ✅ 소셜 연동 상태 확인
 @router.get(
     "/me/social",
     summary="소셜 연동 상태 확인",
@@ -121,6 +107,7 @@ def get_social_status(
         "oauth_id": current_user.oauth_id
     }
 
+# ✅ 소셜 연동 해제
 @router.delete(
     "/me/social/{provider}",
     summary="소셜 연동 해제",
@@ -138,5 +125,4 @@ def disconnect_social_account(
     current_user.oauth_id = None
     db.commit()
     db.refresh(current_user)
-
     return {"message": f"{provider} 연동이 해제되었습니다."}

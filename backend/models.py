@@ -20,6 +20,7 @@ class User(Base, TimestampMixin):
     oauth_id = Column(String, nullable=True)
     nickname = Column(String, nullable=False)
     profile_image_url = Column(String, nullable=True)
+    is_admin = Column(Boolean, default=False)
 
     detection_results = relationship("DetectionResult", back_populates="user")
     reviews = relationship("Review", back_populates="user")

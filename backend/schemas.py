@@ -130,7 +130,6 @@ class RecipeStepOut(RecipeStepBase):
 
 # ---------- Detection Result ----------
 class DetectionResultBase(BaseModel):
-    user_id: int
     food_id: int
     image_path: str
     confidence: float
@@ -148,7 +147,6 @@ class DetectionResultOut(DetectionResultBase):
 
 # ---------- Review ----------
 class ReviewBase(BaseModel):
-    user_id: int
     food_id: int
     content: str
     rating: int
@@ -170,7 +168,6 @@ class ReviewUpdate(BaseModel):
 
 # ---------- User Log ----------
 class UserLogBase(BaseModel):
-    user_id: int
     action: str
     target_id: int
     target_type: str
@@ -188,7 +185,6 @@ class UserLogOut(UserLogBase):
 
 # ---------- User Ingredient Input ----------
 class UserIngredientInputBase(BaseModel):
-    user_id: int
     input_text: str
     matched_food_ids: Optional[List[int]] = None
 
