@@ -6,7 +6,7 @@ from backend.main import app
 from backend.db import get_db
 from sqlalchemy.orm import Session
 
-from backend.tests.test_food import test_create_food
+from backend.tests.test_food import create_food_helper
 from backend.tests.test_user import test_create_user
 
 client = TestClient(app)
@@ -18,12 +18,8 @@ def db_session():
     yield db
     db.rollback()
 
-def test_create_recipe(db_session: Session, food_id: int = None):
-    if food_id is None:
-        food_id = test_create_food(db_session)
-
-    food_id = test_create_food(db_session)
-    user_id, _ = test_create_user(db_session)
+def test_create_recipe(auth_client, db_session, test_user):
+    food_id = create_food_helper(db_session)
     recipe_data = {
         "food_id": food_id,
         "source_type": "User",
@@ -31,14 +27,14 @@ def test_create_recipe(db_session: Session, food_id: int = None):
         "ingredients": "김치, 돼지고기, 두부, 고춧가루",
         "instructions": "김치를 볶고 돼지고기와 두부를 넣고 끓인다.",
     }
-    response = client.post("/recipes/", json=recipe_data)
+    response = auth_client.post("/recipes/", json=recipe_data)
     assert response.status_code == 200
     assert response.json()["title"] == recipe_data["title"]
 
     return response.json()["id"]
 
 def test_get_recipe_by_id(db_session: Session):
-    food_id = test_create_food(db_session)
+    food_id = create_food_helper(db_session)
 
     recipe_data = {
         "food_id": food_id,
@@ -59,7 +55,7 @@ def test_get_recipe_by_id(db_session: Session):
     assert response.json()["food_id"] == food_id
 
 def test_get_recipes_by_food_id(db_session: Session):
-    food_id = test_create_food(db_session)
+    food_id = create_food_helper(db_session)
 
     # food_id를 사용해서 레시피 생성
     recipe_data = {
@@ -78,3 +74,18 @@ def test_get_recipes_by_food_id(db_session: Session):
     recipes = response.json()
     assert isinstance(recipes, list)
     assert any(recipe["title"] == recipe_data["title"] for recipe in recipes)
+
+# helper 함수
+def create_recipe_helper(db_session, food_id: int):
+    from backend import models
+    recipe = models.Recipe(
+        food_id=food_id,
+        source_type="User",
+        title="김치찌개 레시피",
+        ingredients="김치, 돼지고기, 두부, 고춧가루",
+        instructions="김치를 볶고 돼지고기와 두부를 넣고 끓인다."
+    )
+    db_session.add(recipe)
+    db_session.commit()
+    db_session.refresh(recipe)
+    return recipe.id

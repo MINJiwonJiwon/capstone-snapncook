@@ -21,10 +21,10 @@ router = APIRouter(
 def create_detection_result(
     result: schemas.DetectionResultCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user)  # ✅ 여기가 핵심
 ):
     result_data = result.model_dump()
-    result_data["user_id"] = current_user.id
+    result_data["user_id"] = current_user.id  # ✅ user_id 직접 주입
     return crud.create_detection_result(db=db, result=schemas.DetectionResultCreate(**result_data))
 
 

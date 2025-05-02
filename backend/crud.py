@@ -74,12 +74,11 @@ def create_user_log(db: Session, log: schemas.UserLogCreate) -> models.UserLog:
     return db_log
 
 # ---------- UserIngredientInput ----------
-def create_user_ingredient_input(db: Session, input_data: schemas.UserIngredientInputCreate) -> models.UserIngredientInput:
-    db_input = models.UserIngredientInput(**input_data.model_dump())
-    db.add(db_input)
+def create_user_ingredient_input(db: Session, input_obj: models.UserIngredientInput) -> models.UserIngredientInput:
+    db.add(input_obj)
     db.commit()
-    db.refresh(db_input)
-    return db_input
+    db.refresh(input_obj)
+    return input_obj
 
 # ---------- UserIngredientInputRecipe ----------
 def create_user_ingredient_input_recipe(db: Session, item: schemas.UserIngredientInputRecipeCreate) -> models.UserIngredientInputRecipe:

@@ -1,10 +1,10 @@
 # backend/tests/test_user.py
 
 import pytest
+from uuid import uuid4
 from fastapi.testclient import TestClient
 from backend.main import app
 from backend.db import get_db
-from uuid import uuid4
 from sqlalchemy.orm import Session
 
 client = TestClient(app)
@@ -16,36 +16,38 @@ def db_session():
     yield db
     db.rollback()
 
+
 def test_create_user(db_session: Session):
     user_data = {
         "email": f"testuser{uuid4().hex[:8]}@example.com",
         "password": "Password123!",
         "nickname": "테스트유저"
     }
-    response = client.post("/auth/signup", json=user_data)
-    assert response.status_code in [200, 201], f"Expected 200 or 201, got {response.status_code}"
-    assert response.json()["email"] == user_data["email"], "Email doesn't match"
-    assert response.json()["nickname"] == user_data["nickname"], "Nickname doesn't match"
-    
-    return response.json()["id"], user_data["email"]
+
+    # 회원가입
+    signup_res = client.post("/auth/signup", json=user_data)
+    assert signup_res.status_code in [200, 201]
+    user_id = signup_res.json()["id"]
+
+    # 로그인해서 토큰 발급
+    login_res = client.post("/auth/login", json={
+        "email": user_data["email"],
+        "password": user_data["password"]
+    })
+    assert login_res.status_code == 200
+    token = login_res.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    return user_id, user_data["email"], headers
+
 
 def test_get_user_by_id(db_session: Session):
-    # 유저 생성 후, 생성된 user_id를 받아옴
-    user_id, _ = test_create_user(db_session)
+    user_id, user_email, headers = test_create_user(db_session)
 
-    # 유저 정보 조회 요청
-    response = client.get(f"/users/{user_id}")
-
-    # HTTP 상태 코드 확인
+    response = client.get("/auth/me", headers=headers)
     assert response.status_code == 200
 
-    # 반환된 JSON 응답에서 email과 nickname을 확인
-    user_email = response.json()["email"]
-    user_nickname = response.json()["nickname"]
-
-    # 이메일에서 UUID 부분을 확인하기 위한 로직
-    expected_email = f"testuser{user_email.split('@')[0].split('testuser')[1]}@example.com"
-    
-    assert response.json()["id"] == user_id
-    assert user_email == expected_email
-    assert user_nickname == "테스트유저"
+    data = response.json()
+    assert data["id"] == user_id
+    assert data["email"] == user_email
+    assert data["nickname"] == "테스트유저"

@@ -1,92 +1,47 @@
 # backend/tests/test_bookmark.py
 
 import pytest
-from fastapi.testclient import TestClient
-from backend.main import app
-from backend.db import get_db
-from sqlalchemy.orm import Session
-from backend.tests.test_user import test_create_user
-from backend.tests.test_recipe import test_create_food, test_create_recipe
+from backend.tests.test_food import create_food_helper
+from backend.tests.test_recipe import create_recipe_helper
 
-client = TestClient(app)
+# auth_client: 토큰 포함된 client
+# test_user: 현재 로그인된 유저 객체
 
-@pytest.fixture(scope="function")
-def db_session():
-    db: Session = next(get_db())
-    db.begin()
-    yield db
-    db.rollback()
+def test_bookmark_flow(auth_client, db_session, test_user):
+    # 1. 음식 + 레시피 생성
+    food_id = create_food_helper(db_session)
+    recipe_id = create_recipe_helper(db_session, food_id)
 
-def get_access_token(db_session: Session):
-    user_id, email = test_create_user(db_session)
-    login_response = client.post("/auth/login", json={
-        "email": email,
-        "password": "Password123!"
-    })
-    assert login_response.status_code == 200
-    return login_response.json()["access_token"], user_id
-
-def test_bookmark_flow(db_session: Session):
-    # 1. 유저 생성 및 로그인
-    access_token, user_id = get_access_token(db_session)
-
-    # 2. 음식 + 레시피 생성
-    food_id = test_create_food(db_session)
-    recipe_id = test_create_recipe(db_session, food_id=food_id)
-
-    # 3. 북마크 추가
-    response = client.post(
-        "/bookmarks/",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json={"recipe_id": recipe_id}
-    )
+    # 2. 북마크 추가
+    response = auth_client.post("/bookmarks/", json={"recipe_id": recipe_id})
     assert response.status_code == 200
     bookmark_id = response.json()["id"]
 
-    # 4. 내 북마크 목록 조회
-    response = client.get(
-        "/bookmarks/me",
-        headers={"Authorization": f"Bearer {access_token}"}
-    )
+    # 3. 내 북마크 목록 조회
+    response = auth_client.get("/bookmarks/me")
     assert response.status_code == 200
     assert any(bm["id"] == bookmark_id for bm in response.json())
 
-    # 5. 북마크 삭제
-    response = client.delete(
-        f"/bookmarks/{bookmark_id}",
-        headers={"Authorization": f"Bearer {access_token}"}
-    )
+    # 4. 북마크 삭제
+    response = auth_client.delete(f"/bookmarks/{bookmark_id}")
     assert response.status_code == 204
 
-    # 6. 삭제 후 북마크 목록 조회
-    response = client.get(
-        "/bookmarks/me",
-        headers={"Authorization": f"Bearer {access_token}"}
-    )
+    # 5. 삭제 후 북마크 목록 조회
+    response = auth_client.get("/bookmarks/me")
     assert response.status_code == 200
     assert all(bm["id"] != bookmark_id for bm in response.json())
 
-def test_duplicate_bookmark(db_session: Session):
-    # 유저 생성 및 로그인
-    access_token, user_id = get_access_token(db_session)
 
-    # 음식 & 레시피 생성
-    food_id = test_create_food(db_session)
-    recipe_id = test_create_recipe(db_session, food_id=food_id)
+def test_duplicate_bookmark(auth_client, db_session, test_user):
+    # 1. 음식 & 레시피 생성
+    food_id = create_food_helper(db_session)
+    recipe_id = create_recipe_helper(db_session, food_id=food_id)
 
-    # 1차 북마크: 성공
-    response = client.post(
-        "/bookmarks/",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json={"recipe_id": recipe_id}
-    )
+    # 2. 첫 북마크: 성공
+    response = auth_client.post("/bookmarks/", json={"recipe_id": recipe_id})
     assert response.status_code == 200
 
-    # 2차 북마크: 중복 → 실패 (400)
-    response = client.post(
-        "/bookmarks/",
-        headers={"Authorization": f"Bearer {access_token}"},
-        json={"recipe_id": recipe_id}
-    )
+    # 3. 중복 북마크: 실패
+    response = auth_client.post("/bookmarks/", json={"recipe_id": recipe_id})
     assert response.status_code == 400
     assert response.json()["detail"] == "Already bookmarked this recipe."

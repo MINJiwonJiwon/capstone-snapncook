@@ -1,38 +1,46 @@
 # backend/tests/test_food.py
 
 import pytest
-from fastapi.testclient import TestClient
 from backend.main import app
-from backend.db import get_db
-from sqlalchemy.orm import Session
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
-@pytest.fixture(scope="function")
-def db_session():
-    db: Session = next(get_db())
-    db.begin()
-    yield db
-    db.rollback()
-
-def test_create_food(db_session: Session):
+def test_create_food():
     food_data = {
-        "name": "김치찌개",  
+        "name": "김치찌개",
         "description": "얼큰한 국물요리"
     }
     response = client.post("/foods/", json=food_data)
     assert response.status_code == 200
     assert response.json()["name"] == food_data["name"]
     assert response.json()["description"] == food_data["description"]
-    
-    food_id = response.json()["id"]
-    return food_id
 
-def test_get_food_by_id(db_session: Session):
-    food_id = test_create_food(db_session)
-    response = client.get(f"/foods/{food_id}")
-    
-    assert response.status_code == 200
-    assert response.json()["id"] == food_id
-    assert response.json()["name"] == "김치찌개"
-    assert response.json()["description"] == "얼큰한 국물요리"
+    # ID 검증만 추가
+    assert "id" in response.json()
+
+
+def test_get_food_by_id():
+    # 먼저 음식 하나 등록
+    food_data = {
+        "name": "된장찌개",
+        "description": "구수한 된장 국물"
+    }
+    create_response = client.post("/foods/", json=food_data)
+    food_id = create_response.json()["id"]
+
+    # 등록된 음식 조회
+    get_response = client.get(f"/foods/{food_id}")
+    assert get_response.status_code == 200
+    assert get_response.json()["id"] == food_id
+    assert get_response.json()["name"] == food_data["name"]
+    assert get_response.json()["description"] == food_data["description"]
+
+# helper 함수
+def create_food_helper(db_session):
+    from backend import models
+    food = models.Food(name="김치찌개", description="얼큰한 국물요리")
+    db_session.add(food)
+    db_session.commit()
+    db_session.refresh(food)
+    return food.id

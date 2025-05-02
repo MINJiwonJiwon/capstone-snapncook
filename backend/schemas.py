@@ -135,7 +135,7 @@ class DetectionResultBase(BaseModel):
     confidence: float
 
 class DetectionResultCreate(DetectionResultBase):
-    pass
+    user_id: Optional[int] = None
 
 class DetectionResultOut(DetectionResultBase):
     id: int
@@ -152,7 +152,7 @@ class ReviewBase(BaseModel):
     rating: int
 
 class ReviewCreate(ReviewBase):
-    pass
+    user_id: Optional[int] = None
 
 class ReviewOut(ReviewBase):
     id: int
@@ -178,6 +178,7 @@ class UserLogCreate(UserLogBase):
 
 class UserLogOut(UserLogBase):
     id: int
+    user_id: int
     created_at: datetime
 
     class Config:

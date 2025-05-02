@@ -29,12 +29,13 @@ def test_signup_user():
 
 def test_signup_duplicate_user():
     user_data = {
-        "email": "duplicateuser@example.com",
-        "password": "password123!",
-        "nickname": "중복유저"
+    "email": f"duplicateuser{uuid4()}@example.com", 
+    "password": "password123!",
+    "nickname": "중복유저"
     }
     # 첫 번째 회원가입
-    client.post("/auth/signup", json=user_data)
+    res1 = client.post("/auth/signup", json=user_data)
+    assert res1.status_code in [200, 201], f"First signup failed: {res1.status_code}"
     
     # 두 번째 회원가입 시도 (중복 이메일)
     response = client.post("/auth/signup", json=user_data)

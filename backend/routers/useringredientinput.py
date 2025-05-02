@@ -24,9 +24,14 @@ def create_user_ingredient_input(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    input_dict = input_data.model_dump()
-    input_dict["user_id"] = current_user.id
-    return crud.create_user_ingredient_input(db=db, input_data=schemas.UserIngredientInputCreate(**input_dict))
+    # ✅ user_id를 수동으로 할당한 ORM 객체를 생성해서 넘김
+    new_input = models.UserIngredientInput(
+        user_id=current_user.id,
+        input_text=input_data.input_text,
+        matched_food_ids=input_data.matched_food_ids
+    )
+    return crud.create_user_ingredient_input(db=db, input_obj=new_input)
+
 
 
 # ✅ 재료 입력 단건 조회 (내 것만 조회 가능)
