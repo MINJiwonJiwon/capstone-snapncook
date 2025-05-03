@@ -278,3 +278,29 @@ class MypageSummaryResponse(BaseModel):
     bookmarks: List[BookmarkSummary]
     detection_results: List[DetectionResultSummary]
     reviews: List[ReviewSummary]
+
+# ---------- Home ----------
+
+# ✅ 인기 검색어 응답용 스키마
+class PopularSearchRanking(BaseModel):
+    rank: int
+    keyword: str
+    previous_rank: Optional[int] = None
+    trend: str  # 'up', 'down', 'same', 'new'
+
+class PopularSearchResponse(BaseModel):
+    period: str
+    rankings: List[PopularSearchRanking]
+
+# ✅ 추천 음식 응답용 스키마
+class TodayRecommendedFood(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    image_url: Optional[str]
+    rating: float
+    reason: str
+
+class TodayRecommendedFoodResponse(BaseModel):
+    date: str
+    food: TodayRecommendedFood

@@ -1,4 +1,7 @@
 # backend/crud.py
+
+from datetime import date
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import Optional
 from backend import models, schemas
@@ -87,3 +90,32 @@ def create_user_ingredient_input_recipe(db: Session, item: schemas.UserIngredien
     db.commit()
     db.refresh(db_item)
     return db_item
+
+# ---------- Home ----------
+
+def get_search_rankings(db: Session, period: str, on_date: date, limit: int = 3):
+    return (
+        db.query(models.SearchRanking)
+        .filter(models.SearchRanking.period == period, models.SearchRanking.date == on_date)
+        .order_by(models.SearchRanking.rank.asc())
+        .limit(limit)
+        .all()
+    )
+
+
+def get_previous_rankings_dict(db: Session, period: str, on_date: date) -> dict:
+    previous = (
+        db.query(models.SearchRanking)
+        .filter(models.SearchRanking.period == period, models.SearchRanking.date == on_date)
+        .all()
+    )
+    return {r.keyword: r.rank for r in previous}
+
+
+def get_random_food(db: Session):
+    return db.query(models.Food).order_by(func.random()).first()
+
+
+def get_average_rating_for_food(db: Session, food_id: int):
+    avg = db.query(func.avg(models.Review.rating)).filter(models.Review.food_id == food_id).scalar()
+    return round(avg or 0, 2)

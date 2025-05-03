@@ -1,5 +1,5 @@
 # backend/models.py
-from sqlalchemy import Boolean, Column, Integer, String, Text, Float, ForeignKey, DateTime, JSON, func
+from sqlalchemy import Boolean, Column, Date, Integer, String, Text, Float, ForeignKey, DateTime, JSON, func
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime, timezone
 
@@ -161,3 +161,20 @@ class Bookmark(Base):
     user = relationship("User", back_populates="bookmarks")
     recipe = relationship("Recipe", back_populates="bookmarks")
     
+    # ✅ 인기 검색 기록 테이블
+class SearchLog(Base, TimestampMixin):
+    __tablename__ = "search_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    keyword = Column(String, nullable=False, index=True)
+
+# ✅ 인기 검색 순위 테이블
+class SearchRanking(Base, TimestampMixin):
+    __tablename__ = "search_rankings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    keyword = Column(String, nullable=False, index=True)
+    rank = Column(Integer, nullable=False)
+    count = Column(Integer, nullable=False)
+    period = Column(String, nullable=False)  # 'day' or 'week'
+    date = Column(Date, nullable=False)  # 기준일자
