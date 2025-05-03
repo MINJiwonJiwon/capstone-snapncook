@@ -170,7 +170,7 @@ flowchart TD
 
 ## ✅ 전체 API 요청/응답 예시
 
-### **auth_routes.py**
+## **auth_routes.py**
 
 ### POST /auth/signup
 
@@ -308,7 +308,7 @@ flowchart TD
 
 ---
 
-### **food.py**
+## **food.py**
 
 ### POST /foods/
 
@@ -396,7 +396,7 @@ flowchart TD
 
 ---
 
-### **recipe.py**
+## **recipe.py**
 
 ### POST /recipes/
 
@@ -563,7 +563,7 @@ flowchart TD
 
 ---
 
-### **recipestep.py**
+## **recipestep.py**
 
 ### POST /recipe-steps/
 
@@ -626,7 +626,7 @@ flowchart TD
 
 ---
 
-### **detectionresult.py**
+## **detectionresult.py**
 
 ### POST /detection-results/
 
@@ -692,7 +692,7 @@ flowchart TD
 
 ---
 
-### **mypage.py**
+## **mypage.py**
 
 ### GET /mypage/summary
 
@@ -742,7 +742,7 @@ flowchart TD
 
 ---
 
-### **user.py**
+## **user.py**
 
 ### POST /users/
 
@@ -949,7 +949,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### **userlog.py**
+## **userlog.py**
 
 ### POST /user-logs/
 
@@ -1028,7 +1028,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### **review.py**
+## **review.py**
 
 ### POST /reviews/
 
@@ -1179,7 +1179,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### **bookmarks.py**
+## **bookmarks.py**
 
 ### POST /bookmarks/
 
@@ -1242,7 +1242,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### **useringredientinput.py**
+## **useringredientinput.py**
 
 ### POST /user-ingredient-inputs/
 
@@ -1309,7 +1309,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### **useringredientinputrecipe.py**
+## **useringredientinputrecipe.py**
 
 ### POST /user-ingredient-input-recipes/
 
@@ -1381,7 +1381,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### **recommend.py**
+## **recommend.py**
 
 ### GET /recommend/public/by-detection/{detection_id}
 
@@ -1515,7 +1515,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### **oauth_routes.py**
+## **oauth_routes.py**
 
 ### GET /oauth/google/login
 
@@ -1635,6 +1635,89 @@ Authorization: Bearer <access_token>
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6...",
   "refresh_token": "abc123...",
   "token_type": "bearer"
+}
+```
+
+---
+
+## **home.py**
+
+### GET /api/popular-searches
+
+> 📌 인기 검색어 랭킹을 일간 또는 주간 기준으로 제공하며, 순위 변동 추세를 함께 반환합니다.
+>
+
+**Query Parameters**
+
+| 이름 | 타입 | 설명 | 기본값 |
+|------|------|------|--------|
+| period | string | 집계 기준 (`day` 또는 `week`) | day |
+
+**Request**
+
+- Body: 없음 ❌
+
+**Response**
+
+```json
+{
+  "period": "day",
+  "rankings": [
+    {
+      "rank": 1,
+      "keyword": "김치찌개",
+      "previous_rank": 3,
+      "trend": "up"
+    },
+    {
+      "rank": 2,
+      "keyword": "비빔밥",
+      "previous_rank": 1,
+      "trend": "down"
+    },
+    {
+      "rank": 3,
+      "keyword": "삼겹살",
+      "previous_rank": 2,
+      "trend": "down"
+    }
+  ]
+}
+```
+
+**Trend 값 설명**
+
+| trend | 설명 | 표시 |
+|-------|------|------|
+| up | 순위 상승 | 🔼 (녹색 화살표) |
+| down | 순위 하락 | 🔽 (빨간 화살표) |
+| same | 순위 유지 | → (회색 화살표) |
+| new | 신규 진입 | NEW (파란색 라벨) |
+
+---
+
+### GET /api/recommended-food
+
+> 📌 오늘의 추천 메뉴 - 랜덤으로 한식 음식 중 하나를 선택해 이미지, 평점 등과 함께 반환합니다.
+>
+
+**Request**
+
+- Body: 없음 ❌
+
+**Response**
+
+```json
+{
+  "date": "2025-05-03",
+  "food": {
+    "id": 123,
+    "name": "삼겹살",
+    "description": "바삭하고 육즙이 풍부한 돼지고기 구이",
+    "image_url": "https://example.com/images/samgyeopsal.jpg",
+    "rating": 4.8,
+    "reason": "오늘의 추천 메뉴로 즐겨보세요!"
+  }
 }
 ```
 
