@@ -4,22 +4,22 @@ import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import RankingRecommendation from '../../components/RankingRecommendation/RankingRecommendation';
 import styles from './Home.module.css';
+import useAuth from '../../hooks/useAuth';
+import { saveDetectionResult } from '../../api/detection';
 
 const Home = () => {
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [imageHistory, setImageHistory] = useState([]);
   const [dragOver, setDragOver] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   
   useEffect(() => {
-    // 로그인 상태 확인
-    const loginStatus = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(loginStatus);
-    
     // 로그인 상태일 때만 이미지 히스토리 가져오기
-    if (loginStatus) {
+    if (isLoggedIn) {
       const storedHistory = JSON.parse(localStorage.getItem('imageHistory')) || [];
       setImageHistory(storedHistory);
     } else {
@@ -28,7 +28,7 @@ const Home = () => {
       setFile(null);
       setPreviewUrl('');
     }
-  }, [isLoggedIn]); // isLoggedIn이 변경될 때마다 실행
+  }, [isLoggedIn]);
   
   const handleFileChange = (e) => {
     if (!isLoggedIn) {
@@ -83,11 +83,47 @@ const Home = () => {
     reader.readAsDataURL(file);
   };
   
-  const handleUpload = () => {
-    // 이미지를 로컬 스토리지에 저장
-    if (previewUrl) {
+  const handleUpload = async () => {
+    if (!previewUrl) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // 실제 API 연동 시 파일 업로드 처리
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // 파일 업로드 API 호출 (예시)
+      // const uploadResponse = await apiClient.post('/upload', formData, {
+      //   headers: {
+      //     'Content-Type': 'multipart/form-data'
+      //   }
+      // });
+      
+      // 백엔드 API가 완전히 연동되기 전까지는 목업 데이터 사용
+      // 실제 구현 시 API 응답으로 대체
+      const detectionResult = {
+        food_id: 1, // 김치찌개 ID로 가정
+        image_path: 'uploads/images/kimchi.jpg', // 서버에 저장된 이미지 경로
+        confidence: 0.92 // 신뢰도
+      };
+      
+      // 탐지 결과 저장 API 호출
+      await saveDetectionResult(detectionResult);
+      
+      // 이미지를 로컬 스토리지에 저장
       saveImageToHistory(previewUrl);
+      
+      // 세션 스토리지에 탐지된 음식 이름 저장 (실제로는 API 응답에서 가져옴)
+      sessionStorage.setItem('selectedFood', '김치찌개');
+      
+      setIsLoading(false);
       navigate('/recipe');
+    } catch (err) {
+      setError('이미지 분석 중 오류가 발생했습니다.');
+      setIsLoading(false);
+      console.error('Image analysis error:', err);
     }
   };
   
@@ -122,11 +158,17 @@ const Home = () => {
 
   return (
     <>
-      <Navbar setIsLoggedIn={setIsLoggedIn} /> {/* Navbar에 setIsLoggedIn props 전달 */}
+      <Navbar />
       <RankingRecommendation />
       
       <div className={styles.container}>
         <h1>음식 레시피 찾기</h1>
+        
+        {error && (
+          <div className={styles.errorMessage}>
+            {error}
+          </div>
+        )}
         
         <div className={styles.mainContainer}>
           {/* 왼쪽: 이미지 업로드 영역 */}
@@ -165,8 +207,19 @@ const Home = () => {
               <div className={styles.previewContainer}>
                 <img src={previewUrl} alt="미리보기" className={styles.previewImage} />
                 <div className={styles.buttonGroup}>
-                  <button onClick={handleUpload}>분석하기</button>
-                  <button onClick={resetUpload} className={styles.cancelButton}>취소</button>
+                  <button 
+                    onClick={handleUpload} 
+                    disabled={isLoading}
+                  >
+                    {isLoading ? '분석중...' : '분석하기'}
+                  </button>
+                  <button 
+                    onClick={resetUpload} 
+                    className={styles.cancelButton}
+                    disabled={isLoading}
+                  >
+                    취소
+                  </button>
                 </div>
               </div>
             )}
@@ -193,7 +246,13 @@ const Home = () => {
               )}
             </div>
             {isLoggedIn && imageHistory.length > 0 && (
-              <button onClick={clearHistory} className={styles.clearHistory}>기록 삭제</button>
+              <button 
+                onClick={clearHistory} 
+                className={styles.clearHistory}
+                disabled={isLoading}
+              >
+                기록 삭제
+              </button>
             )}
           </div>
         </div>

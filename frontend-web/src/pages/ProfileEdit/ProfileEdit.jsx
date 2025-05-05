@@ -3,87 +3,110 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import styles from './ProfileEdit.module.css';
+import useAuth from '../../hooks/useAuth';
+import useUser from '../../hooks/useUser';
 
 const ProfileEdit = () => {
   const navigate = useNavigate();
+  const { isLoggedIn, user, refreshUserInfo } = useAuth();
+  const { 
+    updateUserInfo, 
+    changePassword, 
+    loading, 
+    error, 
+    success,
+    clearMessages
+  } = useUser();
+  
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-
+  const [formError, setFormError] = useState('');
+  
+  // 로그인 상태 및 사용자 정보 확인
   useEffect(() => {
-    // 로컬 스토리지에서 사용자 정보 가져오기
-    const storedUsername = localStorage.getItem('username');
-    
-    if (storedUsername) {
-      setUsername(storedUsername);
-      
-      // 실제 백엔드 연동 시에는 API 호출로 이메일 등의 정보를 가져와야 함
-      // 현재는 임시로 localStorage에서 가져오거나 기본값 설정
-      setEmail(localStorage.getItem('userEmail') || `${storedUsername}@example.com`);
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
     }
-  }, []);
-
-  const handleSubmit = (e) => {
+    
+    if (user) {
+      setUsername(user.nickname || '');
+      setEmail(user.email || '');
+    }
+  }, [isLoggedIn, user, navigate]);
+  
+  // 폼 제출 시 API 호출
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage('');
-    setSuccessMessage('');
+    clearMessages();
+    setFormError('');
     
     // 기본적인 유효성 검사
     if (newPassword && newPassword !== confirmPassword) {
-      setErrorMessage('새 비밀번호와 확인 비밀번호가 일치하지 않습니다.');
+      setFormError('새 비밀번호와 확인 비밀번호가 일치하지 않습니다.');
       return;
     }
     
-    // 비밀번호 변경 없이 기본 정보만 변경하는 경우
-    if (!newPassword && !password) {
-      updateUserInfo();
-      return;
+    // 비밀번호 복잡성 검사
+    if (newPassword) {
+      // 최소 8자, 하나 이상의 문자와 숫자 포함 검사
+      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+      if (!passwordRegex.test(newPassword)) {
+        setFormError('비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.');
+        return;
+      }
     }
     
-    // 비밀번호 변경을 포함한 경우 현재 비밀번호 확인 필요
-    if (!password) {
-      setErrorMessage('현재 비밀번호를 입력해주세요.');
-      return;
-    }
-    
-    // 현재 비밀번호 검증 (실제 구현 시 백엔드 API 호출 필요)
-    // 임시로 비밀번호는 'password'로 가정
-    if (password === 'password') {
-      updateUserInfo();
-    } else {
-      setErrorMessage('현재 비밀번호가 올바르지 않습니다.');
-    }
-  };
-  
-  const updateUserInfo = () => {
-    setIsLoading(true);
-    
-    // 실제 구현 시 이 부분은 백엔드 API 호출로 대체
-    // 현재는 localStorage만 업데이트
-    setTimeout(() => {
-      localStorage.setItem('username', username);
-      localStorage.setItem('userEmail', email);
-      
-      if (newPassword) {
-        // 실제 구현 시 비밀번호 업데이트 로직 필요
-        console.log('비밀번호가 변경되었습니다.');
+    try {
+      // 비밀번호 변경
+      if (newPassword && password) {
+        await changePassword({
+          current_password: password,
+          new_password: newPassword
+        });
       }
       
-      setIsLoading(false);
-      setSuccessMessage('프로필이 성공적으로 업데이트되었습니다.');
+      // 사용자 정보 업데이트
+      const updatedInfo = {};
+      
+      // 사용자 이름이 변경되었는지 확인
+      if (username !== user?.nickname) {
+        updatedInfo.nickname = username;
+      }
+      
+      // 이메일이 변경되었는지 확인
+      if (email !== user?.email) {
+        updatedInfo.email = email;
+      }
+      
+      // 변경된 정보가 있을 경우에만 업데이트
+      if (Object.keys(updatedInfo).length > 0) {
+        // 프로필 이미지 URL 포함
+        updatedInfo.profile_image_url = user?.profile_image_url;
+        
+        await updateUserInfo(updatedInfo);
+        
+        // 사용자 정보 새로고침
+        await refreshUserInfo();
+      }
       
       // 폼 초기화
       setPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    }, 1000); // 백엔드 API 호출을 시뮬레이션하기 위한 지연
+    } catch (err) {
+      console.error('Profile update error:', err);
+      setFormError(err.response?.data?.detail || '프로필 업데이트 중 오류가 발생했습니다.');
+    }
   };
   
+  const handleCancel = () => {
+    navigate('/mypage');
+  };
+
   return (
     <>
       <Navbar />
@@ -91,30 +114,25 @@ const ProfileEdit = () => {
       <div className={styles.container}>
         <h1>내 정보 수정</h1>
         
-        {errorMessage && (
+        {formError && (
           <div className={styles.errorMessage}>
-            {errorMessage}
+            {formError}
           </div>
         )}
         
-        {successMessage && (
+        {error && (
+          <div className={styles.errorMessage}>
+            {error}
+          </div>
+        )}
+        
+        {success && (
           <div className={styles.successMessage}>
-            {successMessage}
+            {success}
           </div>
         )}
         
         <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.formGroup}>
-            <label htmlFor="username">사용자 이름</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-          
           <div className={styles.formGroup}>
             <label htmlFor="email">이메일</label>
             <input
@@ -123,6 +141,19 @@ const ProfileEdit = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
+            />
+          </div>
+          
+          <div className={styles.formGroup}>
+            <label htmlFor="username">사용자 이름</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              disabled={loading}
             />
           </div>
           
@@ -138,6 +169,7 @@ const ProfileEdit = () => {
               id="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
             />
           </div>
           
@@ -148,7 +180,9 @@ const ProfileEdit = () => {
               id="new-password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              disabled={loading}
             />
+            <small>비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.</small>
           </div>
           
           <div className={styles.formGroup}>
@@ -158,6 +192,7 @@ const ProfileEdit = () => {
               id="confirm-password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={loading}
             />
           </div>
           
@@ -165,15 +200,15 @@ const ProfileEdit = () => {
             <button 
               type="submit" 
               className={styles.saveButton}
-              disabled={isLoading}
+              disabled={loading}
             >
-              {isLoading ? '저장 중...' : '저장하기'}
+              {loading ? '저장 중...' : '저장하기'}
             </button>
             <button 
               type="button" 
               className={styles.cancelButton}
-              onClick={() => navigate('/mypage')}
-              disabled={isLoading}
+              onClick={handleCancel}
+              disabled={loading}
             >
               취소
             </button>

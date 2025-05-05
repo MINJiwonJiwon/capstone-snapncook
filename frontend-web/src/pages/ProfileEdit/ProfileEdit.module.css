@@ -140,3 +140,25 @@ h2 {
     width: 100%;
   }
 }
+
+/* 기존 스타일 외에 추가되는 스타일 */
+
+/* 비활성화된 입력 필드 스타일 */
+.disabledInput {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+/* 로딩 상태의 버튼 스타일 */
+.saveButton:disabled, .cancelButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* 작은 텍스트 스타일 */
+small {
+  color: #7f8c8d;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  display: block;
+}

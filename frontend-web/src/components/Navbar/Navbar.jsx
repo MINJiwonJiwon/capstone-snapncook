@@ -1,46 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './Navbar.module.css';
+import useAuth from '../../hooks/useAuth';
 
-const Navbar = ({ setIsLoggedIn }) => {  // props로 setIsLoggedIn 받기
-  const [isLoggedInNav, setIsLoggedInNav] = useState(false);
-  const [username, setUsername] = useState('');
+const Navbar = () => {
   const navigate = useNavigate();
+  const { isLoggedIn, user, logout } = useAuth();
+  const [username, setUsername] = useState('');
   
   useEffect(() => {
-    // 로컬 스토리지에서 로그인 상태 확인
-    const loginStatus = localStorage.getItem('isLoggedIn') === 'true';
-    const storedUsername = localStorage.getItem('username');
-    
-    setIsLoggedInNav(loginStatus);
-    if (setIsLoggedIn) {  // Home.jsx에서 전달받은 setIsLoggedIn이 있을 경우
-      setIsLoggedIn(loginStatus);
+    // 인증 컨텍스트에서 사용자 이름 가져오기
+    if (isLoggedIn && user) {
+      setUsername(user.nickname || '사용자');
     }
-    
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-  }, [setIsLoggedIn]);
+  }, [isLoggedIn, user]);
   
-  const handleLogout = (e) => {
+  const handleLogout = async (e) => {
     e.preventDefault();
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('username');
     
-    // 로그아웃 시 이미지 히스토리 초기화
-    localStorage.removeItem('imageHistory');
-    sessionStorage.removeItem('currentImage');
-    
-    setIsLoggedInNav(false);
-    setUsername('');
-    
-    // Home 컴포넌트의 상태도 업데이트
-    if (setIsLoggedIn) {
-      setIsLoggedIn(false);
+    try {
+      await logout();
+      alert('로그아웃 되었습니다.');
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      alert('로그아웃 중 오류가 발생했습니다.');
     }
-    
-    alert('로그아웃 되었습니다.');
-    navigate('/');
   };
 
   return (
@@ -50,7 +35,7 @@ const Navbar = ({ setIsLoggedIn }) => {  // props로 setIsLoggedIn 받기
       </div>
       <ul className={styles.navLinks}>
         {/* 로그인된 경우에만 '메뉴' 표시 */}
-        {isLoggedInNav && (
+        {isLoggedIn && (
           <li className={styles.navItem}>
             <Link to="/">메뉴</Link>
             <div className={styles.dropdown}>
@@ -61,7 +46,7 @@ const Navbar = ({ setIsLoggedIn }) => {  // props로 setIsLoggedIn 받기
           </li>
         )}
         
-        {isLoggedInNav ? (
+        {isLoggedIn ? (
           <>
             <li className={styles.navItem}>
               <Link to="/mypage">마이페이지</Link>

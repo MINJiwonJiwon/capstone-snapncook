@@ -157,3 +157,28 @@ button:hover {
     width: 50%;
   }
 }
+
+/* 기존 스타일 외에 추가되는 스타일 */
+
+/* 에러 메시지 스타일 */
+.errorMessage {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #F44336;
+  border: 1px solid #F44336;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 14px;
+  width: 100%;
+}
+
+/* 로딩 상태의 버튼 스타일 */
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.cancelButton:disabled {
+  background-color: #999999;
+}

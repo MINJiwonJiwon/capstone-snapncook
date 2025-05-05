@@ -3,12 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import styles from './Recipe.module.css';
+import useRecipe from '../../hooks/useRecipe';
 
 const Recipe = () => {
   const navigate = useNavigate();
   const [currentImage, setCurrentImage] = useState('');
   const [foodName, setFoodName] = useState('음식 이름');
   const [activeSource, setActiveSource] = useState('');
+  
+  const { 
+    recipeDetail,
+    loading,
+    error,
+    fetchRecipeDetail
+  } = useRecipe();
   
   useEffect(() => {
     // 세션 스토리지에서 현재 이미지 가져오기
@@ -18,17 +26,24 @@ const Recipe = () => {
     } else {
       // 이미지가 없으면 홈으로 리다이렉트
       navigate('/');
+      return;
     }
     
     // 세션 스토리지에서 선택된 음식 이름 가져오기
     const selectedFood = sessionStorage.getItem('selectedFood');
     if (selectedFood) {
       setFoodName(selectedFood);
+      
+      // TODO: 음식 이름으로 음식 ID를 가져와서 해당 음식의 레시피를 조회해야 함
+      // 현재 API 연결 전이므로 임시로 첫 번째 레시피를 가져옴
+      fetchRecipeDetail(1).catch(error => {
+        console.error('Failed to fetch recipe detail:', error);
+      });
     } else {
       // 기본 음식 이름 설정
       setFoodName("김치찌개"); // 예시 음식 이름
     }
-  }, [navigate]);
+  }, [navigate, fetchRecipeDetail]);
   
   const handleCardClick = (source) => {
     setActiveSource(source);
@@ -38,11 +53,56 @@ const Recipe = () => {
     navigate('/');
   };
   
+  // 로딩 중이거나 데이터가 없을 때 표시할 스켈레톤 UI
+  const renderSkeleton = () => (
+    <div className={styles.skeletonContainer}>
+      <div className={styles.skeletonTitle}></div>
+      <div className={styles.skeletonText}></div>
+      <div className={styles.skeletonText}></div>
+      <div className={styles.skeletonText}></div>
+    </div>
+  );
+  
+  const renderRecipeCards = () => {
+    // API 연결 전이므로 임시 데이터 사용
+    const sources = [
+      { id: 'source1', name: '레시피 1', source: '만개의 레시피' },
+      { id: 'source2', name: '레시피 2', source: '백종원 레시피' },
+      { id: 'source3', name: '레시피 3', source: '해외 레시피' }
+    ];
+    
+    return (
+      <div className={styles.cardsContainer}>
+        {sources.map(source => (
+          <div 
+            key={source.id}
+            className={`${styles.card} ${activeSource === source.id ? styles.active : ''}`} 
+            onClick={() => handleCardClick(source.id)}
+          >
+            <div className={styles.cardContent}>
+              <h4>{source.name}</h4>
+              <p>소스: {source.source}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+  
   const renderRecipeContent = () => {
+    if (loading) {
+      return renderSkeleton();
+    }
+    
+    if (error) {
+      return <p className={styles.errorMessage}>{error}</p>;
+    }
+    
     if (!activeSource) {
       return <p className={styles.recipePlaceholder}>카드를 선택하면 레시피가 여기에 표시됩니다.</p>;
     }
     
+    // 실제 API 연동 후에는 recipeDetail 데이터를 사용하도록 수정 필요
     switch (activeSource) {
       case 'source1':
         return (
@@ -154,35 +214,7 @@ const Recipe = () => {
         {/* 레시피 카드 선택 영역 */}
         <div className={styles.recipeCards}>
           <h3>레시피 소스 선택</h3>
-          <div className={styles.cardsContainer}>
-            <div 
-              className={`${styles.card} ${activeSource === 'source1' ? styles.active : ''}`} 
-              onClick={() => handleCardClick('source1')}
-            >
-              <div className={styles.cardContent}>
-                <h4>레시피 1</h4>
-                <p>소스: 만개의 레시피</p>
-              </div>
-            </div>
-            <div 
-              className={`${styles.card} ${activeSource === 'source2' ? styles.active : ''}`} 
-              onClick={() => handleCardClick('source2')}
-            >
-              <div className={styles.cardContent}>
-                <h4>레시피 2</h4>
-                <p>소스: 백종원 레시피</p>
-              </div>
-            </div>
-            <div 
-              className={`${styles.card} ${activeSource === 'source3' ? styles.active : ''}`} 
-              onClick={() => handleCardClick('source3')}
-            >
-              <div className={styles.cardContent}>
-                <h4>레시피 3</h4>
-                <p>소스: 해외 레시피</p>
-              </div>
-            </div>
-          </div>
+          {renderRecipeCards()}
         </div>
         
         {/* 선택된 레시피 표시 영역 */}
