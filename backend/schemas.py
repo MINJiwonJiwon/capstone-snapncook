@@ -66,6 +66,11 @@ class UserUpdatePassword(BaseModel):
     current_password: str
     new_password: str
 
+# User 수정용 스키마(관리자)
+class UserUpdate(BaseModel):
+    nickname: Optional[str] = None
+    is_admin: Optional[bool] = None
+
 # 토큰 관련
 class Token(BaseModel):
     access_token: str
@@ -92,6 +97,12 @@ class FoodOut(FoodBase):
     class Config:
         from_attributes = True
 
+# Food 수정용(관리자)
+class FoodUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+
 # ---------- Recipe ----------
 class RecipeBase(BaseModel):
     food_id: int
@@ -111,6 +122,13 @@ class RecipeOut(RecipeBase):
 
     class Config:
         from_attributes = True
+
+# Recipe 수정용(관리자)
+class RecipeUpdate(BaseModel):
+    title: Optional[str] = None
+    ingredients: Optional[str] = None
+    instructions: Optional[str] = None
+    source_detail: Optional[str] = None
 
 # ---------- Recipe Step ----------
 class RecipeStepBase(BaseModel):
