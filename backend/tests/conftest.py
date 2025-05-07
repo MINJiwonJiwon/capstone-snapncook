@@ -65,3 +65,31 @@ def authenticated_headers():
     token = login_res.json()["access_token"]
 
     return {"Authorization": f"Bearer {token}"}
+
+# conftest.py 하단에 추가
+
+@pytest.fixture
+def admin_user(db_session: Session):
+    unique_email = f"admin_{uuid.uuid4().hex[:6]}@example.com"
+
+    user = models.User(
+        email=unique_email,
+        nickname="adminuser",
+        password_hash=hash_password("AdminPass123!"),
+        is_admin=True
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+@pytest.fixture
+def admin_token(admin_user: models.User):
+    return create_access_token(data={"sub": str(admin_user.id)})
+
+@pytest.fixture
+def admin_client(admin_token: str):
+    client.headers.update({
+        "Authorization": f"Bearer {admin_token}"
+    })
+    return client
