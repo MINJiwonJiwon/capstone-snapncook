@@ -1722,3 +1722,259 @@ Authorization: Bearer <access_token>
 ```
 
 ---
+
+## **admin.py**
+
+> 모든 Admin API는 `Authorization: Bearer <access_token>` 헤더가 필요합니다.  
+> 관리자 권한 (`is_admin=True`) 을 가진 계정만 접근 가능합니다.
+
+---
+
+### 👤 [유저 관리]
+
+#### GET /admin/users
+
+> 📌 모든 유저 목록 조회
+
+**Request**
+
+- 없음 ❌
+
+**Response**
+
+```json
+[
+  {
+    "id": 1,
+    "email": "admin@example.com",
+    "nickname": "관리자",
+    "is_admin": true
+  }
+]
+```
+
+#### PUT /admin/users/{user_id}
+
+> 📌 유저 정보 수정
+
+**Request**
+
+```json
+{
+  "nickname": "변경된닉네임",
+  "is_admin": true
+}
+```
+
+**Response**
+
+```json
+{
+  "id": 1,
+  "nickname": "변경된닉네임",
+  "is_admin": true
+}
+```
+
+#### DELETE /admin/users/{user_id}
+
+> 📌 유저 삭제
+
+**Request**
+
+- 없음 ❌
+
+**Response**
+
+- 204 No Content
+
+---
+
+### 🍽 [음식 관리]
+
+#### GET /admin/foods
+
+> 📌 모든 음식 목록 조회
+
+**Request**
+
+- 없음 ❌
+
+**Response**
+
+```json
+[
+  {
+    "id": 1,
+    "name": "된장찌개",
+    "description": "한국 전통 찌개",
+    "image_url": "https://example.com/img.jpg"
+  }
+]
+```
+
+#### PUT /admin/foods/{food_id}
+
+> 📌 음식 정보 수정
+
+**Request**
+
+```json
+{
+  "name": "수정된 음식 이름",
+  "description": "설명 수정",
+  "image_url": "https://example.com/updated.jpg"
+}
+```
+
+**Response**
+
+```json
+{
+  "id": 1,
+  "name": "수정된 음식 이름",
+  "description": "설명 수정",
+  "image_url": "https://example.com/updated.jpg"
+}
+```
+
+#### DELETE /admin/foods/{food_id}
+
+> 📌 음식 삭제
+
+**Request**
+
+- 없음 ❌
+
+**Response**
+
+- 204 No Content
+
+---
+
+### 📋 [레시피 관리]
+
+#### GET /admin/recipes
+
+> 📌 레시피 목록 조회 (필터: `title`, `food_id`, `source_type`)
+
+**Request**
+
+- 없음 ❌
+
+**Response**
+
+```json
+[
+  {
+    "id": 1,
+    "title": "김치찌개",
+    "ingredients": "김치, 돼지고기",
+    "instructions": "볶고 끓인다.",
+    "food_id": 1,
+    "source_type": "User"
+  }
+]
+```
+
+#### PUT /admin/recipes/{recipe_id}
+
+> 📌 레시피 정보 수정
+
+**Request**
+
+```json
+{
+  "title": "수정된 레시피 이름",
+  "ingredients": "재료 목록",
+  "instructions": "조리법 수정"
+}
+```
+
+**Response**
+
+```json
+{
+  "id": 1,
+  "title": "수정된 레시피 이름",
+  "ingredients": "재료 목록",
+  "instructions": "조리법 수정"
+}
+```
+
+#### DELETE /admin/recipes/{recipe_id}
+
+> 📌 레시피 삭제
+
+**Request**
+
+- 없음 ❌
+
+**Response**
+
+- 204 No Content
+
+---
+
+### 📝 [리뷰 관리]
+
+#### GET /admin/reviews
+
+> 📌 리뷰 목록 조회 (필터: `user_id`, `food_id`, `rating`, `keyword`)
+
+**Request**
+
+- 없음 ❌
+
+**Response**
+
+```json
+[
+  {
+    "id": 1,
+    "user_id": 2,
+    "food_id": 3,
+    "rating": 5,
+    "content": "아주 맛있었어요!"
+  }
+]
+```
+
+#### DELETE /admin/reviews/{review_id}
+
+> 📌 리뷰 삭제
+
+**Request**
+
+- 없음 ❌
+
+**Response**
+
+- 204 No Content
+
+---
+
+### 📊 [로그 관리]
+
+#### GET /admin/logs
+
+> 📌 유저 로그 조회 (필터: `user_id`, `action`, `target_type`, `limit`, `offset`)
+
+**Request**
+
+- 없음 ❌
+
+**Response**
+
+```json
+[
+  {
+    "id": 1,
+    "user_id": 2,
+    "action": "review_create",
+    "target_type": "review",
+    "target_id": 7,
+    "created_at": "2025-05-06T12:00:00Z"
+  }
+]
+```
