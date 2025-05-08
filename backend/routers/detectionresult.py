@@ -21,8 +21,18 @@ router = APIRouter(
 def create_detection_result(
     result: schemas.DetectionResultCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)  # ✅ 여기가 핵심
+    current_user: models.User = Depends(get_current_user) 
 ):
+    food = db.query(models.Food).filter(models.Food.id == result.food_id).first()
+    if not food:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error_code": "FOOD_NOT_FOUND",
+                "message": "해당 음식은 DB에 등록되어 있지 않습니다."
+            }
+        )
+
     result_data = result.model_dump()
     result_data["user_id"] = current_user.id  # ✅ user_id 직접 주입
     return crud.create_detection_result(db=db, result=schemas.DetectionResultCreate(**result_data))
