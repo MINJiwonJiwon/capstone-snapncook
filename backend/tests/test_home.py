@@ -8,7 +8,7 @@ client = TestClient(app)
 
 # 인기 검색어 랭킹 API 테스트
 def test_get_popular_searches():
-    response = client.get("/api/popular-searches?period=day")
+    response = client.get("/api/home/popular-searches")
     assert response.status_code == 200
 
     data = response.json()
@@ -23,7 +23,7 @@ def test_get_popular_searches():
 
 # 오늘의 추천 메뉴 API 테스트
 def test_get_recommended_food():
-    response = client.get("/api/recommended-food")
+    response = client.get("/api/home/recommended-food")
     assert response.status_code == 200
 
     data = response.json()
