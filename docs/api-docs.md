@@ -1642,7 +1642,7 @@ Authorization: Bearer <access_token>
 
 ## **home.py**
 
-### GET /api/popular-searches
+### GET /home/popular-searches
 
 > 📌 인기 검색어 랭킹을 일간 또는 주간 기준으로 제공하며, 순위 변동 추세를 함께 반환합니다.
 >
@@ -1696,7 +1696,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### GET /api/recommended-food
+### GET /home/recommended-food
 
 > 📌 오늘의 추천 메뉴 - 랜덤으로 한식 음식 중 하나를 선택해 이미지, 평점 등과 함께 반환합니다.
 >
