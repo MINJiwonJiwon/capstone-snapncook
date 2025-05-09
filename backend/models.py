@@ -1,5 +1,5 @@
 # backend/models.py
-from sqlalchemy import Column, Integer, String, Text, Float, ForeignKey, DateTime, JSON
+from sqlalchemy import Boolean, Column, Date, Integer, String, Text, Float, ForeignKey, DateTime, JSON, func
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime, timezone
 
@@ -20,11 +20,36 @@ class User(Base, TimestampMixin):
     oauth_id = Column(String, nullable=True)
     nickname = Column(String, nullable=False)
     profile_image_url = Column(String, nullable=True)
+    is_admin = Column(Boolean, default=False)
 
     detection_results = relationship("DetectionResult", back_populates="user")
     reviews = relationship("Review", back_populates="user")
     logs = relationship("UserLog", back_populates="user")
     ingredient_inputs = relationship("UserIngredientInput", back_populates="user")
+    social_accounts = relationship("SocialAccount", back_populates="user")
+    bookmarks = relationship("Bookmark", back_populates="user", cascade="all, delete-orphan")
+
+class SocialAccount(Base):
+    __tablename__ = "social_accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    provider = Column(String, nullable=False)  # 'google', 'kakao', 'naver'
+    oauth_id = Column(String, nullable=False)
+
+    user = relationship("User", back_populates="social_accounts")
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    token = Column(String, nullable=False, unique=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    expires_at = Column(DateTime, nullable=False)
+    revoked = Column(Boolean, default=False)
+
+    user = relationship("User")
 
 class Food(Base, TimestampMixin):
     __tablename__ = "foods"
@@ -52,6 +77,7 @@ class Recipe(Base, TimestampMixin):
     food = relationship("Food", back_populates="recipes")
     steps = relationship("RecipeStep", back_populates="recipe")
     recommended_by_inputs = relationship("UserIngredientInputRecipe", back_populates="recipe")
+    bookmarks = relationship("Bookmark", back_populates="recipe", cascade="all, delete-orphan")
 
 class RecipeStep(Base):
     __tablename__ = "recipe_steps"
@@ -123,3 +149,32 @@ class UserIngredientInputRecipe(Base):
 
     input = relationship("UserIngredientInput", back_populates="recommended_recipes")
     recipe = relationship("Recipe", back_populates="recommended_by_inputs")
+
+class Bookmark(Base):
+    __tablename__ = "bookmarks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="bookmarks")
+    recipe = relationship("Recipe", back_populates="bookmarks")
+    
+    # ✅ 인기 검색 기록 테이블
+class SearchLog(Base, TimestampMixin):
+    __tablename__ = "search_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    keyword = Column(String, nullable=False, index=True)
+
+# ✅ 인기 검색 순위 테이블
+class SearchRanking(Base, TimestampMixin):
+    __tablename__ = "search_rankings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    keyword = Column(String, nullable=False, index=True)
+    rank = Column(Integer, nullable=False)
+    count = Column(Integer, nullable=False)
+    period = Column(String, nullable=False)  # 'day' or 'week'
+    date = Column(Date, nullable=False)  # 기준일자

@@ -1,39 +1,57 @@
 # backend/routers/useringredientinput.py
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from backend import crud, schemas, models
 from backend.db import get_db
+from backend.app.auth.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/user-ingredient-inputs",
     tags=["UserIngredientInput"]
 )
 
+# ✅ 재료 입력 저장 (user_id는 current_user 기준으로 자동 설정)
 @router.post(
     "/",
     response_model=schemas.UserIngredientInputOut,
     summary="재료 입력 저장",
-    description="사용자가 입력한 재료 목록을 저장합니다."
+    description="로그인한 사용자가 입력한 재료 목록을 저장합니다."
 )
 def create_user_ingredient_input(
     input_data: schemas.UserIngredientInputCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
-    return crud.create_user_ingredient_input(db=db, input_data=input_data)
+    # ✅ user_id를 수동으로 할당한 ORM 객체를 생성해서 넘김
+    new_input = models.UserIngredientInput(
+        user_id=current_user.id,
+        input_text=input_data.input_text,
+        matched_food_ids=input_data.matched_food_ids
+    )
+    return crud.create_user_ingredient_input(db=db, input_obj=new_input)
 
+
+
+# ✅ 재료 입력 단건 조회 (내 것만 조회 가능)
 @router.get(
     "/{input_id}",
     response_model=schemas.UserIngredientInputOut,
     summary="재료 입력 조회",
-    description="재료 입력 ID를 기준으로 재료 입력 정보를 조회합니다."
+    description="로그인한 사용자의 입력 ID 기준으로 재료 입력 정보를 조회합니다."
 )
-def get_user_ingredient_input(input_id: int, db: Session = Depends(get_db)):
+def get_user_ingredient_input(
+    input_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
     input_record = db.query(models.UserIngredientInput).filter(
-        models.UserIngredientInput.id == input_id
+        models.UserIngredientInput.id == input_id,
+        models.UserIngredientInput.user_id == current_user.id
     ).first()
 
     if input_record is None:
-        raise HTTPException(status_code=404, detail="Ingredient input not found")
+        raise HTTPException(status_code=404, detail="Ingredient input not found or access denied")
 
     return input_record

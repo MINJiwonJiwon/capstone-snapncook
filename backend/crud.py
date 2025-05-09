@@ -1,11 +1,14 @@
 # backend/crud.py
+
+from datetime import date
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from typing import Optional
 from backend import models, schemas
 
 # ---------- User ----------
-def create_user(db: Session, user: schemas.UserCreate) -> models.User:
-    db_user = models.User(**user.model_dump())
+def create_user(db: Session, user: schemas.UserCreateWithPassword) -> models.User:
+    db_user = models.User(**user.model_dump(exclude={"password"}))
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -13,6 +16,17 @@ def create_user(db: Session, user: schemas.UserCreate) -> models.User:
 
 def get_user(db: Session, user_id: int) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.id == user_id).first()
+
+def get_user_by_oauth(db: Session, provider: str, oauth_id: str):
+    return (
+        db.query(models.User)
+        .join(models.SocialAccount)
+        .filter(
+            models.SocialAccount.provider == provider,
+            models.SocialAccount.oauth_id == oauth_id
+        )
+        .first()
+    )
 
 # ---------- Food ----------
 def create_food(db: Session, food: schemas.FoodCreate) -> models.Food:
@@ -63,12 +77,11 @@ def create_user_log(db: Session, log: schemas.UserLogCreate) -> models.UserLog:
     return db_log
 
 # ---------- UserIngredientInput ----------
-def create_user_ingredient_input(db: Session, input_data: schemas.UserIngredientInputCreate) -> models.UserIngredientInput:
-    db_input = models.UserIngredientInput(**input_data.model_dump())
-    db.add(db_input)
+def create_user_ingredient_input(db: Session, input_obj: models.UserIngredientInput) -> models.UserIngredientInput:
+    db.add(input_obj)
     db.commit()
-    db.refresh(db_input)
-    return db_input
+    db.refresh(input_obj)
+    return input_obj
 
 # ---------- UserIngredientInputRecipe ----------
 def create_user_ingredient_input_recipe(db: Session, item: schemas.UserIngredientInputRecipeCreate) -> models.UserIngredientInputRecipe:
@@ -77,3 +90,32 @@ def create_user_ingredient_input_recipe(db: Session, item: schemas.UserIngredien
     db.commit()
     db.refresh(db_item)
     return db_item
+
+# ---------- Home ----------
+
+def get_search_rankings(db: Session, period: str, on_date: date, limit: int = 3):
+    return (
+        db.query(models.SearchRanking)
+        .filter(models.SearchRanking.period == period, models.SearchRanking.date == on_date)
+        .order_by(models.SearchRanking.rank.asc())
+        .limit(limit)
+        .all()
+    )
+
+
+def get_previous_rankings_dict(db: Session, period: str, on_date: date) -> dict:
+    previous = (
+        db.query(models.SearchRanking)
+        .filter(models.SearchRanking.period == period, models.SearchRanking.date == on_date)
+        .all()
+    )
+    return {r.keyword: r.rank for r in previous}
+
+
+def get_random_food(db: Session):
+    return db.query(models.Food).order_by(func.random()).first()
+
+
+def get_average_rating_for_food(db: Session, food_id: int):
+    avg = db.query(func.avg(models.Review.rating)).filter(models.Review.food_id == food_id).scalar()
+    return round(avg or 0, 2)
