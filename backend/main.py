@@ -27,19 +27,19 @@ def read_root(db: Session = Depends(get_db)):
     return {"message": "DB 연결 테스트 성공!"}
 
 # 라우터 등록
-app.include_router(user.router)  # user 라우터 등록
-app.include_router(food.router)  # food 라우터 등록
-app.include_router(recipe.router)  # recipe 라우터 등록
-app.include_router(recipestep.router)  # recipestep 라우터 등록
-app.include_router(detectionresult.router)  # detectionresult 라우터 등록
-app.include_router(review.router)  # review 라우터 등록
-app.include_router(userlog.router)  # userlog 라우터 등록
-app.include_router(useringredientinput.router)  # useringredientinput 라우터 등록
-app.include_router(useringredientinputrecipe.router)  # useringredientinputrecipe 라우터 등록
-app.include_router(auth.router)  # auth 라우터 등록
-app.include_router(oauth.router)  # oauth 라우터 등록
-app.include_router(recommend.router)  # recommend 라우터 등록
-app.include_router(bookmark.router)  # bookmark 라우터 등록
-app.include_router(mypage.router)  # mypage 라우터 등록
-app.include_router(home.router)  # home 라우터 등록
-app.include_router(admin.router)  # admin 라우터 등록
+app.include_router(user.router, prefix="/api")
+app.include_router(food.router, prefix="/api")
+app.include_router(recipe.router, prefix="/api")
+app.include_router(recipestep.router, prefix="/api")
+app.include_router(detectionresult.router, prefix="/api")
+app.include_router(review.router, prefix="/api")
+app.include_router(userlog.router, prefix="/api")
+app.include_router(useringredientinput.router, prefix="/api")
+app.include_router(useringredientinputrecipe.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
+app.include_router(oauth.router, prefix="/api")
+app.include_router(recommend.router, prefix="/api")
+app.include_router(bookmark.router, prefix="/api")
+app.include_router(mypage.router, prefix="/api")
+app.include_router(home.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
