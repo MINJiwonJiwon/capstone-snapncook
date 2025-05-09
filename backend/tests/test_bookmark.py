@@ -13,21 +13,21 @@ def test_bookmark_flow(auth_client, db_session, test_user):
     recipe_id = create_recipe_helper(db_session, food_id)
 
     # 2. 북마크 추가
-    response = auth_client.post("/bookmarks/", json={"recipe_id": recipe_id})
+    response = auth_client.post("/api/bookmarks/", json={"recipe_id": recipe_id})
     assert response.status_code == 200
     bookmark_id = response.json()["id"]
 
     # 3. 내 북마크 목록 조회
-    response = auth_client.get("/bookmarks/me")
+    response = auth_client.get("/api/bookmarks/me")
     assert response.status_code == 200
     assert any(bm["id"] == bookmark_id for bm in response.json())
 
     # 4. 북마크 삭제
-    response = auth_client.delete(f"/bookmarks/{bookmark_id}")
+    response = auth_client.delete(f"/api/bookmarks/{bookmark_id}")
     assert response.status_code == 204
 
     # 5. 삭제 후 북마크 목록 조회
-    response = auth_client.get("/bookmarks/me")
+    response = auth_client.get("/api/bookmarks/me")
     assert response.status_code == 200
     assert all(bm["id"] != bookmark_id for bm in response.json())
 
@@ -38,10 +38,10 @@ def test_duplicate_bookmark(auth_client, db_session, test_user):
     recipe_id = create_recipe_helper(db_session, food_id=food_id)
 
     # 2. 첫 북마크: 성공
-    response = auth_client.post("/bookmarks/", json={"recipe_id": recipe_id})
+    response = auth_client.post("/api/bookmarks/", json={"recipe_id": recipe_id})
     assert response.status_code == 200
 
     # 3. 중복 북마크: 실패
-    response = auth_client.post("/bookmarks/", json={"recipe_id": recipe_id})
+    response = auth_client.post("/api/bookmarks/", json={"recipe_id": recipe_id})
     assert response.status_code == 400
     assert response.json()["detail"] == "Already bookmarked this recipe."

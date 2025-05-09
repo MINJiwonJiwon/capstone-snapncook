@@ -12,7 +12,7 @@ def test_create_detection_result(auth_client, db_session, test_user):
         "image_path": "/path/to/image.jpg",
         "confidence": 0.95
     }
-    response = auth_client.post("/detection-results/", json=detection_data)
+    response = auth_client.post("/api/detection-results/", json=detection_data)
     assert response.status_code == 200
     assert response.json()["confidence"] == detection_data["confidence"]
 
@@ -25,11 +25,11 @@ def test_get_detection_results(auth_client, db_session, test_user):
         "image_path": "/path/to/image2.jpg",
         "confidence": 0.85
     }
-    create_response = auth_client.post("/detection-results/", json=detection_data)
+    create_response = auth_client.post("/api/detection-results/", json=detection_data)
     assert create_response.status_code == 200
 
     # /me 경로로 조회
-    response = auth_client.get("/detection-results/me")
+    response = auth_client.get("/api/detection-results/me")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
     assert any(det["confidence"] == 0.85 for det in response.json())
@@ -42,7 +42,7 @@ def test_create_detection_result_with_invalid_food_id(auth_client):
         "confidence": 0.95
     }
 
-    response = auth_client.post("/detection-results/", json=invalid_detection)
+    response = auth_client.post("/api/detection-results/", json=invalid_detection)
 
     assert response.status_code == 400
     assert response.json()["detail"]["error_code"] == "FOOD_NOT_FOUND"

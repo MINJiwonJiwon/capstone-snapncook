@@ -14,7 +14,7 @@ def test_recommend_by_detection(auth_client, db_session, test_user):
     ))
     db_session.commit()
 
-    response = auth_client.get("/recommend/private/by-detection")
+    response = auth_client.get("/api/recommend/private/by-detection")
     assert response.status_code in [200, 404]
 
 def test_recommend_by_ingredient(auth_client, db_session, test_user):
@@ -26,5 +26,5 @@ def test_recommend_by_ingredient(auth_client, db_session, test_user):
     ))
     db_session.commit()
 
-    response = auth_client.get("/recommend/private/by-ingredient")
+    response = auth_client.get("/api/recommend/private/by-ingredient")
     assert response.status_code in [200, 400, 404]

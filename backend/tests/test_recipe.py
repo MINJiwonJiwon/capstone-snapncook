@@ -27,7 +27,7 @@ def test_create_recipe(auth_client, db_session, test_user):
         "ingredients": "김치, 돼지고기, 두부, 고춧가루",
         "instructions": "김치를 볶고 돼지고기와 두부를 넣고 끓인다.",
     }
-    response = auth_client.post("/recipes/", json=recipe_data)
+    response = auth_client.post("/api/recipes/", json=recipe_data)
     assert response.status_code == 200
     assert response.json()["title"] == recipe_data["title"]
 
@@ -44,11 +44,11 @@ def test_get_recipe_by_id(db_session: Session):
         "instructions": "소고기를 양념하여 구운 후 양파와 함께 볶는다.",
     }
 
-    create_response = client.post("/recipes/", json=recipe_data)
+    create_response = client.post("/api/recipes/", json=recipe_data)
     assert create_response.status_code == 200
     recipe_id = create_response.json()["id"]
 
-    response = client.get(f"/recipes/{recipe_id}")
+    response = client.get(f"/api/recipes/{recipe_id}")
     assert response.status_code == 200
     assert response.json()["id"] == recipe_id
     assert response.json()["title"] == recipe_data["title"]
@@ -66,10 +66,10 @@ def test_get_recipes_by_food_id(db_session: Session):
         "instructions": "된장을 풀고 감자와 애호박을 넣고 끓인다.",
     }
 
-    create_response = client.post("/recipes/", json=recipe_data)
+    create_response = client.post("/api/recipes/", json=recipe_data)
     assert create_response.status_code == 200
 
-    response = client.get(f"/recipes/food/{food_id}")
+    response = client.get(f"/api/recipes/food/{food_id}")
     assert response.status_code == 200
     recipes = response.json()
     assert isinstance(recipes, list)

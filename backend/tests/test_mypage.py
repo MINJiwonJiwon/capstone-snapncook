@@ -10,7 +10,7 @@ def test_mypage_summary(auth_client, db_session, test_user):
     recipe_id = create_recipe_helper(db_session, food_id=food_id)
 
     # 북마크 등록
-    response = auth_client.post("/bookmarks/", json={"recipe_id": recipe_id})
+    response = auth_client.post("/api/bookmarks/", json={"recipe_id": recipe_id})
     assert response.status_code == 200
 
     # 탐지 결과 등록
@@ -19,7 +19,7 @@ def test_mypage_summary(auth_client, db_session, test_user):
         "image_path": "path/to/image.jpg",
         "confidence": 0.88
     }
-    response = auth_client.post("/detection-results/", json=detection_data)
+    response = auth_client.post("/api/detection-results/", json=detection_data)
     assert response.status_code == 200
 
     # 리뷰 작성
@@ -28,11 +28,11 @@ def test_mypage_summary(auth_client, db_session, test_user):
         "content": "맛있어요!",
         "rating": 5
     }
-    response = auth_client.post("/reviews/", json=review_data)
+    response = auth_client.post("/api/reviews/", json=review_data)
     assert response.status_code == 200
 
     # 마이페이지 요약 호출
-    response = auth_client.get("/mypage/summary")
+    response = auth_client.get("/api/mypage/summary")
     assert response.status_code == 200
 
     data = response.json()

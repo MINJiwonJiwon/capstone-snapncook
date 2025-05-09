@@ -20,7 +20,7 @@ def test_create_user_ingredient_input_recipe(authenticated_headers, db_session: 
     input_data = {
         "input_text": "김치, 돼지고기, 마늘"
     }
-    input_response = client.post("/user-ingredient-inputs/", json=input_data, headers=authenticated_headers)
+    input_response = client.post("/api/user-ingredient-inputs/", json=input_data, headers=authenticated_headers)
     assert input_response.status_code in [200, 201], f"input 생성 실패: {input_response.status_code}"
     input_id = input_response.json()["id"]
 
@@ -35,6 +35,6 @@ def test_create_user_ingredient_input_recipe(authenticated_headers, db_session: 
         "recipe_id": recipe_id,
         "rank": 1
     }
-    response = client.post("/user-ingredient-input-recipes/", json=input_recipe_data, headers=authenticated_headers)
+    response = client.post("/api/user-ingredient-input-recipes/", json=input_recipe_data, headers=authenticated_headers)
     assert response.status_code == 200
     assert response.json()["rank"] == 1

@@ -57,10 +57,10 @@ def authenticated_headers():
     password = "TestPassword123!"
     signup_data = {"email": email, "password": password, "nickname": "임시유저"}
     
-    res = client.post("/auth/signup", json=signup_data)
+    res = client.post("/api/auth/signup", json=signup_data)
     assert res.status_code in [200, 201]
 
-    login_res = client.post("/auth/login", json={"email": email, "password": password})
+    login_res = client.post("/api/auth/login", json={"email": email, "password": password})
     assert login_res.status_code == 200
     token = login_res.json()["access_token"]
 

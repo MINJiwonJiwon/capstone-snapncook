@@ -11,7 +11,7 @@ def test_create_food():
         "name": "김치찌개",
         "description": "얼큰한 국물요리"
     }
-    response = client.post("/foods/", json=food_data)
+    response = client.post("/api/foods/", json=food_data)
     assert response.status_code == 200
     assert response.json()["name"] == food_data["name"]
     assert response.json()["description"] == food_data["description"]
@@ -26,11 +26,11 @@ def test_get_food_by_id():
         "name": "된장찌개",
         "description": "구수한 된장 국물"
     }
-    create_response = client.post("/foods/", json=food_data)
+    create_response = client.post("/api/foods/", json=food_data)
     food_id = create_response.json()["id"]
 
     # 등록된 음식 조회
-    get_response = client.get(f"/foods/{food_id}")
+    get_response = client.get(f"/api/foods/{food_id}")
     assert get_response.status_code == 200
     assert get_response.json()["id"] == food_id
     assert get_response.json()["name"] == food_data["name"]

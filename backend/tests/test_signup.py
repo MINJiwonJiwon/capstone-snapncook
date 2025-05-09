@@ -22,7 +22,7 @@ def test_signup_user():
         "password": "Password123!", 
         "nickname": "테스트유저"
     }
-    response = client.post("/auth/signup", json=user_data)
+    response = client.post("/api/auth/signup", json=user_data)
     assert response.status_code in [200, 201], f"Expected 200 or 201, got {response.status_code}"
     assert response.json()["email"] == user_data["email"], "Email doesn't match"
     assert response.json()["nickname"] == user_data["nickname"], "Nickname doesn't match"
@@ -34,9 +34,9 @@ def test_signup_duplicate_user():
     "nickname": "중복유저"
     }
     # 첫 번째 회원가입
-    res1 = client.post("/auth/signup", json=user_data)
+    res1 = client.post("/api/auth/signup", json=user_data)
     assert res1.status_code in [200, 201], f"First signup failed: {res1.status_code}"
     
     # 두 번째 회원가입 시도 (중복 이메일)
-    response = client.post("/auth/signup", json=user_data)
+    response = client.post("/api/auth/signup", json=user_data)
     assert response.status_code == 400, "Expected 400 for duplicate email"
