@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from backend.db import SessionLocal, get_db 
 from backend.routers import admin, home, mypage, user, food, recipe, recipestep, detectionresult, review, userlog, useringredientinput, useringredientinputrecipe, recommend, bookmark
@@ -17,6 +18,15 @@ async def lifespan(app: FastAPI):
 
 # ✅ FastAPI 앱 생성 시 lifespan 지정
 app = FastAPI(lifespan=lifespan)
+
+# CORS 설정 추가
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 실제 배포 환경에서는 ["http://localhost:3000", "https://yourdomain.com"] 같이 제한하는 게 안전
+    allow_credentials=True,
+    allow_methods=["*"],  # "OPTIONS", "POST", "GET", "PUT", "DELETE", ...
+    allow_headers=["*"],
+)
 
 # ✅ 미들웨어 추가
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY", "super-secret"))
