@@ -5,6 +5,7 @@ from backend import models, schemas, crud
 from backend.db import get_db
 
 router = APIRouter(
+    prefix="/home",
     tags=["Home"]
 )
 
