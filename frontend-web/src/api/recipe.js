@@ -1,4 +1,4 @@
-import apiClient from './client';
+import client from './client';
 import { RECIPE, RECIPE_STEP } from './endpoints';
 
 /**
@@ -14,7 +14,7 @@ import { RECIPE, RECIPE_STEP } from './endpoints';
  */
 export const createRecipe = async (recipeData) => {
   try {
-    const response = await apiClient.post(RECIPE.CREATE, recipeData);
+    const response = await client.post(RECIPE.CREATE, recipeData);
     return response.data;
   } catch (error) {
     console.error('Recipe creation error:', error);
@@ -28,7 +28,7 @@ export const createRecipe = async (recipeData) => {
  */
 export const getAllRecipes = async () => {
   try {
-    const response = await apiClient.get(RECIPE.LIST);
+    const response = await client.get(RECIPE.LIST);
     return response.data;
   } catch (error) {
     console.error('Get all recipes error:', error);
@@ -43,7 +43,7 @@ export const getAllRecipes = async () => {
  */
 export const getRecipeById = async (recipeId) => {
   try {
-    const response = await apiClient.get(RECIPE.GET(recipeId));
+    const response = await client.get(RECIPE.GET(recipeId));
     return response.data;
   } catch (error) {
     console.error(`Get recipe by ID ${recipeId} error:`, error);
@@ -58,7 +58,7 @@ export const getRecipeById = async (recipeId) => {
  */
 export const getRecipesByFoodId = async (foodId) => {
   try {
-    const response = await apiClient.get(RECIPE.GET_BY_FOOD(foodId));
+    const response = await client.get(RECIPE.GET_BY_FOOD(foodId));
     return response.data;
   } catch (error) {
     console.error(`Get recipes by food ID ${foodId} error:`, error);
@@ -73,7 +73,7 @@ export const getRecipesByFoodId = async (foodId) => {
  */
 export const getRecipeDetail = async (recipeId) => {
   try {
-    const response = await apiClient.get(RECIPE.GET_DETAIL(recipeId));
+    const response = await client.get(RECIPE.GET_DETAIL(recipeId));
     return response.data;
   } catch (error) {
     console.error(`Get recipe detail by ID ${recipeId} error:`, error);
@@ -94,7 +94,7 @@ export const getRecipeDetail = async (recipeId) => {
  */
 export const createRecipeStep = async (stepData) => {
   try {
-    const response = await apiClient.post(RECIPE_STEP.CREATE, stepData);
+    const response = await client.post(RECIPE_STEP.CREATE, stepData);
     return response.data;
   } catch (error) {
     console.error('Recipe step creation error:', error);
@@ -109,7 +109,7 @@ export const createRecipeStep = async (stepData) => {
  */
 export const getRecipeStepsByRecipeId = async (recipeId) => {
   try {
-    const response = await apiClient.get(RECIPE_STEP.LIST_BY_RECIPE(recipeId));
+    const response = await client.get(RECIPE_STEP.LIST_BY_RECIPE(recipeId));
     return response.data;
   } catch (error) {
     console.error(`Get recipe steps by recipe ID ${recipeId} error:`, error);

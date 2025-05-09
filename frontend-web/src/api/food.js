@@ -1,4 +1,4 @@
-import apiClient from './client';
+import client from './client';
 import { FOOD } from './endpoints';
 
 /**
@@ -11,7 +11,7 @@ import { FOOD } from './endpoints';
  */
 export const createFood = async (foodData) => {
   try {
-    const response = await apiClient.post(FOOD.CREATE, foodData);
+    const response = await client.post(FOOD.CREATE, foodData);
     return response.data;
   } catch (error) {
     console.error('Food creation error:', error);
@@ -25,7 +25,7 @@ export const createFood = async (foodData) => {
  */
 export const getAllFoods = async () => {
   try {
-    const response = await apiClient.get(FOOD.LIST);
+    const response = await client.get(FOOD.LIST);
     return response.data;
   } catch (error) {
     console.error('Get all foods error:', error);
@@ -40,7 +40,7 @@ export const getAllFoods = async () => {
  */
 export const getFoodById = async (foodId) => {
   try {
-    const response = await apiClient.get(FOOD.GET(foodId));
+    const response = await client.get(FOOD.GET(foodId));
     return response.data;
   } catch (error) {
     console.error(`Get food by ID ${foodId} error:`, error);

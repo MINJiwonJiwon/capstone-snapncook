@@ -1,4 +1,4 @@
-import apiClient from './client';
+import client from './client';
 import { AUTH } from './endpoints';
 
 /**
@@ -12,7 +12,7 @@ import { AUTH } from './endpoints';
  */
 export const signup = async (userData) => {
   try {
-    const response = await apiClient.post(AUTH.SIGNUP, userData);
+    const response = await client.post(AUTH.SIGNUP, userData);
     return response.data;
   } catch (error) {
     console.error('Signup error:', error);
@@ -29,12 +29,18 @@ export const signup = async (userData) => {
  */
 export const login = async (credentials) => {
   try {
-    const response = await apiClient.post(AUTH.LOGIN, credentials);
+    const response = await client.post(AUTH.LOGIN, credentials);
     
     // 로그인 성공 시 토큰 저장
-    const { access_token, token_type } = response.data;
+    const { access_token, refresh_token, token_type } = response.data;
     
     localStorage.setItem('access_token', access_token);
+    
+    // 리프레시 토큰이 있으면 저장
+    if (refresh_token) {
+      localStorage.setItem('refresh_token', refresh_token);
+    }
+    
     localStorage.setItem('isLoggedIn', 'true');
     
     return response.data;
@@ -51,7 +57,7 @@ export const login = async (credentials) => {
  */
 export const refreshToken = async (refreshToken) => {
   try {
-    const response = await apiClient.post(AUTH.REFRESH, { refresh_token: refreshToken });
+    const response = await client.post(AUTH.REFRESH, { refresh_token: refreshToken });
     
     // 토큰 갱신 성공 시 저장
     const { access_token } = response.data;
@@ -71,7 +77,7 @@ export const refreshToken = async (refreshToken) => {
  */
 export const logout = async (refreshToken) => {
   try {
-    const response = await apiClient.post(AUTH.LOGOUT, { refresh_token: refreshToken });
+    const response = await client.post(AUTH.LOGOUT, { refresh_token: refreshToken });
     
     // 로그아웃 시 로컬 스토리지 정리
     localStorage.removeItem('access_token');
@@ -82,6 +88,8 @@ export const logout = async (refreshToken) => {
     // 이미지 히스토리 초기화
     localStorage.removeItem('imageHistory');
     sessionStorage.removeItem('currentImage');
+    sessionStorage.removeItem('selectedFood');
+    sessionStorage.removeItem('selectedFoodId');
     
     return response.data;
   } catch (error) {
@@ -94,6 +102,8 @@ export const logout = async (refreshToken) => {
     localStorage.removeItem('username');
     localStorage.removeItem('imageHistory');
     sessionStorage.removeItem('currentImage');
+    sessionStorage.removeItem('selectedFood');
+    sessionStorage.removeItem('selectedFoodId');
     
     throw error;
   }
@@ -105,12 +115,15 @@ export const logout = async (refreshToken) => {
  */
 export const getMyInfo = async () => {
   try {
-    const response = await apiClient.get(AUTH.ME);
+    const response = await client.get(AUTH.ME);
     
     // 사용자 정보 저장
     if (response.data.nickname) {
       localStorage.setItem('username', response.data.nickname);
     }
+    
+    // 사용자 정보 객체 저장
+    localStorage.setItem('user', JSON.stringify(response.data));
     
     return response.data;
   } catch (error) {

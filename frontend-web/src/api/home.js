@@ -1,4 +1,4 @@
-import apiClient from './client';
+import client from './client';
 import { HOME } from './endpoints';
 
 /**
@@ -8,7 +8,7 @@ import { HOME } from './endpoints';
  */
 export const getPopularSearches = async (period = 'day') => {
   try {
-    const response = await apiClient.get(`${HOME.POPULAR_SEARCHES}?period=${period}`);
+    const response = await client.get(`${HOME.POPULAR_SEARCHES}?period=${period}`);
     return response.data;
   } catch (error) {
     console.error(`Get popular searches (${period}) error:`, error);
@@ -22,7 +22,7 @@ export const getPopularSearches = async (period = 'day') => {
  */
 export const getRecommendedFood = async () => {
   try {
-    const response = await apiClient.get(HOME.RECOMMENDED_FOOD);
+    const response = await client.get(HOME.RECOMMENDED_FOOD);
     return response.data;
   } catch (error) {
     console.error('Get recommended food error:', error);

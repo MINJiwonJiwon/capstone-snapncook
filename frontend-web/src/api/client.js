@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { BASE_URL } from './endpoints';
+import { refreshToken } from './auth';
 
 // API 클라이언트 인스턴스 생성
-const apiClient = axios.create({
+const client = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
@@ -11,7 +12,7 @@ const apiClient = axios.create({
 });
 
 // 요청 인터셉터 설정
-apiClient.interceptors.request.use(
+client.interceptors.request.use(
   (config) => {
     // 로컬 스토리지에서 토큰 가져오기
     const token = localStorage.getItem('access_token');
@@ -29,7 +30,7 @@ apiClient.interceptors.request.use(
 );
 
 // 응답 인터셉터 설정
-apiClient.interceptors.response.use(
+client.interceptors.response.use(
   (response) => {
     return response;
   },
@@ -42,16 +43,14 @@ apiClient.interceptors.response.use(
       
       try {
         // 리프레시 토큰 가져오기
-        const refreshToken = localStorage.getItem('refresh_token');
+        const refreshTokenValue = localStorage.getItem('refresh_token');
         
-        if (refreshToken) {
-          // 토큰 갱신 요청
-          const response = await axios.post(`${BASE_URL}/auth/refresh`, {
-            refresh_token: refreshToken
-          });
+        if (refreshTokenValue) {
+          // 토큰 갱신 API 호출
+          const response = await refreshToken(refreshTokenValue);
           
           // 새 토큰 저장
-          const { access_token, refresh_token } = response.data;
+          const { access_token, refresh_token } = response;
           localStorage.setItem('access_token', access_token);
           
           // 리프레시 토큰이 있다면 함께 저장
@@ -82,4 +81,4 @@ apiClient.interceptors.response.use(
   }
 );
 
-export default apiClient;
+export default client;

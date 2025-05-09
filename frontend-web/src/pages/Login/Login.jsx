@@ -9,11 +9,11 @@ const Login = () => {
   const { isLoggedIn, login, signup, loading, error } = useAuth();
   
   const [activeTab, setActiveTab] = useState('login');
-  const [loginId, setLoginId] = useState('');
+  const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const [signupId, setSignupId] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
+  const [signupNickname, setSignupNickname] = useState('');
   const [formError, setFormError] = useState('');
   
   // 이미 로그인된 경우 홈으로 리다이렉트
@@ -32,24 +32,12 @@ const Login = () => {
     e.preventDefault();
     setFormError('');
     
-    // 임시 계정 확인 (admin/1234)
-    if (loginId === 'admin' && loginPassword === '1234') {
-      // 로그인 성공 처리
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('username', loginId);
-      localStorage.setItem('user', JSON.stringify({
-        id: 1,
-        nickname: 'admin',
-        email: 'admin@example.com'
-      }));
-      localStorage.setItem('access_token', 'dummy_token'); // 더미 토큰
-      alert('로그인 성공!');
-      navigate('/');
-      return;
-    }
-    
     try {
-      await login({ username: loginId, password: loginPassword });
+      // API 명세서에 따라 이메일과 비밀번호로 로그인 시도
+      await login({ 
+        email: loginEmail, 
+        password: loginPassword 
+      });
       navigate('/');
     } catch (err) {
       setFormError(err.response?.data?.detail || '로그인에 실패했습니다.');
@@ -61,10 +49,11 @@ const Login = () => {
     setFormError('');
     
     try {
+      // API 명세서에 따라 회원가입 데이터 형식 맞춤
       await signup({ 
-        username: signupId,
-        password: signupPassword, 
         email: signupEmail,
+        password: signupPassword, 
+        nickname: signupNickname,
         profile_image_url: null
       });
       
@@ -72,8 +61,8 @@ const Login = () => {
       setActiveTab('login');
       alert('회원가입이 완료되었습니다. 로그인해주세요.');
       
-      // 로그인 필드에 아이디 자동 입력
-      setLoginId(signupId);
+      // 로그인 필드에 이메일 자동 입력
+      setLoginEmail(signupEmail);
     } catch (err) {
       setFormError(err.response?.data?.detail || '회원가입에 실패했습니다.');
     }
@@ -152,13 +141,13 @@ const Login = () => {
             <h2>로그인</h2>
             <form onSubmit={handleLoginSubmit}>
               <div className={styles.formGroup}>
-                <label htmlFor="login-id">아이디</label>
+                <label htmlFor="login-email">이메일</label>
                 <input 
-                  type="text" 
-                  id="login-id" 
-                  name="id" 
-                  value={loginId}
-                  onChange={(e) => setLoginId(e.target.value)}
+                  type="email" 
+                  id="login-email" 
+                  name="email" 
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
                   required 
                   disabled={loading}
                 />
@@ -216,18 +205,6 @@ const Login = () => {
             <h2>회원가입</h2>
             <form onSubmit={handleSignupSubmit}>
               <div className={styles.formGroup}>
-                <label htmlFor="signup-id">아이디</label>
-                <input 
-                  type="text" 
-                  id="signup-id" 
-                  name="id" 
-                  value={signupId}
-                  onChange={(e) => setSignupId(e.target.value)}
-                  required 
-                  disabled={loading}
-                />
-              </div>
-              <div className={styles.formGroup}>
                 <label htmlFor="signup-email">이메일</label>
                 <input 
                   type="email" 
@@ -235,6 +212,18 @@ const Login = () => {
                   name="email" 
                   value={signupEmail}
                   onChange={(e) => setSignupEmail(e.target.value)}
+                  required 
+                  disabled={loading}
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label htmlFor="signup-nickname">닉네임</label>
+                <input 
+                  type="text" 
+                  id="signup-nickname" 
+                  name="nickname" 
+                  value={signupNickname}
+                  onChange={(e) => setSignupNickname(e.target.value)}
                   required 
                   disabled={loading}
                 />

@@ -1,4 +1,4 @@
-import apiClient from './client';
+import client from './client';
 import { DETECTION } from './endpoints';
 
 /**
@@ -11,7 +11,7 @@ import { DETECTION } from './endpoints';
  */
 export const saveDetectionResult = async (detectionData) => {
   try {
-    const response = await apiClient.post(DETECTION.CREATE, detectionData);
+    const response = await client.post(DETECTION.CREATE, detectionData);
     return response.data;
   } catch (error) {
     console.error('Save detection result error:', error);
@@ -25,7 +25,7 @@ export const saveDetectionResult = async (detectionData) => {
  */
 export const getMyDetectionResults = async () => {
   try {
-    const response = await apiClient.get(DETECTION.LIST_ME);
+    const response = await client.get(DETECTION.LIST_ME);
     return response.data;
   } catch (error) {
     console.error('Get my detection results error:', error);

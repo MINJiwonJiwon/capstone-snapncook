@@ -1,4 +1,4 @@
-import apiClient from './client';
+import client from './client';
 import { BOOKMARK } from './endpoints';
 
 /**
@@ -9,7 +9,7 @@ import { BOOKMARK } from './endpoints';
  */
 export const createBookmark = async (bookmarkData) => {
   try {
-    const response = await apiClient.post(BOOKMARK.CREATE, bookmarkData);
+    const response = await client.post(BOOKMARK.CREATE, bookmarkData);
     return response.data;
   } catch (error) {
     console.error('Create bookmark error:', error);
@@ -23,7 +23,7 @@ export const createBookmark = async (bookmarkData) => {
  */
 export const getMyBookmarks = async () => {
   try {
-    const response = await apiClient.get(BOOKMARK.LIST_ME);
+    const response = await client.get(BOOKMARK.LIST_ME);
     return response.data;
   } catch (error) {
     console.error('Get my bookmarks error:', error);
@@ -38,7 +38,7 @@ export const getMyBookmarks = async () => {
  */
 export const deleteBookmark = async (bookmarkId) => {
   try {
-    const response = await apiClient.delete(BOOKMARK.DELETE(bookmarkId));
+    const response = await client.delete(BOOKMARK.DELETE(bookmarkId));
     return response.data;
   } catch (error) {
     console.error(`Delete bookmark ${bookmarkId} error:`, error);

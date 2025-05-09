@@ -1,19 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './RankingRecommendation.module.css';
-import useHome from '../../hooks/useHome';
+import { getPopularSearches, getRecommendedFood } from '../../api/home';
 
 const RankingRecommendation = () => {
   const navigate = useNavigate();
-  const { 
-    popularSearches, 
-    recommendedFood, 
-    searchPeriod, 
-    loading, 
-    handlePeriodChange 
-  } = useHome();
+  const [popularSearches, setPopularSearches] = useState([]);
+  const [recommendedFood, setRecommendedFood] = useState(null);
+  const [searchPeriod, setSearchPeriod] = useState('day');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
-  const [activeTab, setActiveTab] = useState('day');
+  // 컴포넌트 마운트 시 데이터 로드
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        await Promise.all([
+          fetchPopularSearches(searchPeriod),
+          fetchRecommendedFood()
+        ]);
+        
+        setLoading(false);
+      } catch (err) {
+        setError('데이터를 불러오는 중 오류가 발생했습니다.');
+        setLoading(false);
+        console.error('Data loading error:', err);
+      }
+    };
+    
+    loadData();
+  }, []);
+  
+  // 인기 검색어 가져오기
+  const fetchPopularSearches = async (period) => {
+    try {
+      const response = await getPopularSearches(period);
+      setPopularSearches(response.rankings || []);
+      setSearchPeriod(response.period || period);
+    } catch (err) {
+      console.error('Fetch popular searches error:', err);
+      throw err;
+    }
+  };
+  
+  // 추천 메뉴 가져오기
+  const fetchRecommendedFood = async () => {
+    try {
+      const response = await getRecommendedFood();
+      setRecommendedFood(response.food || null);
+    } catch (err) {
+      console.error('Fetch recommended food error:', err);
+      throw err;
+    }
+  };
+  
+  // 탭 변경 핸들러
+  const handlePeriodChange = async (period) => {
+    if (period !== searchPeriod) {
+      setSearchPeriod(period);
+      setLoading(true);
+      
+      try {
+        await fetchPopularSearches(period);
+        setLoading(false);
+      } catch (err) {
+        setError('인기 검색어를 불러오는 중 오류가 발생했습니다.');
+        setLoading(false);
+      }
+    }
+  };
   
   // 로딩 중이거나 데이터가 없을 때 표시할 스켈레톤 UI
   const renderSkeleton = () => (
@@ -40,17 +98,14 @@ const RankingRecommendation = () => {
     }
   };
 
-  const handleFoodClick = (foodName) => {
-    // 음식 이름을 세션 스토리지에 저장
+  const handleFoodClick = (foodName, foodId) => {
+    // 음식 이름과 ID를 세션 스토리지에 저장
     sessionStorage.setItem('selectedFood', foodName);
-    alert(`"${foodName}" 레시피 페이지로 이동합니다.`);
+    if (foodId) {
+      sessionStorage.setItem('selectedFoodId', foodId.toString());
+    }
+    
     navigate('/recipe');
-  };
-  
-  // 탭 변경 핸들러
-  const handleTabChange = (period) => {
-    setActiveTab(period);
-    handlePeriodChange(period);
   };
 
   return (
@@ -60,14 +115,14 @@ const RankingRecommendation = () => {
           <h3>인기 검색 랭킹</h3>
           <div className={styles.periodTabs}>
             <button 
-              className={`${styles.periodTab} ${activeTab === 'day' ? styles.active : ''}`}
-              onClick={() => handleTabChange('day')}
+              className={`${styles.periodTab} ${searchPeriod === 'day' ? styles.active : ''}`}
+              onClick={() => handlePeriodChange('day')}
             >
               일간
             </button>
             <button 
-              className={`${styles.periodTab} ${activeTab === 'week' ? styles.active : ''}`}
-              onClick={() => handleTabChange('week')}
+              className={`${styles.periodTab} ${searchPeriod === 'week' ? styles.active : ''}`}
+              onClick={() => handlePeriodChange('week')}
             >
               주간
             </button>
@@ -109,7 +164,7 @@ const RankingRecommendation = () => {
                 className={styles.recommendationItem}
                 onClick={(e) => {
                   e.preventDefault();
-                  handleFoodClick(recommendedFood.name);
+                  handleFoodClick(recommendedFood.name, recommendedFood.id);
                 }}>
                 오늘의 추천 메뉴: {recommendedFood.name}
               </a>
@@ -126,7 +181,7 @@ const RankingRecommendation = () => {
               src={recommendedFood.image_url}
               alt={recommendedFood.name}
               className={`${styles.recommendationImg} ${styles.recommendationItem}`}
-              onClick={() => handleFoodClick(recommendedFood.name)}
+              onClick={() => handleFoodClick(recommendedFood.name, recommendedFood.id)}
             />
           ) : (
             <div className={styles.emptyImage}>이미지 없음</div>

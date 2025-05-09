@@ -1,7 +1,7 @@
 import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { signup, login, logout, getMyInfo } from '../api/auth';
+import { signup, login, logout, getMyInfo, refreshToken } from '../api/auth';
 
 /**
  * 인증 관련 기능을 제공하는 커스텀 훅
@@ -22,6 +22,7 @@ const useAuth = () => {
     setError(null);
     
     try {
+      // API 명세서의 /auth/signup 엔드포인트 호출
       const result = await signup(userData);
       setIsLoading(false);
       return result;
@@ -41,6 +42,7 @@ const useAuth = () => {
     setError(null);
     
     try {
+      // API 명세서의 /auth/login 엔드포인트 호출
       const result = await login(credentials);
       
       // 리프레시 토큰이 있다면 저장
@@ -69,8 +71,9 @@ const useAuth = () => {
     setError(null);
     
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
-      await logout(refreshToken);
+      const refreshTokenValue = localStorage.getItem('refresh_token');
+      // API 명세서의 /auth/logout 엔드포인트 호출
+      await logout(refreshTokenValue);
       
       updateLoginStatus(false, null);
       setIsLoading(false);
@@ -88,6 +91,29 @@ const useAuth = () => {
   };
 
   /**
+   * 토큰 갱신 함수
+   */
+  const handleRefreshToken = async () => {
+    try {
+      const refreshTokenValue = localStorage.getItem('refresh_token');
+      if (!refreshTokenValue) {
+        throw new Error('리프레시 토큰이 없습니다.');
+      }
+      
+      // API 명세서의 /auth/refresh 엔드포인트 호출
+      const result = await refreshToken(refreshTokenValue);
+      return result;
+    } catch (err) {
+      console.error('Token refresh error:', err);
+      
+      // 토큰 갱신 실패 시 로그아웃 처리
+      updateLoginStatus(false, null);
+      navigate('/login');
+      throw err;
+    }
+  };
+
+  /**
    * 사용자 정보 새로고침 함수
    */
   const refreshUserInfo = async () => {
@@ -96,6 +122,7 @@ const useAuth = () => {
     setIsLoading(true);
     
     try {
+      // API 명세서의 /auth/me 엔드포인트 호출
       const userInfo = await getMyInfo();
       updateLoginStatus(true, userInfo);
       setIsLoading(false);
@@ -106,8 +133,18 @@ const useAuth = () => {
       
       // 인증 오류 발생 시 로그인 상태 초기화
       if (err.response?.status === 401) {
-        updateLoginStatus(false, null);
-        navigate('/login');
+        // 토큰 갱신 시도
+        try {
+          await handleRefreshToken();
+          // 갱신 성공 시 다시 사용자 정보 요청
+          const userInfo = await getMyInfo();
+          updateLoginStatus(true, userInfo);
+          return userInfo;
+        } catch (refreshErr) {
+          // 갱신 실패 시 로그아웃
+          updateLoginStatus(false, null);
+          navigate('/login');
+        }
       }
       
       throw err;
@@ -122,6 +159,7 @@ const useAuth = () => {
     signup: handleSignup,
     login: handleLogin,
     logout: handleLogout,
+    refreshToken: handleRefreshToken,
     refreshUserInfo,
   };
 };

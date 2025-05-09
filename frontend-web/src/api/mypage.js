@@ -1,4 +1,4 @@
-import apiClient from './client';
+import client from './client';
 import { MYPAGE } from './endpoints';
 
 /**
@@ -8,7 +8,7 @@ import { MYPAGE } from './endpoints';
  */
 export const getMypageSummary = async () => {
   try {
-    const response = await apiClient.get(MYPAGE.SUMMARY);
+    const response = await client.get(MYPAGE.SUMMARY);
     return response.data;
   } catch (error) {
     console.error('Get mypage summary error:', error);

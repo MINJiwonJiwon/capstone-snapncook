@@ -6,6 +6,8 @@ import RankingRecommendation from '../../components/RankingRecommendation/Rankin
 import styles from './Home.module.css';
 import useAuth from '../../hooks/useAuth';
 import { saveDetectionResult } from '../../api/detection';
+import { getFoodById } from '../../api/food';
+import client from '../../api/client';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -84,39 +86,43 @@ const Home = () => {
   };
   
   const handleUpload = async () => {
-    if (!previewUrl) return;
+    if (!previewUrl || !file) return;
     
     setIsLoading(true);
     setError(null);
     
     try {
-      // 실제 API 연동 시 파일 업로드 처리
+      // 실제 API 연동 - 파일 업로드 처리
       const formData = new FormData();
       formData.append('file', file);
       
-      // 파일 업로드 API 호출 (예시)
-      // const uploadResponse = await apiClient.post('/upload', formData, {
-      //   headers: {
-      //     'Content-Type': 'multipart/form-data'
-      //   }
-      // });
+      // 파일 업로드 API 호출
+      const uploadResponse = await client.post('/upload/image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
       
-      // 백엔드 API가 완전히 연동되기 전까지는 목업 데이터 사용
-      // 실제 구현 시 API 응답으로 대체
-      const detectionResult = {
-        food_id: 1, // 김치찌개 ID로 가정
-        image_path: 'uploads/images/kimchi.jpg', // 서버에 저장된 이미지 경로
-        confidence: 0.92 // 신뢰도
-      };
+      // 서버에서 이미지 분석 결과 받기
+      // 실제 구현에서는 서버로부터 응답을 받아와야 함
+      const { food_id, image_path, confidence } = uploadResponse.data;
       
       // 탐지 결과 저장 API 호출
-      await saveDetectionResult(detectionResult);
+      const detectionResult = await saveDetectionResult({
+        food_id,
+        image_path,
+        confidence
+      });
       
       // 이미지를 로컬 스토리지에 저장
       saveImageToHistory(previewUrl);
       
-      // 세션 스토리지에 탐지된 음식 이름 저장 (실제로는 API 응답에서 가져옴)
-      sessionStorage.setItem('selectedFood', '김치찌개');
+      // 탐지된 음식 정보 가져오기
+      const foodInfo = await getFoodById(food_id);
+      
+      // 세션 스토리지에 탐지된 음식 이름 저장
+      sessionStorage.setItem('selectedFood', foodInfo.name);
+      sessionStorage.setItem('selectedFoodId', food_id.toString());
       
       setIsLoading(false);
       navigate('/recipe');

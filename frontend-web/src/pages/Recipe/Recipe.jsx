@@ -4,49 +4,128 @@ import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import styles from './Recipe.module.css';
 import useRecipe from '../../hooks/useRecipe';
+import useBookmark from '../../hooks/useBookmark';
+import { getFoodById } from '../../api/food';
+import { getRecipesByFoodId } from '../../api/recipe';
 
 const Recipe = () => {
   const navigate = useNavigate();
   const [currentImage, setCurrentImage] = useState('');
   const [foodName, setFoodName] = useState('음식 이름');
-  const [activeSource, setActiveSource] = useState('');
+  const [foodId, setFoodId] = useState(null);
+  const [activeRecipeId, setActiveRecipeId] = useState(null);
+  const [recipes, setRecipes] = useState([]);
+  const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
+  const [errorRecipes, setErrorRecipes] = useState(null);
   
   const { 
     recipeDetail,
-    loading,
-    error,
+    loading: loadingDetail,
+    error: errorDetail,
     fetchRecipeDetail
   } = useRecipe();
   
-  useEffect(() => {
-    // 세션 스토리지에서 현재 이미지 가져오기
-    const image = sessionStorage.getItem('currentImage');
-    if (image) {
-      setCurrentImage(image);
-    } else {
-      // 이미지가 없으면 홈으로 리다이렉트
-      navigate('/');
-      return;
-    }
-    
-    // 세션 스토리지에서 선택된 음식 이름 가져오기
-    const selectedFood = sessionStorage.getItem('selectedFood');
-    if (selectedFood) {
-      setFoodName(selectedFood);
-      
-      // TODO: 음식 이름으로 음식 ID를 가져와서 해당 음식의 레시피를 조회해야 함
-      // 현재 API 연결 전이므로 임시로 첫 번째 레시피를 가져옴
-      fetchRecipeDetail(1).catch(error => {
-        console.error('Failed to fetch recipe detail:', error);
-      });
-    } else {
-      // 기본 음식 이름 설정
-      setFoodName("김치찌개"); // 예시 음식 이름
-    }
-  }, [navigate, fetchRecipeDetail]);
+  const {
+    bookmarks,
+    loading: loadingBookmarks,
+    addBookmark,
+    removeBookmark,
+    isBookmarked,
+    fetchMyBookmarks
+  } = useBookmark();
   
-  const handleCardClick = (source) => {
-    setActiveSource(source);
+  useEffect(() => {
+    const loadRecipeData = async () => {
+      // 세션 스토리지에서 현재 이미지 가져오기
+      const image = sessionStorage.getItem('currentImage');
+      if (image) {
+        setCurrentImage(image);
+      } else {
+        // 이미지가 없으면 홈으로 리다이렉트
+        navigate('/');
+        return;
+      }
+      
+      // 세션 스토리지에서 선택된 음식 정보 가져오기
+      const selectedFood = sessionStorage.getItem('selectedFood');
+      const selectedFoodId = sessionStorage.getItem('selectedFoodId');
+      
+      if (selectedFood) {
+        setFoodName(selectedFood);
+      }
+      
+      if (selectedFoodId) {
+        // 음식 ID를 세션 스토리지에서 가져왔다면 그대로 사용
+        setFoodId(parseInt(selectedFoodId));
+        await loadRecipesByFoodId(parseInt(selectedFoodId));
+      } else if (selectedFood) {
+        // 음식 이름만 있는 경우, 이름으로 음식 정보 조회
+        try {
+          // 실제 구현에서는 이름으로 검색하는 API가 필요
+          // 여기서는 예시로 음식 ID 1을 사용
+          const foodId = 1;
+          setFoodId(foodId);
+          await loadRecipesByFoodId(foodId);
+        } catch (err) {
+          console.error('Failed to find food by name:', err);
+          setErrorRecipes('음식 정보를 불러오는 데 실패했습니다.');
+        }
+      }
+      
+      // 북마크 목록 가져오기
+      await fetchMyBookmarks();
+    };
+    
+    loadRecipeData();
+  }, [navigate, fetchMyBookmarks]);
+  
+  // 음식 ID로 레시피 목록 가져오기
+  const loadRecipesByFoodId = async (foodId) => {
+    setIsLoadingRecipes(true);
+    setErrorRecipes(null);
+    
+    try {
+      // 음식 ID로 레시피 목록 조회
+      const recipeList = await getRecipesByFoodId(foodId);
+      setRecipes(recipeList);
+      
+      // 첫 번째 레시피가 있으면 선택
+      if (recipeList && recipeList.length > 0) {
+        setActiveRecipeId(recipeList[0].id);
+        await fetchRecipeDetail(recipeList[0].id);
+      }
+      
+      setIsLoadingRecipes(false);
+    } catch (err) {
+      console.error('Failed to fetch recipes:', err);
+      setErrorRecipes('레시피 목록을 불러오는 데 실패했습니다.');
+      setIsLoadingRecipes(false);
+    }
+  };
+  
+  // 레시피 카드 클릭 시 처리
+  const handleRecipeClick = async (recipeId) => {
+    setActiveRecipeId(recipeId);
+    await fetchRecipeDetail(recipeId);
+  };
+  
+  // 북마크 토글 처리
+  const handleToggleBookmark = async (recipeId) => {
+    const bookmark = isBookmarked(recipeId);
+    
+    try {
+      if (bookmark) {
+        // 북마크 제거
+        await removeBookmark(bookmark.id);
+      } else {
+        // 북마크 추가
+        await addBookmark(recipeId);
+      }
+      // 북마크 목록 새로고침
+      await fetchMyBookmarks();
+    } catch (err) {
+      console.error('Toggle bookmark error:', err);
+    }
   };
   
   const handleBackClick = () => {
@@ -63,25 +142,47 @@ const Recipe = () => {
     </div>
   );
   
+  // 레시피 카드 렌더링
   const renderRecipeCards = () => {
-    // API 연결 전이므로 임시 데이터 사용
-    const sources = [
-      { id: 'source1', name: '레시피 1', source: '만개의 레시피' },
-      { id: 'source2', name: '레시피 2', source: '백종원 레시피' },
-      { id: 'source3', name: '레시피 3', source: '해외 레시피' }
-    ];
+    if (isLoadingRecipes) {
+      return (
+        <div className={styles.cardsContainer}>
+          <div className={styles.skeletonCard}></div>
+          <div className={styles.skeletonCard}></div>
+          <div className={styles.skeletonCard}></div>
+        </div>
+      );
+    }
+    
+    if (errorRecipes) {
+      return <p className={styles.errorMessage}>{errorRecipes}</p>;
+    }
+    
+    if (!recipes || recipes.length === 0) {
+      return <p className={styles.emptyMessage}>이 음식에 대한 레시피가 없습니다.</p>;
+    }
     
     return (
       <div className={styles.cardsContainer}>
-        {sources.map(source => (
+        {recipes.map(recipe => (
           <div 
-            key={source.id}
-            className={`${styles.card} ${activeSource === source.id ? styles.active : ''}`} 
-            onClick={() => handleCardClick(source.id)}
+            key={recipe.id}
+            className={`${styles.card} ${activeRecipeId === recipe.id ? styles.active : ''}`} 
+            onClick={() => handleRecipeClick(recipe.id)}
           >
             <div className={styles.cardContent}>
-              <h4>{source.name}</h4>
-              <p>소스: {source.source}</p>
+              <h4>{recipe.title}</h4>
+              <p>소스: {recipe.source_detail || recipe.source_type}</p>
+              {/* 북마크 버튼 추가 */}
+              <button 
+                className={`${styles.bookmarkButton} ${isBookmarked(recipe.id) ? styles.bookmarked : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggleBookmark(recipe.id);
+                }}
+              >
+                {isBookmarked(recipe.id) ? '★' : '☆'}
+              </button>
             </div>
           </div>
         ))}
@@ -89,111 +190,60 @@ const Recipe = () => {
     );
   };
   
+  // 레시피 상세 내용 렌더링
   const renderRecipeContent = () => {
-    if (loading) {
+    if (loadingDetail) {
       return renderSkeleton();
     }
     
-    if (error) {
-      return <p className={styles.errorMessage}>{error}</p>;
+    if (errorDetail) {
+      return <p className={styles.errorMessage}>{errorDetail}</p>;
     }
     
-    if (!activeSource) {
+    if (!activeRecipeId) {
       return <p className={styles.recipePlaceholder}>카드를 선택하면 레시피가 여기에 표시됩니다.</p>;
     }
     
-    // 실제 API 연동 후에는 recipeDetail 데이터를 사용하도록 수정 필요
-    switch (activeSource) {
-      case 'source1':
-        return (
-          <div className={styles.recipeContent}>
-            <h3>만개의 레시피 - {foodName}</h3>
-            <h4>재료</h4>
-            <ul>
-              <li>김치 300g</li>
-              <li>돼지고기 목살 150g</li>
-              <li>두부 1/2모</li>
-              <li>대파 1대</li>
-              <li>양파 1/2개</li>
-              <li>청양고추 2개</li>
-              <li>물 3컵</li>
-              <li>고춧가루 1큰술</li>
-              <li>간장 1큰술</li>
-              <li>다진 마늘 1큰술</li>
-            </ul>
-            <h4>조리 방법</h4>
-            <ol>
-              <li>김치는 적당한 크기로 썰어주세요.</li>
-              <li>돼지고기는 먹기 좋은 크기로 썰어주세요.</li>
-              <li>두부, 대파, 양파, 청양고추도 적당한 크기로 썰어주세요.</li>
-              <li>냄비에 김치와 돼지고기를 넣고 볶아주세요.</li>
-              <li>김치가 투명해지면 물을 붓고 끓여주세요.</li>
-              <li>물이 끓으면 두부, 양파, 고춧가루, 간장, 다진 마늘을 넣어주세요.</li>
-              <li>중간 불로 10분 정도 더 끓인 후 대파와 청양고추를 넣어주세요.</li>
-              <li>2분 더 끓인 후 불을 끄고 완성입니다.</li>
-            </ol>
-          </div>
-        );
-      case 'source2':
-        return (
-          <div className={styles.recipeContent}>
-            <h3>백종원 레시피 - {foodName}</h3>
-            <h4>재료</h4>
-            <ul>
-              <li>묵은지 400g</li>
-              <li>삼겹살 200g</li>
-              <li>두부 1모</li>
-              <li>대파 1대</li>
-              <li>양파 1개</li>
-              <li>고추 2개</li>
-              <li>물 2.5컵</li>
-              <li>고춧가루 2큰술</li>
-              <li>된장 1작은술</li>
-              <li>다진 마늘 2큰술</li>
-              <li>식용유 2큰술</li>
-            </ul>
-            <h4>조리 방법</h4>
-            <ol>
-              <li>팬에 식용유를 두르고 삼겹살을 먼저 볶아 기름을 빼주세요.</li>
-              <li>삼겹살이 노릇해지면 김치를 넣고 5분간 볶아주세요.</li>
-              <li>김치가 볶아지면 물을 붓고 된장, 고춧가루를 넣어 끓여주세요.</li>
-              <li>국물이 끓어오르면 두부, 양파, 다진 마늘을 넣고 중불로 15분간 끓여주세요.</li>
-              <li>마지막에 대파와 고추를 넣고 2분 더 끓여 완성합니다.</li>
-            </ol>
-          </div>
-        );
-      case 'source3':
-        return (
-          <div className={styles.recipeContent}>
-            <h3>해외 레시피 - {foodName}</h3>
-            <h4>재료</h4>
-            <ul>
-              <li>김치 250g</li>
-              <li>베이컨 100g</li>
-              <li>두부 1모</li>
-              <li>버섯 100g</li>
-              <li>파 2대</li>
-              <li>물 4컵</li>
-              <li>김치 국물 1/4컵</li>
-              <li>고추장 1큰술</li>
-              <li>간장 1큰술</li>
-              <li>설탕 1작은술</li>
-              <li>참기름 1작은술</li>
-            </ul>
-            <h4>조리 방법</h4>
-            <ol>
-              <li>냄비에 베이컨을 넣고 기름이 나올 때까지 볶아주세요.</li>
-              <li>김치를 넣고 3분간 볶아주세요.</li>
-              <li>물과 김치 국물을 붓고 끓여주세요.</li>
-              <li>끓어오르면 고추장, 간장, 설탕을 넣고 저어주세요.</li>
-              <li>두부와 버섯을 넣고 5분간 더 끓여주세요.</li>
-              <li>마지막에 파를 넣고 참기름을 둘러 완성합니다.</li>
-            </ol>
-          </div>
-        );
-      default:
-        return <p className={styles.recipePlaceholder}>레시피를 찾을 수 없습니다.</p>;
+    if (!recipeDetail) {
+      return <p className={styles.recipePlaceholder}>레시피 상세 정보를 불러오는 중 오류가 발생했습니다.</p>;
     }
+    
+    // API 응답에서 필요한 정보 추출
+    const { food, recipe, steps } = recipeDetail;
+    
+    return (
+      <div className={styles.recipeContent}>
+        <h3>{recipe.title} - {food.name}</h3>
+        
+        <h4>재료</h4>
+        <p>{recipe.ingredients}</p>
+        
+        <h4>조리 방법</h4>
+        <div className={styles.instructionsContainer}>
+          {recipe.instructions}
+        </div>
+        
+        {steps && steps.length > 0 && (
+          <>
+            <h4>상세 조리 단계</h4>
+            <ol>
+              {steps.map(step => (
+                <li key={step.step_order}>
+                  {step.description}
+                  {step.image_url && (
+                    <img 
+                      src={step.image_url} 
+                      alt={`단계 ${step.step_order}`} 
+                      className={styles.stepImage} 
+                    />
+                  )}
+                </li>
+              ))}
+            </ol>
+          </>
+        )}
+      </div>
+    );
   };
 
   return (
