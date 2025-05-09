@@ -1,0 +1,230 @@
+.rankingRecommendation {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  background-color: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px var(--border-color);
+  width: 100%;
+  box-sizing: border-box;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* 모바일 반응형 지원 */
+@media screen and (max-width: 768px) {
+  .rankingRecommendation {
+    flex-direction: column;
+  }
+  
+  .ranking {
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+}
+
+.ranking {
+  flex: 1;
+  padding-right: 15px;
+  border-right: 1px solid var(--border-color);
+}
+
+.recommendation {
+  flex: 2;
+  display: flex;
+  align-items: center;
+}
+
+.recommendationText {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.recommendationImage {
+  flex: 1;
+  text-align: center;
+}
+
+.ranking h3, .recommendation h3 {
+  margin-bottom: 5px;
+  color: var(--main-color);
+  font-size: 0.9rem;
+}
+
+.ranking ol {
+  padding-left: 20px;
+  margin-top: 5px;
+}
+
+.ranking li {
+  margin-bottom: 3px;
+  font-size: 0.85rem;
+}
+
+.recommendation p {
+  margin: 5px 0;
+  font-size: 0.85rem;
+}
+
+.recommendationImg {
+  max-width: 100%;
+  max-height: 80px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
+.rankingItem, .recommendationItem {
+  cursor: pointer;
+  color: var(--text-color);
+  text-decoration: none;
+}
+
+.rankingItem:hover, .recommendationItem:hover {
+  color: var(--secondary-color);
+  text-decoration: underline;
+}
+
+.recommendationImg {
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.recommendationImg:hover {
+  transform: scale(1.05);
+}
+
+/* 기존 스타일 외에 추가되는 스타일 */
+
+/* 기간 선택 탭 스타일 */
+.rankingHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.periodTabs {
+  display: flex;
+  gap: 5px;
+}
+
+.periodTab {
+  padding: 3px 8px;
+  border: 1px solid var(--border-color);
+  background-color: transparent;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.periodTab.active {
+  background-color: var(--secondary-color);
+  color: var(--light-text);
+  border-color: var(--secondary-color);
+  font-weight: bold;
+}
+
+/* 순위 트렌드 아이콘 스타일 */
+.trendUp {
+  color: #4CAF50; /* 녹색 */
+  font-size: 0.8rem;
+  margin-left: 5px;
+}
+
+.trendDown {
+  color: #F44336; /* 빨간색 */
+  font-size: 0.8rem;
+  margin-left: 5px;
+}
+
+.trendSame {
+  color: #9E9E9E; /* 회색 */
+  font-size: 0.8rem;
+  margin-left: 5px;
+}
+
+.trendNew {
+  background-color: #2196F3; /* 파란색 */
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-left: 5px;
+}
+
+/* 로딩 스켈레톤 UI 스타일 */
+.skeleton {
+  padding: 10px 0;
+}
+
+.skeletonItem {
+  height: 16px;
+  background-color: #f0f0f0;
+  border-radius: 3px;
+  margin-bottom: 10px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonItem:nth-child(1) {
+  width: 80%;
+}
+
+.skeletonItem:nth-child(2) {
+  width: 70%;
+}
+
+.skeletonItem:nth-child(3) {
+  width: 75%;
+}
+
+.skeletonRecommend {
+  height: 16px;
+  width: 90%;
+  background-color: #f0f0f0;
+  border-radius: 3px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonImage {
+  width: 100%;
+  height: 80px;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* 데이터 없음 메시지 스타일 */
+.emptyMessage {
+  font-size: 0.8rem;
+  color: #9E9E9E;
+  font-style: italic;
+}
+
+.emptyImage {
+  width: 100%;
+  height: 80px;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: #9E9E9E;
+}
