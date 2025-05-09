@@ -75,8 +75,8 @@ export const MYPAGE = {
 
 // 홈 화면 관련 엔드포인트
 export const HOME = {
-  POPULAR_SEARCHES: '/api/popular-searches',
-  RECOMMENDED_FOOD: '/api/recommended-food',
+  POPULAR_SEARCHES: '/home/popular-searches',
+  RECOMMENDED_FOOD: '/home/recommended-food',
 };
 
 // 추천 관련 엔드포인트
