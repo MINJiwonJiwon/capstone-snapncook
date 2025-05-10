@@ -183,6 +183,7 @@ flowchart TD
 {
   "email": "user@example.com",
   "password": "Password123!",
+  "password_check": "Password123!",
   "nickname": "테스트유저",
   "profile_image_url": null
 }
@@ -755,6 +756,7 @@ flowchart TD
 {
   "email": "user@example.com",
   "password": "Password123!",
+  "password_check": "Password123!",
   "nickname": "요리하는곰돌이",
   "profile_image_url": null
 }
@@ -919,7 +921,7 @@ Authorization: Bearer <access_token>
 
 ---
 
-### POST /users/me/password
+### PATCH /users/me/password
 
 > 📌 비밀번호 변경 - 현재 비밀번호를 확인한 뒤 새 비밀번호로 변경합니다.
 > 
@@ -929,7 +931,8 @@ Authorization: Bearer <access_token>
 ```json
 {
   "current_password": "OldPassword123!",
-  "new_password": "NewSecurePassword456!"
+  "new_password": "NewSecurePassword456!",
+  "new_password_check": "NewSecurePassword456!"
 }
 ```
 
@@ -943,7 +946,7 @@ Authorization: Bearer <access_token>
 
 ```json
 {
-  "message": "Password updated successfully"
+  "message": "비밀번호가 성공적으로 변경되었습니다."
 }
 ```
 
