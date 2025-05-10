@@ -59,6 +59,7 @@ def test_refresh_token_revocation(db_session: Session):
     user_data = {
         "email": f"testuser{uuid4().hex[:8]}@example.com",
         "password": "Password123!",
+        "password_check": "Password123!",
         "nickname": "토큰테스트"
     }
 
