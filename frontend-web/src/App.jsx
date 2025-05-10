@@ -5,6 +5,7 @@ import Recipe from './pages/Recipe/Recipe';
 import Login from './pages/Login/Login';
 import MyPage from './pages/MyPage/MyPage';
 import ProfileEdit from './pages/ProfileEdit/ProfileEdit';
+import OAuthCallback from './components/OAuthCallback/OAuthCallback';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
@@ -29,6 +30,10 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/recipe" element={<Recipe />} />
             <Route path="/login" element={<Login />} />
+            
+            {/* OAuth 콜백 처리 경로 */}
+            <Route path="/oauth/:provider/callback" element={<OAuthCallback />} />
+            
             <Route
               path="/mypage"
               element={

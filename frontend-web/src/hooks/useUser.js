@@ -32,9 +32,8 @@ const useUser = () => {
       setLoading(false);
       return result;
     } catch (err) {
-      setError('사용자 정보를 가져오는 중 오류가 발생했습니다.');
       setLoading(false);
-      console.error('Fetch user info error:', err);
+      setError(err.message || '사용자 정보를 가져오는 중 오류가 발생했습니다.');
       throw err;
     }
   };
@@ -52,9 +51,8 @@ const useUser = () => {
       setLoading(false);
       return result;
     } catch (err) {
-      setError('소셜 연동 상태를 가져오는 중 오류가 발생했습니다.');
       setLoading(false);
-      console.error('Fetch social status error:', err);
+      setError(err.message || '소셜 연동 상태를 가져오는 중 오류가 발생했습니다.');
       throw err;
     }
   };
@@ -78,9 +76,8 @@ const useUser = () => {
       
       return result;
     } catch (err) {
-      setError(`${provider} 연동 해제 중 오류가 발생했습니다.`);
       setLoading(false);
-      console.error(`Disconnect social ${provider} error:`, err);
+      setError(err.message || `${provider} 연동 해제 중 오류가 발생했습니다.`);
       throw err;
     }
   };
@@ -101,9 +98,8 @@ const useUser = () => {
       setLoading(false);
       return result;
     } catch (err) {
-      setError('사용자 정보 업데이트 중 오류가 발생했습니다.');
       setLoading(false);
-      console.error('Update user info error:', err);
+      setError(err.message || '사용자 정보 업데이트 중 오류가 발생했습니다.');
       throw err;
     }
   };
@@ -123,9 +119,8 @@ const useUser = () => {
       setLoading(false);
       return result;
     } catch (err) {
-      setError('비밀번호 변경 중 오류가 발생했습니다.');
       setLoading(false);
-      console.error('Change password error:', err);
+      setError(err.message || '비밀번호 변경 중 오류가 발생했습니다.');
       throw err;
     }
   };
@@ -136,15 +131,16 @@ const useUser = () => {
   const handleDeleteAccount = async () => {
     setLoading(true);
     setError(null);
+    setSuccess(null);
     
     try {
       const result = await deleteAccount();
+      setSuccess('계정이 성공적으로 삭제되었습니다.');
       setLoading(false);
       return result;
     } catch (err) {
-      setError('계정 삭제 중 오류가 발생했습니다.');
       setLoading(false);
-      console.error('Delete account error:', err);
+      setError(err.message || '계정 삭제 중 오류가 발생했습니다.');
       throw err;
     }
   };

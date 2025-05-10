@@ -15,8 +15,25 @@ export const signup = async (userData) => {
     const response = await client.post(AUTH.SIGNUP, userData);
     return response.data;
   } catch (error) {
+    // 오류 메시지 한글화 및 상세화
+    if (error.response) {
+      const { status, data } = error.response;
+      
+      // 이메일 중복 오류
+      if (status === 400 && data.detail && data.detail.includes('Email already registered')) {
+        throw new Error('이미 등록된 이메일입니다.');
+      }
+      
+      // 비밀번호 유효성 오류
+      if (status === 400 || status === 422) {
+        if (data.detail && data.detail.includes('password')) {
+          throw new Error('비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.');
+        }
+      }
+    }
+    
     console.error('Signup error:', error);
-    throw error;
+    throw error.response?.data?.detail ? new Error(error.response.data.detail) : error;
   }
 };
 
@@ -45,8 +62,24 @@ export const login = async (credentials) => {
     
     return response.data;
   } catch (error) {
+    // 오류 메시지 한글화 및 상세화
+    if (error.response) {
+      const { status, data } = error.response;
+      
+      // 잘못된 자격 증명
+      if (status === 401) {
+        if (data.detail && data.detail.includes('Invalid credentials')) {
+          throw new Error('존재하지 않는 이메일입니다.');
+        }
+        
+        if (data.detail && data.detail.includes('Incorrect password')) {
+          throw new Error('비밀번호가 올바르지 않습니다.');
+        }
+      }
+    }
+    
     console.error('Login error:', error);
-    throw error;
+    throw error.response?.data?.detail ? new Error(error.response.data.detail) : error;
   }
 };
 
@@ -65,8 +98,13 @@ export const refreshToken = async (refreshToken) => {
     
     return response.data;
   } catch (error) {
+    // 오류 메시지 한글화
+    if (error.response?.status === 401 && error.response?.data?.detail?.includes('Invalid or expired refresh token')) {
+      throw new Error('만료되거나 유효하지 않은 리프레시 토큰입니다. 다시 로그인해주세요.');
+    }
+    
     console.error('Token refresh error:', error);
-    throw error;
+    throw error.response?.data?.detail ? new Error(error.response.data.detail) : error;
   }
 };
 
@@ -84,6 +122,7 @@ export const logout = async (refreshToken) => {
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('username');
+    localStorage.removeItem('user');
     
     // 이미지 히스토리 초기화
     localStorage.removeItem('imageHistory');
@@ -100,12 +139,13 @@ export const logout = async (refreshToken) => {
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('username');
+    localStorage.removeItem('user');
     localStorage.removeItem('imageHistory');
     sessionStorage.removeItem('currentImage');
     sessionStorage.removeItem('selectedFood');
     sessionStorage.removeItem('selectedFoodId');
     
-    throw error;
+    throw error.response?.data?.detail ? new Error('로그아웃 중 오류가 발생했습니다.') : error;
   }
 };
 
@@ -128,6 +168,11 @@ export const getMyInfo = async () => {
     return response.data;
   } catch (error) {
     console.error('Get user info error:', error);
-    throw error;
+    
+    if (error.response?.status === 401) {
+      throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
+    }
+    
+    throw error.response?.data?.detail ? new Error(error.response.data.detail) : error;
   }
 };

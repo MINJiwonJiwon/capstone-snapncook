@@ -1,0 +1,77 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: var(--background-color);
+}
+
+.callbackCard {
+  width: 90%;
+  max-width: 400px;
+  padding: 30px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px var(--border-color);
+  text-align: center;
+}
+
+.logoContainer {
+  margin-bottom: 30px;
+}
+
+.logoContainer h2 {
+  color: var(--main-color);
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.loadingSpinner {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(85, 107, 47, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--main-color);
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.statusMessage {
+  color: var(--text-color);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.errorIcon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  margin: 0 auto 20px;
+  background-color: #f44336;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  border-radius: 50%;
+}
+
+.errorMessage {
+  color: #f44336;
+  font-size: 1.1rem;
+  margin: 0 0 20px;
+}
+
+.redirectMessage {
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-style: italic;
+  margin: 0;
+}
