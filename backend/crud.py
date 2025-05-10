@@ -8,7 +8,7 @@ from backend import models, schemas
 
 # ---------- User ----------
 def create_user(db: Session, user: schemas.UserCreateWithPassword) -> models.User:
-    db_user = models.User(**user.model_dump(exclude={"password"}))
+    db_user = models.User(**user.model_dump(exclude={"password", "password_check"}))
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
