@@ -34,20 +34,25 @@ async def login(request: Request):
 # 🔁 콜백 핸들러
 @router.get("/callback")
 async def callback(request: Request, db: Session = Depends(get_db)):
-    token = await oauth.google.authorize_access_token(request)
-    profile = (await oauth.google.get('userinfo', token=token)).json()
+    try:
+        token = await oauth.google.authorize_access_token(request)
+        profile = (await oauth.google.get('userinfo', token=token)).json()
 
-    print("🔥 Google userinfo:", profile)
-    print("🔥 email:", profile.get("email"))
-    print("🔥 sub:", profile.get("sub"))
+        print("🔥 Google userinfo:", profile)
+        print("🔥 email:", profile.get("email"))
+        print("🔥 sub:", profile.get("sub"))
 
-    user = get_or_create_oauth_user(
-        db=db,
-        email=profile.get("email"),
-        nickname=profile.get("name"),
-        profile_image_url=profile.get("picture"),
-        oauth_provider="google",
-        oauth_id=profile.get("id")
-    )
+        user = get_or_create_oauth_user(
+            db=db,
+            email=profile.get("email"),
+            nickname=profile.get("name"),
+            profile_image_url=profile.get("picture"),
+            oauth_provider="google",
+            oauth_id=profile.get("id")
+        )
 
-    return {"access_token": create_access_token(data={"sub": str(user.id)})}
+        return {"access_token": create_access_token(data={"sub": str(user.id)})}
+
+    except Exception as e:
+        print("❌ Google OAuth 인증 실패:", e)
+        return {"error": "Google OAuth 인증 중 오류가 발생했습니다."}
