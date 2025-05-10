@@ -20,6 +20,7 @@ def test_signup_user():
     user_data = {
         "email": f"testuser{uuid4()}@example.com",
         "password": "Password123!", 
+        "password_check": "Password123!", 
         "nickname": "테스트유저"
     }
     response = client.post("/api/auth/signup", json=user_data)
