@@ -10,8 +10,15 @@ from backend.app.auth.token_utils import (
 )
 
 def signup_user(user: schemas.UserCreateWithPassword, db: Session) -> models.User:
+    # 이메일 중복 체크
     if db.query(models.User).filter(models.User.email == user.email).first():
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="이미 등록된 이메일입니다")
+
+    # 비밀번호 확인 불일치
+    if user.password != user.password_check:
+        raise HTTPException(status_code=400, detail="비밀번호 확인이 일치하지 않습니다")
+
+    # 비밀번호 해싱 후 저장
     user.password_hash = utils.hash_password(user.password)
     return crud.create_user(db, user)
 

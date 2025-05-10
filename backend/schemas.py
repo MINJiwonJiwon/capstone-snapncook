@@ -26,6 +26,7 @@ class UserCreateWithPassword(UserBase):
         ..., min_length=8, max_length=128,
         description="비밀번호는 8자 이상이며, 숫자와 특수문자를 포함해야 합니다."
     )
+    password_check: str
     password_hash: Optional[str] = None
 
     @field_validator("password")
@@ -65,6 +66,7 @@ class UserUpdateProfile(BaseModel):
 class UserUpdatePassword(BaseModel):
     current_password: str
     new_password: str
+    new_password_check: str
 
 # User 수정용 스키마(관리자)
 class UserUpdate(BaseModel):
