@@ -6,7 +6,7 @@ import { startGoogleLogin, startKakaoLogin, startNaverLogin } from '../../api/oa
 
 const Login = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, login, signup, loading, error } = useAuth();
+  const { isLoggedIn, login, signup, loading, error: authError } = useAuth();
   
   const [activeTab, setActiveTab] = useState('login');
   const [loginEmail, setLoginEmail] = useState('');
@@ -15,6 +15,7 @@ const Login = () => {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupNickname, setSignupNickname] = useState('');
   const [formError, setFormError] = useState('');
+  const [socialLoginError, setSocialLoginError] = useState('');
   
   // 이미 로그인된 경우 홈으로 리다이렉트
   useEffect(() => {
@@ -23,33 +24,69 @@ const Login = () => {
     }
   }, [isLoggedIn, navigate]);
   
+  // 모든 오류 메시지 초기화
+  const clearErrors = () => {
+    setFormError('');
+    setSocialLoginError('');
+  };
+  
   const handleTabClick = (tab) => {
     setActiveTab(tab);
-    setFormError('');
+    clearErrors();
   };
   
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setFormError('');
+    clearErrors();
+    
+    // 유효성 검사
+    if (!loginEmail.trim()) {
+      setFormError('이메일을 입력해주세요.');
+      return;
+    }
+    
+    if (!loginPassword.trim()) {
+      setFormError('비밀번호를 입력해주세요.');
+      return;
+    }
     
     try {
-      // API 명세서에 따라 이메일과 비밀번호로 로그인 시도
       await login({ 
         email: loginEmail, 
         password: loginPassword 
       });
       navigate('/');
     } catch (err) {
-      setFormError(err.response?.data?.detail || '로그인에 실패했습니다.');
+      // API 오류 메시지 표시
+      setFormError(err.message || '로그인 중 오류가 발생했습니다.');
     }
   };
   
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
-    setFormError('');
+    clearErrors();
+    
+    // 유효성 검사
+    if (!signupEmail.trim() || !signupPassword.trim() || !signupNickname.trim()) {
+      setFormError('모든 필드를 입력해주세요.');
+      return;
+    }
+    
+    // 이메일 형식 검사
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(signupEmail)) {
+      setFormError('올바른 이메일 형식이 아닙니다.');
+      return;
+    }
+    
+    // 비밀번호 형식 검사
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    if (!passwordRegex.test(signupPassword)) {
+      setFormError('비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.');
+      return;
+    }
     
     try {
-      // API 명세서에 따라 회원가입 데이터 형식 맞춤
       await signup({ 
         email: signupEmail,
         password: signupPassword, 
@@ -59,16 +96,19 @@ const Login = () => {
       
       // 회원가입 성공 시 로그인 탭으로 전환하고 메시지 표시
       setActiveTab('login');
-      alert('회원가입이 완료되었습니다. 로그인해주세요.');
-      
-      // 로그인 필드에 이메일 자동 입력
       setLoginEmail(signupEmail);
+      setLoginPassword('');
+      
+      // 알림 메시지 표시
+      alert('회원가입이 완료되었습니다. 로그인해주세요.');
     } catch (err) {
-      setFormError(err.response?.data?.detail || '회원가입에 실패했습니다.');
+      // API 오류 메시지 표시
+      setFormError(err.message || '회원가입 중 오류가 발생했습니다.');
     }
   };
   
   const handleOAuthLogin = async (provider) => {
+    clearErrors();
     try {
       let response;
       
@@ -88,13 +128,17 @@ const Login = () => {
       
       // 리다이렉트 URL로 이동
       if (response && response.redirect_url) {
+        // 소셜 로그인 진행 중 표시
+        localStorage.setItem('social_login_pending', provider.toLowerCase());
+        localStorage.setItem('social_login_time', new Date().getTime());
+        
         window.location.href = response.redirect_url;
       } else {
         throw new Error('리다이렉트 URL이 없습니다.');
       }
     } catch (err) {
-      setFormError(`${provider} 로그인 시작 중 오류가 발생했습니다.`);
       console.error(`${provider} login error:`, err);
+      setSocialLoginError(`${provider} 로그인을 시작할 수 없습니다. 잠시 후 다시 시도해주세요.`);
     }
   };
 
@@ -124,9 +168,16 @@ const Login = () => {
           </div>
           
           {/* 에러 메시지 표시 */}
-          {(formError || error) && (
+          {(formError || authError) && (
             <div className={styles.errorMessage}>
-              {formError || error}
+              {formError || authError}
+            </div>
+          )}
+          
+          {/* 소셜 로그인 오류 메시지 */}
+          {socialLoginError && (
+            <div className={styles.errorMessage}>
+              {socialLoginError}
             </div>
           )}
           
@@ -180,6 +231,7 @@ const Login = () => {
                   className={`${styles.oauthButton} ${styles.google}`}
                   onClick={() => handleOAuthLogin('Google')}
                   disabled={loading}
+                  title="Google 계정으로 로그인"
                 >
                   G
                 </button>
@@ -187,6 +239,7 @@ const Login = () => {
                   className={`${styles.oauthButton} ${styles.kakao}`}
                   onClick={() => handleOAuthLogin('Kakao')}
                   disabled={loading}
+                  title="Kakao 계정으로 로그인"
                 >
                   K
                 </button>
@@ -194,6 +247,7 @@ const Login = () => {
                   className={`${styles.oauthButton} ${styles.naver}`}
                   onClick={() => handleOAuthLogin('Naver')}
                   disabled={loading}
+                  title="Naver 계정으로 로그인"
                 >
                   N
                 </button>
@@ -239,6 +293,9 @@ const Login = () => {
                   required 
                   disabled={loading}
                 />
+                <small className={styles.passwordHint}>
+                  비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.
+                </small>
               </div>
               <button 
                 type="submit" 
