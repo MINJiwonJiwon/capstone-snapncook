@@ -1,0 +1,211 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: var(--main-color);
+  margin-bottom: 25px;
+}
+
+
+.photoGallery {
+  margin-bottom: 30px;
+}
+
+.photoGallery h2 {
+  text-align: left;
+  color: var(--secondary-color);
+  margin-bottom: 25px;
+}
+
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.photoCard {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.photoCard.selected {
+  border-color: var(--secondary-color);
+  transform: scale(1.05);
+}
+
+.thumbnail {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+}
+
+.reviewForm {
+  background-color: var(--accent-color);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+}
+
+.reviewForm h2 {
+  text-align: center;
+  color: var(--secondary-color);
+  margin-bottom: 25px;
+}
+
+.photoPreview {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.selectedFoodImg {
+  width: 200px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.ratingSection {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+
+.starOn {
+  color: gold;
+  cursor: pointer;
+}
+
+.starOff {
+  color: lightgray;
+  cursor: pointer;
+}
+
+.uploadSection {
+  margin-bottom: 20px;
+}
+
+.uploadLabel {
+  display: block;
+  cursor: pointer;
+}
+
+.uploadPlaceholder {
+  width: 200px;
+  height: 150px;
+  margin: 0 auto;
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-color);
+}
+
+.reviewPhotoPreview {
+  width: 200px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 0 auto;
+  display: block;
+}
+
+.reviewTextarea {
+  width: 100%;
+  height: 100px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 20px;
+  resize: vertical;
+  background: var(--background-color);
+  color: var(--text-color);
+}
+
+.submitButton {
+  background-color: var(--hover-main);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+}
+
+.reviewsList {
+  margin-top: 30px;
+}
+
+.reviewCard {
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.stars {
+  font-size: 1.2rem;
+}
+
+.reviewDate {
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.reviewContent {
+  margin-top: 15px;
+}
+
+.reviewPhotos {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.photoBox {
+  flex: 1;
+  text-align: center;
+}
+
+.photoBox h4 {
+  margin-bottom: 5px;
+  color: var(--text-color);
+}
+
+.foodImg, .reviewImg {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.reviewText {
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+.noPhotos, .noReviews {
+  text-align: center;
+  color: var(--error-color);
+  padding: 20px;
+}
