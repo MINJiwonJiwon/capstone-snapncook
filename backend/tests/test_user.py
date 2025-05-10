@@ -21,6 +21,7 @@ def test_create_user(db_session: Session):
     user_data = {
         "email": f"testuser{uuid4().hex[:8]}@example.com",
         "password": "Password123!",
+        "password_check": "Password123!",
         "nickname": "테스트유저"
     }
 
@@ -58,6 +59,7 @@ def test_refresh_token_revocation(db_session: Session):
     user_data = {
         "email": f"testuser{uuid4().hex[:8]}@example.com",
         "password": "Password123!",
+        "password_check": "Password123!",
         "nickname": "토큰테스트"
     }
 
@@ -94,3 +96,32 @@ def test_refresh_token_revocation(db_session: Session):
         "refresh_token": refresh_token
     })
     assert refresh_res_2.status_code == 401
+
+def test_change_password_success(db_session: Session):
+    # 1. 회원가입
+    user_data = {
+        "email": f"user{uuid4().hex[:8]}@test.com",
+        "password": "Oldpass123!",
+        "password_check": "Oldpass123!",
+        "nickname": "비번유저"
+    }
+    signup_res = client.post("/api/auth/signup", json=user_data)
+    assert signup_res.status_code == 200
+
+    # 2. 로그인
+    login_res = client.post("/api/auth/login", json={
+        "email": user_data["email"],
+        "password": user_data["password"]
+    })
+    token = login_res.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 3. 비밀번호 변경 요청
+    password_payload = {
+        "current_password": "Oldpass123!",
+        "new_password": "Newpass123!",
+        "new_password_check": "Newpass123!"
+    }
+    res = client.patch("/api/users/me/password", json=password_payload, headers=headers)
+    assert res.status_code == 200
+    assert res.json()["message"] == "비밀번호가 성공적으로 변경되었습니다."

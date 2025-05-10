@@ -55,7 +55,12 @@ def authenticated_headers():
     """UUID 기반 유저 회원가입 & 로그인 후 인증 헤더 반환"""
     email = f"testuser_{uuid.uuid4().hex[:8]}@example.com"
     password = "TestPassword123!"
-    signup_data = {"email": email, "password": password, "nickname": "임시유저"}
+    signup_data = {
+        "email": email,
+        "password": password,
+        "password_check": password, 
+        "nickname": "임시유저"
+    }
     
     res = client.post("/api/auth/signup", json=signup_data)
     assert res.status_code in [200, 201]

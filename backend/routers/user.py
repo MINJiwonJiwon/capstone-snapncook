@@ -87,11 +87,23 @@ def change_password(
     if not verify_password(password_update.current_password, current_user.password_hash):
         raise HTTPException(status_code=400, detail="현재 비밀번호가 일치하지 않습니다.")
 
-    new_password_hash = hash_password(password_update.new_password)
-    current_user.password_hash = new_password_hash
+    if password_update.new_password != password_update.new_password_check:
+        raise HTTPException(status_code=400, detail="새 비밀번호와 확인이 일치하지 않습니다.")
 
+    if password_update.current_password == password_update.new_password:
+        raise HTTPException(status_code=400, detail="새 비밀번호는 이전 비밀번호와 달라야 합니다.")
+
+    if len(password_update.new_password) < 8 or \
+       not any(c.isdigit() for c in password_update.new_password) or \
+       not any(c in "@$!%*#?&" for c in password_update.new_password):
+        raise HTTPException(
+            status_code=400,
+            detail="비밀번호는 8자 이상이며, 숫자와 특수문자(@$!%*#?&)를 포함해야 합니다."
+        )
+
+    current_user.password_hash = hash_password(password_update.new_password)
     db.commit()
-    return {"message": "Password updated successfully"}
+    return {"message": "비밀번호가 성공적으로 변경되었습니다."}
 
 # ✅ 소셜 연동 상태 확인
 @router.get(

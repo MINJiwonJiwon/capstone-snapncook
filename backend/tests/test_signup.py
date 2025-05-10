@@ -20,6 +20,7 @@ def test_signup_user():
     user_data = {
         "email": f"testuser{uuid4()}@example.com",
         "password": "Password123!", 
+        "password_check": "Password123!", 
         "nickname": "테스트유저"
     }
     response = client.post("/api/auth/signup", json=user_data)
@@ -29,10 +30,12 @@ def test_signup_user():
 
 def test_signup_duplicate_user():
     user_data = {
-    "email": f"duplicateuser{uuid4()}@example.com", 
-    "password": "password123!",
-    "nickname": "중복유저"
+        "email": f"duplicateuser{uuid4()}@example.com", 
+        "password": "password123!",
+        "password_check": "password123!", 
+        "nickname": "중복유저"
     }
+
     # 첫 번째 회원가입
     res1 = client.post("/api/auth/signup", json=user_data)
     assert res1.status_code in [200, 201], f"First signup failed: {res1.status_code}"

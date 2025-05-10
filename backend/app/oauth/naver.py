@@ -28,33 +28,38 @@ async def login(request: Request):
 
 @router.get("/callback")
 async def callback(request: Request, db: Session = Depends(get_db)):
-    token = await oauth.naver.authorize_access_token(request)
+    try:
+        token = await oauth.naver.authorize_access_token(request)
 
-    # 사용자 정보 요청
-    resp = await oauth.naver.get("https://openapi.naver.com/v1/nid/me", token=token)
-    profile = resp.json()
+        # 사용자 정보 요청
+        resp = await oauth.naver.get("https://openapi.naver.com/v1/nid/me", token=token)
+        profile = resp.json()
 
-    print("🔥 Naver userinfo:", profile)
+        print("🔥 Naver userinfo:", profile)
 
-    response_data = profile.get("response", {})
-    naver_id = str(response_data.get("id"))
-    email = response_data.get("email")
-    name = response_data.get("name", "네이버유저")
+        response_data = profile.get("response", {})
+        naver_id = str(response_data.get("id"))
+        email = response_data.get("email")
+        name = response_data.get("name", "네이버유저")
 
-    print(f"🔥 email: {email}")
-    print(f"🔥 naver_id: {naver_id}")
+        print(f"🔥 email: {email}")
+        print(f"🔥 naver_id: {naver_id}")
 
-    if not naver_id or not email:
-        raise HTTPException(status_code=400, detail="네이버 사용자 정보 부족 (id 또는 email 없음)")
+        if not naver_id or not email:
+            raise HTTPException(status_code=400, detail="네이버 사용자 정보 부족 (id 또는 email 없음)")
 
-    user_data = {
-        "email": email,
-        "nickname": name,
-        "profile_image_url": response_data.get("profile_image", None),
-        "oauth_provider": "naver",
-        "oauth_id": naver_id
-    }
+        user_data = {
+            "email": email,
+            "nickname": name,
+            "profile_image_url": response_data.get("profile_image", None),
+            "oauth_provider": "naver",
+            "oauth_id": naver_id
+        }
 
-    user = get_or_create_oauth_user(db=db, **user_data)
+        user = get_or_create_oauth_user(db=db, **user_data)
 
-    return {"access_token": create_access_token(data={"sub": str(user.id)})}
+        return {"access_token": create_access_token(data={"sub": str(user.id)})}
+
+    except Exception as e:
+        print("❌ Naver OAuth 인증 실패:", e)
+        return {"error": "Naver OAuth 인증 중 오류가 발생했습니다."}

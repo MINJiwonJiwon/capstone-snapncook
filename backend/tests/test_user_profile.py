@@ -35,11 +35,12 @@ def test_update_profile_image_only(authenticated_headers):
 def test_change_password(authenticated_headers):
     new_password_data = {
         "current_password": "TestPassword123!",
-        "new_password": "NewPassword456!"
+        "new_password": "NewPassword456!",
+        "new_password_check": "NewPassword456!" 
     }
     res = client.patch("/api/users/me/password", headers=authenticated_headers, json=new_password_data)
     assert res.status_code == 200
-    assert res.json()["message"] == "Password updated successfully"
+    assert res.json()["message"] == "비밀번호가 성공적으로 변경되었습니다."
 
 def test_get_social_status(authenticated_headers):
     res = client.get("/api/users/me/social", headers=authenticated_headers)
