@@ -69,14 +69,14 @@ function App() {
               }
             />
             {/* 추가 기능 페이지 */}
-            <Route path="/function1" 
+            <Route path="/recipe-suggest" 
               element={
                 <ProtectedRoute>
                   <RecipeSuggest />
                 </ProtectedRoute>
               } 
             />
-            <Route path="/function2" 
+            <Route path="/rate-recipe" 
               element={
                 <ProtectedRoute>
                   <RateRecipe />

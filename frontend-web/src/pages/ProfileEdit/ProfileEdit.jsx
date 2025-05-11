@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
+import ProfileImage from '../../components/ProfileImage/ProfileImage';
 import styles from './ProfileEdit.module.css';
 import useAuth from '../../hooks/useAuth';
 import useUser from '../../hooks/useUser';
@@ -23,8 +24,13 @@ const ProfileEdit = () => {
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState(null);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
+  
+  // 파일 입력을 위한 ref
+  const fileInputRef = useRef(null);
   
   // 로그인 상태 및 사용자 정보 확인
   useEffect(() => {
@@ -36,6 +42,8 @@ const ProfileEdit = () => {
     if (user) {
       setNickname(user.nickname || '');
       setEmail(user.email || '');
+      setProfileImageUrl(user.profile_image_url || null);
+      setPreviewImageUrl(user.profile_image_url || null);
     }
   }, [isLoggedIn, user, navigate]);
 
@@ -46,13 +54,52 @@ const ProfileEdit = () => {
     clearMessages();
   };
   
+  // 프로필 이미지 클릭 시 파일 선택 다이얼로그 열기
+  const handleProfileImageClick = () => {
+    fileInputRef.current.click();
+  };
+  
+  // 프로필 이미지 변경
+  const handleProfileImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // 이미지 파일인지 확인
+    if (!file.type.startsWith('image/')) {
+      setFormError('이미지 파일만 업로드할 수 있습니다.');
+      return;
+    }
+    
+    // 파일 크기 제한 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError('이미지 크기는 5MB 이하여야 합니다.');
+      return;
+    }
+    
+    // 파일 미리보기 생성
+    const fileReader = new FileReader();
+    fileReader.onloadend = () => {
+      setPreviewImageUrl(fileReader.result);
+    };
+    fileReader.readAsDataURL(file);
+    
+    // TODO: 파일 업로드 API 연동
+    // 실제 구현 시에는 FormData를 사용하여 서버에 업로드하고, 
+    // 반환된 URL을 setProfileImageUrl에 설정해야 함
+    // 이 예제에서는 미리보기 URL을 사용
+  };
+  
   // 폼 제출 시 API 호출
   const handleSubmit = async (e) => {
     e.preventDefault();
     resetMessages();
     
     // 프로필 정보와 비밀번호 변경 처리 분리
-    const hasProfileChanges = nickname !== user?.nickname || email !== user?.email;
+    const hasProfileChanges = 
+      nickname !== user?.nickname || 
+      email !== user?.email || 
+      previewImageUrl !== user?.profile_image_url;
+    
     const hasPasswordChanges = password && newPassword && confirmPassword;
     
     // 비밀번호 변경이 있는 경우 검증
@@ -87,11 +134,14 @@ const ProfileEdit = () => {
         updatedInfo.email = email;
       }
       
+      // 프로필 이미지가 변경되었는지 확인
+      if (previewImageUrl !== user?.profile_image_url) {
+        // 실제 구현 시에는 이미 업로드된 이미지의 URL을 사용
+        updatedInfo.profile_image_url = previewImageUrl;
+      }
+      
       // 변경된 정보가 있을 경우에만 업데이트
       if (Object.keys(updatedInfo).length > 0) {
-        // 프로필 이미지 URL 포함
-        updatedInfo.profile_image_url = user?.profile_image_url;
-        
         await updateUserInfo(updatedInfo);
         
         // 사용자 정보 새로고침
@@ -180,6 +230,25 @@ const ProfileEdit = () => {
             {formSuccess || success}
           </div>
         )}
+        
+        <div className={styles.profileImageSection}>
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleProfileImageChange}
+            style={{ display: 'none' }}
+          />
+          <ProfileImage 
+            imageUrl={previewImageUrl}
+            alt={nickname || '사용자'}
+            size="large"
+            onClick={handleProfileImageClick}
+          />
+          <p className={styles.imageHint}>
+            클릭하여 프로필 이미지 변경
+          </p>
+        </div>
         
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>

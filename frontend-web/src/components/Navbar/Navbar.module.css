@@ -81,3 +81,118 @@
   visibility: visible;
   transform: translateY(0);
 }
+
+/* 프로필 컨테이너 스타일 */
+.profileContainer {
+  position: relative;
+}
+
+.profileButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 20px;
+  transition: background-color 0.3s;
+}
+
+.profileButton:hover {
+  background-color: var(--hover-main);
+}
+
+.username {
+  color: var(--light-text);
+  font-size: 0.9rem;
+}
+
+.dropdownArrow {
+  font-size: 0.7rem;
+  color: var(--light-text);
+  margin-left: 2px;
+}
+
+/* 프로필 드롭다운 메뉴 */
+.profileDropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  background-color: white;
+  min-width: 250px;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.profileMenuHeader {
+  background-color: var(--accent-color);
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.profileMenuInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.profileName {
+  margin: 0;
+  font-weight: bold;
+  color: var(--main-color);
+  font-size: 1rem;
+}
+
+.profileEmail {
+  margin: 5px 0 0 0;
+  color: var(--text-color);
+  font-size: 0.8rem;
+}
+
+.profileMenuItems {
+  padding: 10px 0;
+}
+
+.profileMenuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  text-align: left;
+  transition: background-color 0.3s;
+}
+
+.profileMenuItem:hover {
+  background-color: var(--accent-color);
+}
+
+.icon {
+  margin-right: 10px;
+  font-style: normal;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1rem;
+  }
+  
+  .logoLink {
+    font-size: 1.2rem;
+  }
+  
+  .navItem {
+    margin-left: 10px;
+  }
+  
+  .username {
+    display: none;
+  }
+}
