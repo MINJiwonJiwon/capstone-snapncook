@@ -1,0 +1,23 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 -->
+  <rect width="200" height="200" fill="#FFF8DC" />
+  
+  <!-- 접시 -->
+  <ellipse cx="100" cy="120" rx="70" ry="20" fill="#FFFAF0" stroke="#DDD8C4" stroke-width="2" />
+  
+  <!-- 요리 대표 이미지 (간단한 햄버거 형태) -->
+  <rect x="70" y="60" width="60" height="10" rx="5" fill="#E2725B" /> <!-- 빵 윗부분 -->
+  <rect x="70" y="70" width="60" height="30" rx="2" fill="#556B2F" /> <!-- 속재료 -->
+  <rect x="70" y="100" width="60" height="10" rx="5" fill="#E2725B" /> <!-- 빵 아랫부분 -->
+  
+  <!-- 포크와 나이프 -->
+  <line x1="40" y1="120" x2="40" y2="70" stroke="#556B2F" stroke-width="2" />
+  <line x1="35" y1="75" x2="45" y2="75" stroke="#556B2F" stroke-width="2" />
+  <line x1="35" y1="80" x2="45" y2="80" stroke="#556B2F" stroke-width="2" />
+  
+  <line x1="160" y1="120" x2="160" y2="70" stroke="#556B2F" stroke-width="2" />
+  <path d="M155 70 L165 70 L160 90 Z" fill="#556B2F" />
+  
+  <!-- 텍스트 -->
+  <text x="100" y="170" font-family="Arial" font-size="14" fill="#556B2F" text-anchor="middle" font-weight="bold">레시피</text>
+</svg>

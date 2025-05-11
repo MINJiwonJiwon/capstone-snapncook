@@ -5,6 +5,8 @@ import Recipe from './pages/Recipe/Recipe';
 import Login from './pages/Login/Login';
 import MyPage from './pages/MyPage/MyPage';
 import ProfileEdit from './pages/ProfileEdit/ProfileEdit';
+import RecipeSuggest from './pages/RecipeSuggest/RecipeSuggest'; // 재료 레시피 페이지
+import RateRecipe from './pages/RateRecipe/RateRecipe'; // 리뷰 페이지
 import OAuthCallback from './components/OAuthCallback/OAuthCallback';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
@@ -65,6 +67,21 @@ function App() {
                   <ProfileEdit />
                 </ProtectedRoute>
               }
+            />
+            {/* 추가 기능 페이지 */}
+            <Route path="/recipe-suggest" 
+              element={
+                <ProtectedRoute>
+                  <RecipeSuggest />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/rate-recipe" 
+              element={
+                <ProtectedRoute>
+                  <RateRecipe />
+                </ProtectedRoute>
+              } 
             />
             {/* 모든 경로를 처리하지 못한 경우 홈으로 리다이렉트 */}
             <Route path="*" element={<Navigate to="/" />} />

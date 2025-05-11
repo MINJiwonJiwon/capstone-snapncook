@@ -11,12 +11,7 @@ export const getUserInfo = async () => {
     return response.data;
   } catch (error) {
     console.error('Get user info error:', error);
-    
-    if (error.response?.status === 401) {
-      throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
-    }
-    
-    throw new Error('사용자 정보를 가져오는 중 오류가 발생했습니다.');
+    throw error;
   }
 };
 
@@ -30,7 +25,7 @@ export const getSocialStatus = async () => {
     return response.data;
   } catch (error) {
     console.error('Get social status error:', error);
-    throw new Error('소셜 연동 상태를 확인하는 중 오류가 발생했습니다.');
+    throw error;
   }
 };
 
@@ -45,7 +40,7 @@ export const disconnectSocial = async (provider) => {
     return response.data;
   } catch (error) {
     console.error(`Disconnect social ${provider} error:`, error);
-    throw new Error(`${provider} 연동 해제 중 오류가 발생했습니다.`);
+    throw error;
   }
 };
 
@@ -65,27 +60,10 @@ export const updateUserInfo = async (userData) => {
       localStorage.setItem('username', userData.nickname);
     }
     
-    // 사용자 객체 업데이트
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      try {
-        const user = JSON.parse(userStr);
-        const updatedUser = { ...user, ...userData };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-      } catch (e) {
-        console.error('Error updating user in localStorage:', e);
-      }
-    }
-    
     return response.data;
   } catch (error) {
     console.error('Update user info error:', error);
-    
-    if (error.response?.status === 400) {
-      throw new Error('잘못된 요청입니다. 입력한 정보를 확인해주세요.');
-    }
-    
-    throw new Error('사용자 정보 업데이트 중 오류가 발생했습니다.');
+    throw error;
   }
 };
 
@@ -102,16 +80,13 @@ export const deleteAccount = async () => {
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('username');
-    localStorage.removeItem('user');
     localStorage.removeItem('imageHistory');
     sessionStorage.removeItem('currentImage');
-    sessionStorage.removeItem('selectedFood');
-    sessionStorage.removeItem('selectedFoodId');
     
     return response.data;
   } catch (error) {
     console.error('Delete account error:', error);
-    throw new Error('계정 삭제 중 오류가 발생했습니다.');
+    throw error;
   }
 };
 
@@ -120,11 +95,13 @@ export const deleteAccount = async () => {
  * @param {Object} passwordData - 비밀번호 정보
  * @param {string} passwordData.current_password - 현재 비밀번호
  * @param {string} passwordData.new_password - 새 비밀번호
+ * @param {string} passwordData.new_password_check - 새 비밀번호 확인
  * @returns {Promise} 변경 결과
  */
 export const changePassword = async (passwordData) => {
   try {
-    const response = await client.post(USER.CHANGE_PASSWORD, passwordData);
+    // POST에서 PATCH로 메서드 변경
+    const response = await client.patch(USER.CHANGE_PASSWORD, passwordData);
     return response.data;
   } catch (error) {
     console.error('Change password error:', error);
@@ -133,16 +110,29 @@ export const changePassword = async (passwordData) => {
     if (error.response) {
       const { status, data } = error.response;
       
-      // 현재 비밀번호 오류
-      if (status === 400 && data.detail && data.detail.includes('Current password is incorrect')) {
-        throw new Error('현재 비밀번호가 올바르지 않습니다.');
+      // 400 Bad Request - 현재 비밀번호 오류
+      if (status === 400) {
+        if (data.detail && data.detail.includes('Current password is incorrect')) {
+          throw new Error('현재 비밀번호가 올바르지 않습니다.');
+        }
       }
       
-      // 비밀번호 조건 불충족
-      if (status === 400 || status === 422) {
-        if (data.detail && data.detail.includes('password')) {
-          throw new Error('새 비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.');
+      // 422 Unprocessable Entity - 유효성 검사 오류
+      if (status === 422) {
+        // 배열 형태의 detail
+        if (Array.isArray(data.detail)) {
+          const errorMessages = data.detail.map(error => error.msg).join('\n');
+          throw new Error(errorMessages);
         }
+        // 객체 형태의 detail
+        else if (typeof data.detail === 'object') {
+          throw new Error(JSON.stringify(data.detail));
+        }
+      }
+      
+      // 기타 오류
+      if (data.detail) {
+        throw new Error(typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail));
       }
     }
     

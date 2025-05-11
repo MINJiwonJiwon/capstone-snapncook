@@ -20,6 +20,20 @@ h2 {
   font-size: 1.3rem;
 }
 
+.profileImageSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.imageHint {
+  margin-top: 10px;
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
 .form {
   display: flex;
   flex-direction: column;
@@ -141,51 +155,18 @@ h2 {
   }
 }
 
-/* 비활성화된 입력 필드 스타일 */
-.disabledInput {
-  background-color: #f5f5f5;
-  cursor: not-allowed;
-}
-
-/* 로딩 상태의 버튼 스타일 */
-.saveButton:disabled, .cancelButton:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* 작은 텍스트 스타일 */
-small {
-  color: #7f8c8d;
-  font-size: 0.8rem;
-  margin-top: 5px;
-  display: block;
-}
-
-/* 탭 스타일 */
-.tabContainer {
-  display: flex;
-  margin-bottom: 20px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.tab {
-  flex: 1;
-  padding: 10px;
-  text-align: center;
-  background: none;
-  border: none;
+/* 프로필 이미지 관련 스타일 */
+.profileImage {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--secondary-color);
   cursor: pointer;
-  font-size: 1rem;
-  color: var(--text-color);
-  transition: all 0.3s ease;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.tab:hover {
-  color: var(--secondary-color);
-}
-
-.activeTab {
-  color: var(--secondary-color);
-  border-bottom: 2px solid var(--secondary-color);
-  font-weight: bold;
+.profileImage:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }

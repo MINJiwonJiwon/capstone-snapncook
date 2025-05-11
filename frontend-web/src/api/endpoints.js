@@ -87,4 +87,25 @@ export const RECOMMEND = {
   PRIVATE_BY_INGREDIENT: (inputId) => `/recommend/private/by-ingredient/${inputId}`,
 };
 
+// 리뷰 관련 엔드포인트 (추가)
+export const REVIEW = {
+  CREATE: '/reviews/',
+  GET: (foodId) => `/reviews/food/${foodId}`,
+  ME: '/reviews/me',
+  PATCH: (reviewId) => `/reviews/${reviewId}`,
+  DELETE: (reviewId) => `/reviews/${reviewId}`,
+};
+
+// 재료 입력 관련 엔드포인트 (추가)
+export const INGINPUT = {
+  CREATE: '/user-ingredient-inputs/',
+  GET: (inputId) => `/user-ingredient-inputs/${inputId}`,
+};
+
+// 재료 입력 레시피 관련 엔드포인트 (추가)
+export const INGINPUTRECIPE = {
+  CREATE: '/user-ingredient-input-recipes/',
+  GET: (inputId) => `/user-ingredient-input-recipes/input/${inputId}`,
+};
+
 export { BASE_URL };
