@@ -80,7 +80,7 @@
 - **응답**: 400 / 422  
 - **화면 전환**: `/login`으로 이동되었지만 내용 없음
 
-![비밀번호 조건 오류 화면](../image/password_error.png)
+![비밀번호 조건 오류 화면](../image/1st/password_error.png)
 
 - **상태**: ⚠️ UI 처리 미흡, 백엔드 로직은 정상
 
@@ -98,7 +98,7 @@
 - **기대 결과**: 200, `"Password updated successfully"`
 - **상태**: ❌ 실행자체가 안 됨
 
-![비밀번호 조건 오류 화면](../image/change_password_error.png)
+![비밀번호 조건 오류 화면](../image/1st/change_password_error.png)
 - 비밀번호를 맞게 입력해도 틀리게 입력해도 "비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다."만 뜨고 아무것도 변하는 것이 없음
 
 ---
@@ -128,7 +128,7 @@
 - **로그**: 백엔드에서는 `302 Found`로 redirect 동작 확인됨
 - **문제**: 이후 redirect 흐름에서 오류 발생
 - **화면**: `"Google/Kakao/Naver 로그인 시작 중 오류가 발생했습니다."` 메시지 표시됨
-![소셜 로그인 오류 발생](../image/oauth_login_error.png)
+![소셜 로그인 오류 발생](../image/1st/oauth_login_error.png)
 - **원인 추정**:
   - OAuth redirect URI mismatch
   - 프론트에서 redirect callback 처리 누락

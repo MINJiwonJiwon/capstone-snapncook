@@ -93,7 +93,7 @@
 - **프론트 화면 반응**:
   - `"[object Object],[object Object]"`라는 텍스트가 붉은 경고 박스로 출력됨
   - 사용자 입장에서 무슨 오류인지 알 수 없음
-  ![object object 오류 화면](../image/password_error_object_object.png)
+  ![object object 오류 화면](../image/2nd/password_error_object_object.png)
 
 - **문제 원인**:
   - 백엔드에서 `detail` 배열 형태로 메시지를 반환했지만,
@@ -169,7 +169,7 @@
 - **실제 결과**:
   - ❌ `"비밀번호 불일치"`는 프론트에서 자체 체크되어 `"새 비밀번호와 확인 비밀번호가 일치하지 않습니다."` 메시지로 잘 출력됨 (요청도 서버에 안 감)
   - ❌ `"비밀번호 조건 미달"` 상황에서는 서버 응답(422)이 오긴 했으나, `"비밀번호 변경 중 오류가 발생했습니다."`라는 **일반화된 메시지만** 출력됨  
-    ![조건 위반 시 에러 메시지](../image/change_password_error_server_only.png)
+    ![조건 위반 시 에러 메시지](../image/2nd/change_password_error_server_only.png)
   - ❌ `"현재 비밀번호 오류"` 등 나머지 케이스는 서버 도달도 못 했고, 프론트에서 엉뚱한 고정 메시지를 출력함
 
 - **원인 분석**:
