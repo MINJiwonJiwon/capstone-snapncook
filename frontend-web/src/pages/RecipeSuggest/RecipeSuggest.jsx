@@ -11,7 +11,8 @@ const RecipeSuggest = () => {
     currentInput,
     submitIngredientInput,
     loading: inputLoading,
-    error: inputError
+    error: inputError,
+    clearError: clearInputError
   } = useIngInput();
 
   // 추천 레시피 관련 훅
@@ -19,28 +20,63 @@ const RecipeSuggest = () => {
     inputRecipes,
     fetchInputRecipesByInputId,
     loading: recipeLoading,
-    error: recipeError
+    error: recipeError,
+    clearError: clearRecipeError
   } = useIngInputRecipe();
 
   // 입력창 상태
   const [inputIngredients, setInputIngredients] = useState('');
   // 최근 검색어(입력값)
   const [searchedIngredients, setSearchedIngredients] = useState('');
+  // 로컬 에러 상태
+  const [error, setError] = useState(null);
 
-  // 폼 제출
+  // 폼 제출 - 수정된 버전
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!inputIngredients.trim()) return;
+    
+    // 에러 초기화
+    setError(null);
+    clearInputError && clearInputError();
+    clearRecipeError && clearRecipeError();
+    
+    // 입력값 검증 추가
+    if (!inputIngredients || !inputIngredients.trim()) {
+      setError('재료를 입력해주세요.');
+      return;
+    }
+    
+    // 검색어로 설정
     setSearchedIngredients(inputIngredients);
+    
     try {
-      // 재료 입력 저장 (서버에 입력 기록 생성)
-      const result = await submitIngredientInput({ ingredient_text: inputIngredients });
+      // 재료 입력 저장 - input_text 필드명으로 수정
+      const result = await submitIngredientInput({ 
+        input_text: inputIngredients.trim() 
+      });
+      
       // 입력 기록 ID로 추천 레시피 조회
       if (result && result.id) {
         fetchInputRecipesByInputId(result.id);
       }
     } catch (err) {
-      // 에러는 훅에서 처리됨
+      // API 에러 분석
+      if (err.response && err.response.data) {
+        // validation 오류 (422)
+        if (err.response.status === 422) {
+          const data = err.response.data;
+          if (Array.isArray(data.detail)) {
+            const errorMsg = data.detail.map(e => e.msg).join(', ');
+            setError(errorMsg);
+          } else {
+            setError(data.detail || '재료 입력 저장 실패');
+          }
+        } else {
+          setError(err.response.data.detail || '재료 입력 저장 실패');
+        }
+      } else {
+        setError('재료 입력 저장 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -76,9 +112,9 @@ const RecipeSuggest = () => {
         </form>
 
         {/* 에러 메시지 */}
-        {(inputError || recipeError) && (
+        {(error || inputError || recipeError) && (
           <div className={styles.error}>
-            {inputError || recipeError}
+            {error || inputError || recipeError}
           </div>
         )}
 
@@ -90,13 +126,19 @@ const RecipeSuggest = () => {
               : '재료를 입력해보세요'}
           </h1>
           <div className={styles.recipeGrid}>
-            {recipeLoading ? (
+            {recipeLoading || inputLoading ? (
               <div className={styles.loading}>레시피를 찾고 있습니다...</div>
             ) : (
               inputRecipes && inputRecipes.length > 0 ? (
                 inputRecipes.map((recipe) => (
                   <div key={recipe.id} className={styles.recipeCard}>
-                    <img src={recipe.image_url || '/default-food.jpg'} alt={recipe.title} />
+                    <img 
+                      src={recipe.image_url || '/assets/images/default-recipe.svg'} 
+                      alt={recipe.title}
+                      onError={(e) => {
+                        e.target.src = '/assets/images/default-recipe.svg';
+                      }}
+                    />
                     <h3>{recipe.title}</h3>
                     <p className={styles.ingredients}>
                       <b>재료:</b> {recipe.ingredients}

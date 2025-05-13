@@ -12,12 +12,23 @@ import { getMypageSummary } from '../../api/mypage';
 const MyPage = () => {
   const navigate = useNavigate();
   const { isLoggedIn, user } = useAuth();
-  const { bookmarks, fetchMyBookmarks, removeBookmark } = useBookmark();
+  const { bookmarks, fetchMyBookmarks, removeBookmark, isBookmarked } = useBookmark();
   
   const [detectionResults, setDetectionResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [pageData, setPageData] = useState(null);
+  const [pageData, setPageData] = useState({
+    bookmarks: [],
+    detection_results: [],
+    reviews: []
+  });
+  
+  // 각 섹션별 로딩/에러 상태
+  const [sectionStatus, setSectionStatus] = useState({
+    bookmarks: { loading: false, error: null },
+    detections: { loading: false, error: null },
+    reviews: { loading: false, error: null }
+  });
   
   // 로그인 상태 확인 및 데이터 로드
   useEffect(() => {
@@ -29,26 +40,94 @@ const MyPage = () => {
     loadMyPageData();
   }, [isLoggedIn, navigate]);
   
-  // 마이페이지 데이터 로드
+  // 마이페이지 데이터 로드 - 개선된 버전
   const loadMyPageData = async () => {
     setLoading(true);
     setError(null);
     
+    // 각 섹션의 초기 로딩 상태 설정
+    setSectionStatus({
+      bookmarks: { loading: true, error: null },
+      detections: { loading: true, error: null },
+      reviews: { loading: true, error: null }
+    });
+    
     try {
-      // 마이페이지 요약 정보 가져오기
-      const summaryData = await getMypageSummary();
-      setPageData(summaryData);
+      // Promise.allSettled를 사용하여 모든 API 요청을 독립적으로 처리
+      const [bookmarksResult, detectionsResult, summaryResult] = await Promise.allSettled([
+        // 북마크 목록 가져오기
+        fetchMyBookmarks().catch(err => {
+          console.error('Fetch bookmarks error:', err);
+          setSectionStatus(prev => ({
+            ...prev,
+            bookmarks: { loading: false, error: '북마크를 불러오는 중 오류가 발생했습니다.' }
+          }));
+          return []; // 빈 배열 반환
+        }),
+        
+        // 탐지 결과 목록 가져오기
+        getMyDetectionResults().catch(err => {
+          console.error('Get detection results error:', err);
+          // 404 에러는 데이터 없음으로 처리
+          if (err.response && err.response.status === 404) {
+            setSectionStatus(prev => ({
+              ...prev,
+              detections: { loading: false, error: null }
+            }));
+            return []; // 데이터 없음 - 빈 배열 반환
+          }
+          
+          setSectionStatus(prev => ({
+            ...prev,
+            detections: { loading: false, error: '탐지 결과를 불러오는 중 오류가 발생했습니다.' }
+          }));
+          return [];
+        }),
+        
+        // 마이페이지 요약 정보 가져오기
+        getMypageSummary().catch(err => {
+          console.error('Get mypage summary error:', err);
+          setSectionStatus(prev => ({
+            ...prev,
+            reviews: { loading: false, error: '리뷰 정보를 불러오는 중 오류가 발생했습니다.' }
+          }));
+          // 기본 구조 반환
+          return {
+            bookmarks: [],
+            detection_results: [],
+            reviews: []
+          };
+        })
+      ]);
       
-      // 북마크 목록 가져오기
-      await fetchMyBookmarks();
+      // 결과 처리 및 로딩 상태 업데이트
+      if (bookmarksResult.status === 'fulfilled') {
+        setSectionStatus(prev => ({
+          ...prev,
+          bookmarks: { loading: false, error: null }
+        }));
+      }
       
-      // 탐지 결과 목록 가져오기
-      const detectionData = await getMyDetectionResults();
-      setDetectionResults(detectionData);
+      if (detectionsResult.status === 'fulfilled') {
+        setDetectionResults(detectionsResult.value || []);
+        setSectionStatus(prev => ({
+          ...prev,
+          detections: { loading: false, error: null }
+        }));
+      }
+      
+      if (summaryResult.status === 'fulfilled') {
+        setPageData(summaryResult.value);
+        setSectionStatus(prev => ({
+          ...prev,
+          reviews: { loading: false, error: null }
+        }));
+      }
       
       setLoading(false);
     } catch (err) {
-      setError('마이페이지 데이터를 불러오는 중 오류가 발생했습니다.');
+      // 전체적인 오류 처리
+      setError('일부 데이터를 불러오는 중 오류가 발생했습니다.');
       setLoading(false);
       console.error('Load mypage data error:', err);
     }
@@ -58,6 +137,8 @@ const MyPage = () => {
   const handleToggleFavorite = async (bookmarkId) => {
     try {
       await removeBookmark(bookmarkId);
+      // 데이터 새로고침
+      loadMyPageData();
     } catch (err) {
       console.error('Toggle bookmark error:', err);
     }
@@ -81,7 +162,7 @@ const MyPage = () => {
     navigate('/mypage/profile');
   };
   
-  // 로딩 중 표시
+  // 전체 로딩 중 표시
   if (loading) {
     return (
       <>
@@ -95,7 +176,7 @@ const MyPage = () => {
     );
   }
   
-  // 에러 표시
+  // 전체 에러 표시
   if (error) {
     return (
       <>
@@ -137,130 +218,159 @@ const MyPage = () => {
         {/* 즐겨찾기 섹션 */}
         <div className={styles.favoritesSection}>
           <h2>즐겨찾기한 레시피</h2>
-          <div className={styles.galleryContainer}>
-            {!pageData || !pageData.bookmarks || pageData.bookmarks.length === 0 ? (
-              <div className={styles.emptyGallery}>즐겨찾기한 레시피가 없습니다.</div>
-            ) : (
-              pageData.bookmarks.map((bookmark, index) => (
-                <div key={`bookmark-${index}`} className={styles.galleryItem}>
-                  <img 
-                    src={bookmark.recipe_thumbnail || '/assets/images/default-recipe.jpg'} 
-                    alt={bookmark.recipe_title} 
-                    onClick={() => handleImageClick(
-                      bookmark.recipe_thumbnail || '/assets/images/default-recipe.jpg',
-                      bookmark.recipe_title
-                    )} 
-                  />
-                  <button 
-                    className={`${styles.favoriteButton} ${styles.active}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleFavorite(bookmark.id);
-                    }}
-                  >
-                    ♥
-                  </button>
-                  <div className={styles.imageInfo}>
-                    <h4>{bookmark.recipe_title}</h4>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-        
-        {/* 모든 업로드 사진 섹션 */}
-        <div className={styles.uploadsSection}>
-          <h2>내가 업로드한 모든 사진</h2>
-          <div className={styles.galleryContainer}>
-            {!pageData || !pageData.detection_results || pageData.detection_results.length === 0 ? (
-              <div className={styles.emptyGallery}>업로드한 사진이 없습니다.</div>
-            ) : (
-              pageData.detection_results.map((item, index) => {
-                const isFavorite = pageData.bookmarks.some(
-                  bookmark => bookmark.id === item.id
-                );
-                
-                return (
-                  <div key={`detection-${index}`} className={styles.galleryItem}>
+          {sectionStatus.bookmarks.loading ? (
+            <div className={styles.sectionLoading}>즐겨찾기 목록을 불러오는 중...</div>
+          ) : sectionStatus.bookmarks.error ? (
+            <div className={styles.sectionError}>{sectionStatus.bookmarks.error}</div>
+          ) : (
+            <div className={styles.galleryContainer}>
+              {!pageData.bookmarks || pageData.bookmarks.length === 0 ? (
+                <div className={styles.emptyGallery}>즐겨찾기한 레시피가 없습니다.</div>
+              ) : (
+                pageData.bookmarks.map((bookmark, index) => (
+                  <div key={`bookmark-${index}`} className={styles.galleryItem}>
                     <img 
-                      src={item.image_path || '/assets/images/default-food.jpg'} 
-                      alt={item.food_name} 
+                      src={bookmark.recipe_thumbnail || '/assets/images/default-recipe.svg'} 
+                      alt={bookmark.recipe_title} 
                       onClick={() => handleImageClick(
-                        item.image_path || '/assets/images/default-food.jpg',
-                        item.food_name
+                        bookmark.recipe_thumbnail || '/assets/images/default-recipe.svg',
+                        bookmark.recipe_title
                       )} 
+                      onError={(e) => {
+                        e.target.src = '/assets/images/default-recipe.svg';
+                      }}
                     />
                     <button 
-                      className={`${styles.favoriteButton} ${isFavorite ? styles.active : ''}`}
+                      className={`${styles.favoriteButton} ${styles.active}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleToggleFavorite(item.id);
+                        handleToggleFavorite(bookmark.id);
                       }}
                     >
                       ♥
                     </button>
                     <div className={styles.imageInfo}>
-                      <h4>{item.food_name || '음식 이미지'}</h4>
-                      <p>정확도: {Math.round(item.confidence * 100)}%</p>
+                      <h4>{bookmark.recipe_title}</h4>
                     </div>
                   </div>
-                );
-              })
-            )}
-          </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
         
-        {/* 리뷰 섹션 추가 */}
-        {pageData && pageData.reviews && pageData.reviews.length > 0 && (
-          <div className={styles.reviewsSection}>
-            <h2>내가 작성한 리뷰</h2>
+        {/* 모든 업로드 사진 섹션 */}
+        <div className={styles.uploadsSection}>
+          <h2>내가 업로드한 모든 사진</h2>
+          {sectionStatus.detections.loading ? (
+            <div className={styles.sectionLoading}>업로드 사진을 불러오는 중...</div>
+          ) : sectionStatus.detections.error ? (
+            <div className={styles.sectionError}>{sectionStatus.detections.error}</div>
+          ) : (
+            <div className={styles.galleryContainer}>
+              {!pageData.detection_results || pageData.detection_results.length === 0 ? (
+                <div className={styles.emptyGallery}>업로드한 사진이 없습니다.</div>
+              ) : (
+                pageData.detection_results.map((item, index) => {
+                  const isFavorite = pageData.bookmarks && pageData.bookmarks.some(
+                    bookmark => bookmark.id === item.id
+                  );
+                  
+                  return (
+                    <div key={`detection-${index}`} className={styles.galleryItem}>
+                      <img 
+                        src={item.image_path || '/assets/images/default-food.svg'} 
+                        alt={item.food_name} 
+                        onClick={() => handleImageClick(
+                          item.image_path || '/assets/images/default-food.svg',
+                          item.food_name
+                        )} 
+                        onError={(e) => {
+                          e.target.src = '/assets/images/default-food.svg';
+                        }}
+                      />
+                      <button 
+                        className={`${styles.favoriteButton} ${isFavorite ? styles.active : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleFavorite(item.id);
+                        }}
+                      >
+                        ♥
+                      </button>
+                      <div className={styles.imageInfo}>
+                        <h4>{item.food_name || '음식 이미지'}</h4>
+                        <p>정확도: {Math.round(item.confidence * 100)}%</p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* 리뷰 섹션 */}
+        <div className={styles.reviewsSection}>
+          <h2>내가 작성한 리뷰</h2>
+          {sectionStatus.reviews.loading ? (
+            <div className={styles.sectionLoading}>리뷰를 불러오는 중...</div>
+          ) : sectionStatus.reviews.error ? (
+            <div className={styles.sectionError}>{sectionStatus.reviews.error}</div>
+          ) : (
             <div className={styles.reviewsList}>
-              {pageData.reviews.map((review, index) => (
-                <div key={`review-${index}`} className={styles.reviewCard}>
-                  <div className={styles.reviewHeader}>
-                    <h4>{review.food_name}</h4>
-                    <div className={styles.reviewRating}>
-                      {[...Array(5)].map((_, i) => (
-                        <span 
-                          key={i} 
-                          className={i < review.rating ? styles.starFilled : styles.starEmpty}
-                        >
-                          ★
-                        </span>
-                      ))}
+              {!pageData.reviews || pageData.reviews.length === 0 ? (
+                <div className={styles.emptyGallery}>작성한 리뷰가 없습니다.</div>
+              ) : (
+                pageData.reviews.map((review, index) => (
+                  <div key={`review-${index}`} className={styles.reviewCard}>
+                    <div className={styles.reviewHeader}>
+                      <h4>{review.food_name}</h4>
+                      <div className={styles.reviewRating}>
+                        {[...Array(5)].map((_, i) => (
+                          <span 
+                            key={i} 
+                            className={i < review.rating ? styles.starFilled : styles.starEmpty}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className={styles.reviewContent}>
+                      {review.food_image_url && (
+                        <div className={styles.reviewImageContainer}>
+                          <img 
+                            src={review.food_image_url} 
+                            alt={review.food_name} 
+                            className={styles.reviewImage}
+                            onError={(e) => {
+                              e.target.src = '/assets/images/default-food.svg';
+                            }}
+                          />
+                        </div>
+                      )}
+                      <p className={styles.reviewText}>{review.content}</p>
+                    </div>
+                    
+                    <div className={styles.reviewFooter}>
+                      <span className={styles.reviewDate}>
+                        {new Date(review.created_at).toLocaleDateString()}
+                      </span>
+                      <button 
+                        className={styles.editReviewButton}
+                        onClick={() => navigate(`/function2?review=${review.id}`)}
+                      >
+                        수정하기
+                      </button>
                     </div>
                   </div>
-                  
-                  <div className={styles.reviewContent}>
-                    {review.food_image_url && (
-                      <div className={styles.reviewImageContainer}>
-                        <img 
-                          src={review.food_image_url} 
-                          alt={review.food_name} 
-                          className={styles.reviewImage}
-                        />
-                      </div>
-                    )}
-                    <p className={styles.reviewText}>{review.content}</p>
-                  </div>
-                  
-                  <div className={styles.reviewFooter}>
-                    <span className={styles.reviewDate}>
-                      {new Date(review.created_at).toLocaleDateString()}
-                    </span>
-                    <button 
-                      className={styles.editReviewButton}
-                      onClick={() => navigate(`/function2?review=${review.id}`)}
-                    >
-                      수정하기
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       
       <Footer />

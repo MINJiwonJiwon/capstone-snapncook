@@ -84,11 +84,14 @@ const Navbar = () => {
             <li className={styles.navItem}>
               <div className={styles.profileContainer} ref={profileMenuRef}>
                 <div className={styles.profileButton} onClick={toggleProfileMenu}>
-                  <ProfileImage 
-                    imageUrl={user?.profile_image_url}
-                    alt={username}
-                    size="small"
-                  />
+                  {/* 프로필 이미지와 사용자 이름이 겹치지 않도록 분리 */}
+                  <div className={styles.profileImageWrapper}>
+                    <ProfileImage 
+                      imageUrl={user?.profile_image_url}
+                      alt={username}
+                      size="small"
+                    />
+                  </div>
                   <span className={styles.username}>{username}</span>
                   <span className={styles.dropdownArrow}>▼</span>
                 </div>
@@ -96,11 +99,13 @@ const Navbar = () => {
                 {showProfileMenu && (
                   <div className={styles.profileDropdown}>
                     <div className={styles.profileMenuHeader}>
-                      <ProfileImage 
-                        imageUrl={user?.profile_image_url}
-                        alt={username}
-                        size="medium"
-                      />
+                      <div className={styles.profileMenuImageWrapper}>
+                        <ProfileImage 
+                          imageUrl={user?.profile_image_url}
+                          alt={username}
+                          size="medium"
+                        />
+                      </div>
                       <div className={styles.profileMenuInfo}>
                         <p className={styles.profileName}>{username}</p>
                         <p className={styles.profileEmail}>{user?.email}</p>

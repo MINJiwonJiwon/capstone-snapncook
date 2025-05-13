@@ -91,7 +91,7 @@ export const deleteAccount = async () => {
 };
 
 /**
- * 비밀번호 변경 API
+ * 비밀번호 변경 API - HTTP 메서드를 PATCH로 수정
  * @param {Object} passwordData - 비밀번호 정보
  * @param {string} passwordData.current_password - 현재 비밀번호
  * @param {string} passwordData.new_password - 새 비밀번호
@@ -106,36 +106,7 @@ export const changePassword = async (passwordData) => {
   } catch (error) {
     console.error('Change password error:', error);
     
-    // 오류 메시지 상세화
-    if (error.response) {
-      const { status, data } = error.response;
-      
-      // 400 Bad Request - 현재 비밀번호 오류
-      if (status === 400) {
-        if (data.detail && data.detail.includes('Current password is incorrect')) {
-          throw new Error('현재 비밀번호가 올바르지 않습니다.');
-        }
-      }
-      
-      // 422 Unprocessable Entity - 유효성 검사 오류
-      if (status === 422) {
-        // 배열 형태의 detail
-        if (Array.isArray(data.detail)) {
-          const errorMessages = data.detail.map(error => error.msg).join('\n');
-          throw new Error(errorMessages);
-        }
-        // 객체 형태의 detail
-        else if (typeof data.detail === 'object') {
-          throw new Error(JSON.stringify(data.detail));
-        }
-      }
-      
-      // 기타 오류
-      if (data.detail) {
-        throw new Error(typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail));
-      }
-    }
-    
-    throw new Error('비밀번호 변경 중 오류가 발생했습니다.');
+    // 오류를 그대로 전달하여 상위 컴포넌트에서 처리하도록 함
+    throw error;
   }
 };

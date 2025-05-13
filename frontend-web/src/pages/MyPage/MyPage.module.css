@@ -230,6 +230,26 @@ h2 {
   color: white;
 }
 
+/* 섹션별 로딩/에러 스타일 추가 */
+.sectionLoading, .sectionError {
+  padding: 15px;
+  text-align: center;
+  margin: 10px 0;
+  border-radius: 5px;
+}
+
+.sectionLoading {
+  background-color: rgba(33, 150, 243, 0.1);
+  color: #2196F3;
+  border: 1px solid #2196F3;
+}
+
+.sectionError {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #F44336;
+  border: 1px solid #F44336;
+}
+
 /* 로딩 메시지 스타일 */
 .loadingMessage {
   background-color: rgba(33, 150, 243, 0.1);

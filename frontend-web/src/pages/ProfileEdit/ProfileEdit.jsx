@@ -29,6 +29,16 @@ const ProfileEdit = () => {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   
+  // 필드별 오류 메시지 상태
+  const [fieldErrors, setFieldErrors] = useState({
+    email: '',
+    nickname: '',
+    password: '',
+    newPassword: '',
+    confirmPassword: '',
+    profileImage: ''
+  });
+  
   // 파일 입력을 위한 ref
   const fileInputRef = useRef(null);
   
@@ -51,6 +61,14 @@ const ProfileEdit = () => {
   const resetMessages = () => {
     setFormError('');
     setFormSuccess('');
+    setFieldErrors({
+      email: '',
+      nickname: '',
+      password: '',
+      newPassword: '',
+      confirmPassword: '',
+      profileImage: ''
+    });
     clearMessages();
   };
   
@@ -59,20 +77,141 @@ const ProfileEdit = () => {
     fileInputRef.current.click();
   };
   
+  // 오류 메시지 변환 함수 - 비밀번호 변경
+  const getPasswordErrorMessage = (error, status) => {
+    // 문자열 패턴 매칭
+    if (typeof error === 'string') {
+      if (error.includes('Current password is incorrect')) {
+        return '현재 비밀번호가 올바르지 않습니다.';
+      }
+      if (error.includes('same as')) {
+        return '새 비밀번호는 이전 비밀번호와 달라야 합니다.';
+      }
+      if (error.includes('password') && error.includes('match')) {
+        return '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.';
+      }
+      if (error.includes('password') && (error.includes('character') || error.includes('digit') || error.includes('letter'))) {
+        return '비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.';
+      }
+      if (error.includes('password') && error.includes('weak')) {
+        return '보안에 취약한 비밀번호입니다. 더 강력한 비밀번호를 사용해주세요.';
+      }
+      if (error.includes('password') && error.includes('common')) {
+        return '너무 흔한 비밀번호입니다. 더 독특한 비밀번호를 사용해주세요.';
+      }
+      
+      // 그 외 알 수 있는 오류는 그대로 표시
+      return error;
+    }
+    
+    // HTTP 상태 코드 기반 메시지
+    if (status) {
+      switch (status) {
+        case 400:
+          return '비밀번호 변경 요청이 올바르지 않습니다.';
+        case 401:
+          return '인증에 실패했습니다. 다시 로그인해주세요.';
+        case 403:
+          return '비밀번호 변경 권한이 없습니다.';
+        case 422:
+          return '비밀번호가 유효하지 않습니다. 입력한 정보를 확인해주세요.';
+        case 500:
+        case 502:
+        case 503:
+          return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        default:
+          return '비밀번호 변경 중 오류가 발생했습니다.';
+      }
+    }
+    
+    return '비밀번호 변경에 실패했습니다. 다시 시도해주세요.';
+  };
+  
+  // 오류 메시지 변환 함수 - 프로필 정보 수정
+  const getProfileErrorMessage = (error, status) => {
+    // 문자열 패턴 매칭
+    if (typeof error === 'string') {
+      if (error.includes('email') && error.includes('already')) {
+        return '이미 등록된 이메일입니다.';
+      }
+      if (error.includes('nickname') && error.includes('already')) {
+        return '이미 사용 중인 닉네임입니다. 다른 닉네임을 선택해주세요.';
+      }
+      if (error.includes('email') && error.includes('valid')) {
+        return '유효한 이메일 주소를 입력해주세요.';
+      }
+      if (error.includes('nickname') && error.includes('length')) {
+        return '닉네임은 2자 이상, 20자 이하로 입력해주세요.';
+      }
+      if (error.includes('nickname') && error.includes('character')) {
+        return '닉네임에 허용되지 않는 문자가 포함되어 있습니다.';
+      }
+      if (error.includes('image') && error.includes('size')) {
+        return '이미지 크기가 너무 큽니다. 5MB 이하의 이미지를 사용해주세요.';
+      }
+      if (error.includes('image') && error.includes('format') || error.includes('type')) {
+        return '지원되지 않는 이미지 형식입니다. JPG, PNG, GIF 형식을 사용해주세요.';
+      }
+      
+      // 그 외 알 수 있는 오류는 그대로 표시
+      return error;
+    }
+    
+    // HTTP 상태 코드 기반 메시지
+    if (status) {
+      switch (status) {
+        case 400:
+          return '프로필 수정 요청이 올바르지 않습니다.';
+        case 401:
+          return '인증에 실패했습니다. 다시 로그인해주세요.';
+        case 403:
+          return '프로필 수정 권한이 없습니다.';
+        case 409:
+          return '중복된 정보가 있습니다. 다른 이메일이나 닉네임을 사용해주세요.';
+        case 413:
+          return '파일 크기가 너무 큽니다. 5MB 이하의 이미지를 사용해주세요.';
+        case 415:
+          return '지원되지 않는 파일 형식입니다.';
+        case 422:
+          return '입력한 정보가 유효하지 않습니다. 양식을 확인해주세요.';
+        case 500:
+        case 502:
+        case 503:
+          return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        default:
+          return '프로필 수정 중 오류가 발생했습니다.';
+      }
+    }
+    
+    return '프로필 수정에 실패했습니다. 다시 시도해주세요.';
+  };
+  
   // 프로필 이미지 변경
   const handleProfileImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
+    // 필드 오류 초기화
+    setFieldErrors(prev => ({
+      ...prev,
+      profileImage: ''
+    }));
+    
     // 이미지 파일인지 확인
     if (!file.type.startsWith('image/')) {
-      setFormError('이미지 파일만 업로드할 수 있습니다.');
+      setFieldErrors(prev => ({
+        ...prev,
+        profileImage: '이미지 파일만 업로드할 수 있습니다.'
+      }));
       return;
     }
     
     // 파일 크기 제한 (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setFormError('이미지 크기는 5MB 이하여야 합니다.');
+      setFieldErrors(prev => ({
+        ...prev,
+        profileImage: '이미지 크기는 5MB 이하여야 합니다.'
+      }));
       return;
     }
     
@@ -120,6 +259,33 @@ const ProfileEdit = () => {
 
   // 프로필 정보 변경 처리
   const handleProfileSubmit = async () => {
+    // 필드별 유효성 검사
+    let hasErrors = false;
+    const newFieldErrors = { ...fieldErrors };
+    
+    // 이메일 형식 검사
+    if (email && email !== user?.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        newFieldErrors.email = '올바른 이메일 형식이 아닙니다.';
+        hasErrors = true;
+      }
+    }
+    
+    // 닉네임 길이 검사
+    if (nickname && nickname !== user?.nickname) {
+      if (nickname.length < 2 || nickname.length > 20) {
+        newFieldErrors.nickname = '닉네임은 2자 이상, 20자 이하로 입력해주세요.';
+        hasErrors = true;
+      }
+    }
+    
+    // 오류가 있으면 상태 업데이트 후 중단
+    if (hasErrors) {
+      setFieldErrors(newFieldErrors);
+      return;
+    }
+    
     try {
       // 사용자 정보 업데이트
       const updatedInfo = {};
@@ -150,44 +316,109 @@ const ProfileEdit = () => {
       }
     } catch (err) {
       console.error('Profile update error:', err);
-      setFormError(err.message || '프로필 업데이트 중 오류가 발생했습니다.');
+      
+      // 오류 응답에 따른 메시지 구분 처리
+      if (err.response) {
+        const { status, data } = err.response;
+        
+        // 필드별 오류 메시지 처리
+        if (data.detail && typeof data.detail === 'object') {
+          // 필드별 오류 메시지가 있는 경우
+          const newErrors = { ...fieldErrors };
+          
+          if (data.detail.email) {
+            newErrors.email = getProfileErrorMessage(data.detail.email, status);
+          }
+          
+          if (data.detail.nickname) {
+            newErrors.nickname = getProfileErrorMessage(data.detail.nickname, status);
+          }
+          
+          if (data.detail.profile_image_url) {
+            newErrors.profileImage = getProfileErrorMessage(data.detail.profile_image_url, status);
+          }
+          
+          setFieldErrors(newErrors);
+          
+          // 일반 오류 메시지도 표시
+          setFormError('프로필 업데이트 중 오류가 발생했습니다. 입력 내용을 확인해주세요.');
+        } else if (Array.isArray(data.detail)) {
+          // 배열 형태의 오류 메시지
+          const errorMessages = data.detail.map(error => 
+            typeof error === 'string' ? error : error.msg || JSON.stringify(error)
+          ).join('\n');
+          setFormError(getProfileErrorMessage(errorMessages, status));
+        } else if (typeof data.detail === 'string') {
+          // 문자열 형태의 오류 메시지
+          setFormError(getProfileErrorMessage(data.detail, status));
+        } else {
+          // 상태 코드 기반 메시지
+          setFormError(getProfileErrorMessage(null, status));
+        }
+      } else {
+        // 네트워크 오류 등
+        setFormError('서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
+      }
     }
   };
 
   // 비밀번호 변경 처리
   const handlePasswordSubmit = async () => {
-    // 유효성 검사
-    if (!password) {
-      setFormError('현재 비밀번호를 입력해주세요.');
-      return;
+    // 필드별 유효성 검사
+    let hasErrors = false;
+    const newFieldErrors = { ...fieldErrors };
+    
+    // 현재 비밀번호 입력 확인
+    if (!password.trim()) {
+      newFieldErrors.password = '현재 비밀번호를 입력해주세요.';
+      hasErrors = true;
     }
     
-    if (!newPassword) {
-      setFormError('새 비밀번호를 입력해주세요.');
-      return;
+    // 새 비밀번호 입력 확인
+    if (!newPassword.trim()) {
+      newFieldErrors.newPassword = '새 비밀번호를 입력해주세요.';
+      hasErrors = true;
     }
     
+    // 새 비밀번호 확인 입력 확인
+    if (!confirmPassword.trim()) {
+      newFieldErrors.confirmPassword = '비밀번호 확인을 입력해주세요.';
+      hasErrors = true;
+    }
+    
+    // 비밀번호 일치 확인
     if (newPassword !== confirmPassword) {
-      setFormError('새 비밀번호와 확인 비밀번호가 일치하지 않습니다.');
-      return;
+      newFieldErrors.confirmPassword = '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.';
+      hasErrors = true;
+    }
+    
+    // 비밀번호와 현재 비밀번호가 같은 경우 추가 검사
+    if (password === newPassword && password.trim() !== '') {
+      newFieldErrors.newPassword = '새 비밀번호는 현재 비밀번호와 달라야 합니다.';
+      hasErrors = true;
     }
     
     // 비밀번호 복잡성 검사
-    if (newPassword) {
-      // 최소 8자, 하나 이상의 문자와 숫자 포함 검사
-      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    if (newPassword.trim() !== '') {
+      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
       if (!passwordRegex.test(newPassword)) {
-        setFormError('비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.');
-        return;
+        newFieldErrors.newPassword = '비밀번호는 최소 8자 이상이며, 문자와 숫자를 포함해야 합니다.';
+        hasErrors = true;
       }
     }
     
+    // 오류가 있으면 상태 업데이트 후 중단
+    if (hasErrors) {
+      setFieldErrors(newFieldErrors);
+      return;
+    }
+    
     try {
-      // 비밀번호 변경 API 호출 - new_password_check 추가
+      // 비밀번호 변경 API 호출
       await changePassword({
         current_password: password,
         new_password: newPassword,
-        new_password_check: confirmPassword // 새 비밀번호 확인 필드 추가
+        new_password_check: confirmPassword
       });
       
       // 폼 초기화
@@ -198,7 +429,85 @@ const ProfileEdit = () => {
       setFormSuccess('비밀번호가 성공적으로 변경되었습니다.');
     } catch (err) {
       console.error('Password change error:', err);
-      setFormError(err.message || '비밀번호 변경 중 오류가 발생했습니다.');
+      
+      // 오류 응답에 따른 메시지 구분 처리
+      if (err.response) {
+        const { status, data } = err.response;
+        
+        // 필드별 오류 메시지 처리
+        if (data.detail && typeof data.detail === 'object') {
+          // 필드별 오류 메시지가 있는 경우
+          const newErrors = { ...fieldErrors };
+          
+          if (data.detail.current_password) {
+            newErrors.password = getPasswordErrorMessage(data.detail.current_password, status);
+          }
+          
+          if (data.detail.new_password) {
+            newErrors.newPassword = getPasswordErrorMessage(data.detail.new_password, status);
+          }
+          
+          if (data.detail.new_password_check) {
+            newErrors.confirmPassword = getPasswordErrorMessage(data.detail.new_password_check, status);
+          }
+          
+          setFieldErrors(newErrors);
+          
+          // 일반 오류 메시지도 표시
+          setFormError('비밀번호 변경 중 오류가 발생했습니다. 입력 내용을 확인해주세요.');
+        } else if (Array.isArray(data.detail)) {
+          // 배열 형태의 오류 메시지
+          const errorMessages = data.detail.map(error => 
+            typeof error === 'string' ? error : error.msg || JSON.stringify(error)
+          ).join('\n');
+          setFormError(getPasswordErrorMessage(errorMessages, status));
+        } else {
+          // 현재 비밀번호 오류 (400)
+          if (status === 400 && data.detail && typeof data.detail === 'string' && 
+              data.detail.includes('Current password is incorrect')) {
+            setFieldErrors(prev => ({
+              ...prev,
+              password: '현재 비밀번호가 올바르지 않습니다.'
+            }));
+            return;
+          }
+          
+          // 동일한 비밀번호 오류 (400)
+          if (status === 400 && data.detail && typeof data.detail === 'string' && 
+              data.detail.includes('same as')) {
+            setFieldErrors(prev => ({
+              ...prev,
+              newPassword: '새 비밀번호는 이전 비밀번호와 달라야 합니다.'
+            }));
+            return;
+          }
+          
+          // 유효성 검사 오류 (422)
+          if (status === 422 && data.detail) {
+            if (Array.isArray(data.detail)) {
+              const errorMessages = data.detail.map(error => error.msg).join('\n');
+              setFormError(errorMessages);
+              return;
+            } else if (typeof data.detail === 'string') {
+              setFormError(data.detail);
+              return;
+            }
+          }
+          
+          // 기타 오류는 상세 메시지 그대로 표시
+          if (data.detail) {
+            setFormError(typeof data.detail === 'string' ? 
+              data.detail : JSON.stringify(data.detail));
+            return;
+          }
+          
+          // 상태 코드 기반 메시지
+          setFormError(getPasswordErrorMessage(null, status));
+        }
+      } else {
+        // 네트워크 오류 등
+        setFormError('서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
+      }
     }
   };
   
@@ -248,6 +557,9 @@ const ProfileEdit = () => {
           <p className={styles.imageHint}>
             클릭하여 프로필 이미지 변경
           </p>
+          {fieldErrors.profileImage && (
+            <p className={styles.fieldError}>{fieldErrors.profileImage}</p>
+          )}
         </div>
         
         <form onSubmit={handleSubmit} className={styles.form}>
@@ -258,9 +570,13 @@ const ProfileEdit = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className={fieldErrors.email ? styles.inputError : ''}
               required
               disabled={loading}
             />
+            {fieldErrors.email && (
+              <p className={styles.fieldError}>{fieldErrors.email}</p>
+            )}
           </div>
           
           <div className={styles.formGroup}>
@@ -270,9 +586,14 @@ const ProfileEdit = () => {
               id="username"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
+              className={fieldErrors.nickname ? styles.inputError : ''}
               required
               disabled={loading}
             />
+            {fieldErrors.nickname && (
+              <p className={styles.fieldError}>{fieldErrors.nickname}</p>
+            )}
+            <small className={styles.fieldHint}>2~20자 사이로 입력해주세요.</small>
           </div>
           
           <hr className={styles.divider} />
@@ -287,8 +608,12 @@ const ProfileEdit = () => {
               id="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className={fieldErrors.password ? styles.inputError : ''}
               disabled={loading}
             />
+            {fieldErrors.password && (
+              <p className={styles.fieldError}>{fieldErrors.password}</p>
+            )}
           </div>
           
           <div className={styles.formGroup}>
@@ -298,9 +623,13 @@ const ProfileEdit = () => {
               id="new-password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              className={fieldErrors.newPassword ? styles.inputError : ''}
               disabled={loading}
             />
-            <small>비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.</small>
+            {fieldErrors.newPassword && (
+              <p className={styles.fieldError}>{fieldErrors.newPassword}</p>
+            )}
+            <small className={styles.fieldHint}>비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.</small>
           </div>
           
           <div className={styles.formGroup}>
@@ -310,8 +639,12 @@ const ProfileEdit = () => {
               id="confirm-password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              className={fieldErrors.confirmPassword ? styles.inputError : ''}
               disabled={loading}
             />
+            {fieldErrors.confirmPassword && (
+              <p className={styles.fieldError}>{fieldErrors.confirmPassword}</p>
+            )}
           </div>
           
           <div className={styles.buttonGroup}>
