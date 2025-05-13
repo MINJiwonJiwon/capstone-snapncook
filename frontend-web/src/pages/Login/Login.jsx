@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './Login.module.css';
 import useAuth from '../../hooks/useAuth';
-import { startGoogleLogin, startKakaoLogin, startNaverLogin } from '../../api/oauth';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -34,29 +33,135 @@ const Login = () => {
     clearErrors();
   };
   
+  // 로그인 오류 메시지 매핑 함수
+  const getLoginErrorMessage = (error, status) => {
+    // 자주 발생하는 오류 패턴 매핑
+    if (typeof error === 'string') {
+      if (error.includes('Invalid credentials') || error.includes('not found')) {
+        return '존재하지 않는 이메일입니다.';
+      }
+      if (error.includes('Incorrect password')) {
+        return '비밀번호가 올바르지 않습니다.';
+      }
+      if (error.includes('Not authenticated') || error.includes('Invalid token')) {
+        return '인증에 실패했습니다. 다시 로그인해주세요.';
+      }
+      if (error.includes('disabled') || error.includes('inactive')) {
+        return '비활성화된 계정입니다. 관리자에게 문의하세요.';
+      }
+      if (error.includes('too many') || error.includes('limit')) {
+        return '로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.';
+      }
+      if (error.includes('banned') || error.includes('suspended')) {
+        return '계정이 일시 정지되었습니다. 관리자에게 문의하세요.';
+      }
+      
+      // 그 외 알 수 있는 오류는 그대로 표시
+      return error;
+    }
+    
+    // HTTP 상태 코드 기반 메시지
+    if (status) {
+      switch (status) {
+        case 400:
+          return '잘못된 요청입니다. 입력 정보를 확인해주세요.';
+        case 401:
+          return '이메일 또는 비밀번호가 올바르지 않습니다.';
+        case 403:
+          return '접근이 거부되었습니다. 권한을 확인해주세요.';
+        case 404:
+          return '해당 계정을 찾을 수 없습니다.';
+        case 429:
+          return '너무 많은 로그인 시도가 있었습니다. 잠시 후 다시 시도해주세요.';
+        case 500:
+        case 502:
+        case 503:
+          return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        default:
+          return '로그인 중 오류가 발생했습니다.';
+      }
+    }
+    
+    return '로그인에 실패했습니다. 다시 시도해주세요.';
+  };
+  
+  // 회원가입 오류 메시지 매핑 함수
+  const getSignupErrorMessage = (error, status) => {
+    // 자주 발생하는 회원가입 오류 패턴 매핑
+    if (typeof error === 'string') {
+      if (error.includes('already registered') || error.includes('already exists')) {
+        return '이미 등록된 이메일입니다.';
+      }
+      if (error.includes('nickname') && (error.includes('already') || error.includes('taken'))) {
+        return '이미 사용 중인 닉네임입니다. 다른 닉네임을 선택해주세요.';
+      }
+      if (error.includes('password') && error.includes('match')) {
+        return '비밀번호와 비밀번호 확인이 일치하지 않습니다.';
+      }
+      if (error.includes('password') && error.includes('weak')) {
+        return '보안에 취약한 비밀번호입니다. 더 강력한 비밀번호를 사용해주세요.';
+      }
+      if (error.includes('password') && error.includes('common')) {
+        return '너무 흔한 비밀번호입니다. 더 독특한 비밀번호를 사용해주세요.';
+      }
+      if (error.includes('password') && (error.includes('character') || error.includes('digit') || error.includes('letter'))) {
+        return '비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.';
+      }
+      if (error.includes('email') && error.includes('valid')) {
+        return '유효한 이메일 주소를 입력해주세요.';
+      }
+      if (error.includes('nickname') && error.includes('length')) {
+        return '닉네임은 2자 이상, 20자 이하로 입력해주세요.';
+      }
+      if (error.includes('nickname') && error.includes('character')) {
+        return '닉네임에 허용되지 않는 문자가 포함되어 있습니다.';
+      }
+      
+      // 그 외 알 수 있는 오류는 그대로 표시
+      return error;
+    }
+    
+    // HTTP 상태 코드 기반 메시지
+    if (status) {
+      switch (status) {
+        case 400:
+          return '잘못된 요청입니다. 입력 정보를 확인해주세요.';
+        case 409:
+          return '이미 등록된 이메일 또는 닉네임입니다.';
+        case 422:
+          return '입력한 정보가 유효하지 않습니다. 양식을 확인해주세요.';
+        case 500:
+        case 502:
+        case 503:
+          return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        default:
+          return '회원가입 중 오류가 발생했습니다.';
+      }
+    }
+    
+    return '회원가입에 실패했습니다. 다시 시도해주세요.';
+  };
+  
+  // 로그인 폼 제출 핸들러
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     clearErrors();
     
     // 필드 검증
-    if (!loginEmail.trim() || !loginPassword.trim()) {
-      setFormError('이메일과 비밀번호를 입력해주세요.');
+    if (!loginEmail.trim()) {
+      setFormError('이메일을 입력해주세요.');
       return;
     }
     
-    // 임시 계정 확인 (admin/1234) - 개발용, 실제 서비스에서는 제거
-    if (loginEmail === 'admin' && loginPassword === '1234') {
-      // 로그인 성공 처리
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('username', 'admin');
-      localStorage.setItem('user', JSON.stringify({
-        id: 1,
-        nickname: 'admin',
-        email: 'admin@example.com'
-      }));
-      localStorage.setItem('access_token', 'dummy_token'); // 더미 토큰
-      alert('로그인 성공!');
-      navigate('/');
+    if (!loginPassword.trim()) {
+      setFormError('비밀번호를 입력해주세요.');
+      return;
+    }
+    
+    // 이메일 형식 기본 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(loginEmail)) {
+      setFormError('올바른 이메일 형식이 아닙니다.');
       return;
     }
     
@@ -67,28 +172,60 @@ const Login = () => {
       });
       navigate('/');
     } catch (err) {
-      // 오류 메시지 파싱 개선
+      // 향상된 오류 메시지 처리
       if (err.response && err.response.data) {
-        if (typeof err.response.data.detail === 'string') {
-          setFormError(err.response.data.detail);
-        } else if (typeof err.response.data.detail === 'object') {
-          setFormError(JSON.stringify(err.response.data.detail));
+        const { status, data } = err.response;
+        const errorDetail = data.detail;
+        
+        // 응답 형식에 따른 다양한 처리
+        if (typeof errorDetail === 'string') {
+          setFormError(getLoginErrorMessage(errorDetail, status));
+        } else if (Array.isArray(errorDetail)) {
+          // 배열 형태의 오류 메시지
+          const errorMessages = errorDetail.map(error => 
+            typeof error === 'string' ? error : error.msg || JSON.stringify(error)
+          ).join('\n');
+          setFormError(errorMessages);
+        } else if (typeof errorDetail === 'object') {
+          // 객체 형태의 오류 메시지
+          const errorMessages = Object.entries(errorDetail)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join('\n');
+          setFormError(errorMessages);
         } else {
-          setFormError('로그인에 실패했습니다.');
+          // 기타 상태 코드 기반 메시지
+          setFormError(getLoginErrorMessage(null, status));
         }
       } else {
-        setFormError('로그인에 실패했습니다.');
+        // 네트워크 오류 등
+        setFormError('서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
       }
     }
   };
   
+  // 회원가입 폼 제출 핸들러
   const handleSignupSubmit = async (e) => {
     e.preventDefault();
     clearErrors();
     
-    // 유효성 검사 - 모든 필드 검사
-    if (!signupEmail.trim() || !signupPassword.trim() || !signupNickname.trim() || !signupPasswordCheck.trim()) {
-      setFormError('모든 필드를 입력해주세요.');
+    // 유효성 검사 - 각 필드 개별 검사
+    if (!signupEmail.trim()) {
+      setFormError('이메일을 입력해주세요.');
+      return;
+    }
+    
+    if (!signupNickname.trim()) {
+      setFormError('닉네임을 입력해주세요.');
+      return;
+    }
+    
+    if (!signupPassword.trim()) {
+      setFormError('비밀번호를 입력해주세요.');
+      return;
+    }
+    
+    if (!signupPasswordCheck.trim()) {
+      setFormError('비밀번호 확인을 입력해주세요.');
       return;
     }
     
@@ -105,11 +242,24 @@ const Login = () => {
       return;
     }
     
+    // 닉네임 길이 검사
+    if (signupNickname.length < 2 || signupNickname.length > 20) {
+      setFormError('닉네임은 2자 이상, 20자 이하로 입력해주세요.');
+      return;
+    }
+    
+    // 비밀번호 강도 검사
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+    if (!passwordRegex.test(signupPassword)) {
+      setFormError('비밀번호는 최소 8자 이상이며, 문자와 숫자를 포함해야 합니다.');
+      return;
+    }
+    
     try {
       await signup({ 
         email: signupEmail,
         password: signupPassword,
-        password_check: signupPasswordCheck, // 비밀번호 확인 필드 추가
+        password_check: signupPasswordCheck,
         nickname: signupNickname,
         profile_image_url: null
       });
@@ -121,63 +271,54 @@ const Login = () => {
       
       alert('회원가입이 완료되었습니다. 로그인해주세요.');
     } catch (err) {
-      // 오류 메시지 파싱 개선
+      // 향상된 오류 메시지 처리
       if (err.response && err.response.data) {
-        const { data } = err.response;
+        const { status, data } = err.response;
+        const errorDetail = data.detail;
         
-        // detail이 배열인 경우 (422 Validation Error)
-        if (Array.isArray(data.detail)) {
-          const errorMessages = data.detail.map(error => error.msg).join('\n');
+        // 이메일 중복 오류 특별 처리 (400)
+        if (status === 400 && typeof errorDetail === 'string' && 
+            errorDetail.includes('Email already registered')) {
+          setFormError('이미 등록된 이메일입니다.');
+          return;
+        }
+        
+        // 응답 형식에 따른 다양한 처리
+        if (typeof errorDetail === 'string') {
+          setFormError(getSignupErrorMessage(errorDetail, status));
+        } else if (Array.isArray(errorDetail)) {
+          // 배열 형태의 오류 메시지 (주로 유효성 검사)
+          const errorMessages = errorDetail.map(error => 
+            typeof error === 'string' ? error : error.msg || JSON.stringify(error)
+          ).join('\n');
           setFormError(errorMessages);
-        } 
-        // detail이 문자열인 경우
-        else if (typeof data.detail === 'string') {
-          setFormError(data.detail);
-        }
-        // detail이 객체인 경우
-        else if (typeof data.detail === 'object') {
-          setFormError(JSON.stringify(data.detail));
-        }
-        // 기타 경우
-        else {
-          setFormError('회원가입 중 오류가 발생했습니다.');
+        } else if (typeof errorDetail === 'object') {
+          // 객체 형태의 오류 메시지
+          const errorMessages = Object.entries(errorDetail)
+            .map(([key, value]) => {
+              // 필드명을 한글로 변환
+              const fieldNameMap = {
+                'email': '이메일',
+                'password': '비밀번호',
+                'password_check': '비밀번호 확인',
+                'nickname': '닉네임'
+              };
+              const fieldName = fieldNameMap[key] || key;
+              return `${fieldName}: ${value}`;
+            })
+            .join('\n');
+          setFormError(errorMessages);
+        } else {
+          // 기타 상태 코드 기반 메시지
+          setFormError(getSignupErrorMessage(null, status));
         }
       } else {
-        setFormError('회원가입 중 오류가 발생했습니다.');
+        // 네트워크 오류 등
+        setFormError('서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
       }
     }
   };
   
-  const handleOAuthLogin = async (provider) => {
-    try {
-      let response;
-      
-      switch (provider.toLowerCase()) {
-        case 'google':
-          response = await startGoogleLogin();
-          break;
-        case 'kakao':
-          response = await startKakaoLogin();
-          break;
-        case 'naver':
-          response = await startNaverLogin();
-          break;
-        default:
-          throw new Error('지원하지 않는 소셜 로그인입니다.');
-      }
-      
-      // 리다이렉트 URL로 이동
-      if (response && response.redirect_url) {
-        window.location.href = response.redirect_url;
-      } else {
-        throw new Error('리다이렉트 URL이 없습니다.');
-      }
-    } catch (err) {
-      setFormError(`${provider} 로그인 시작 중 오류가 발생했습니다.`);
-      console.error(`${provider} login error:`, err);
-    }
-  };
-
   return (
     <>
       <nav className={styles.navbar}>
@@ -256,27 +397,34 @@ const Login = () => {
             <div className={styles.oauthContainer}>
               <p>또는 소셜 계정으로 로그인</p>
               <div className={styles.oauthButtons}>
-                <button 
-                  className={`${styles.oauthButton} ${styles.google}`}
-                  onClick={() => handleOAuthLogin('Google')}
-                  disabled={loading}
-                >
-                  G
-                </button>
-                <button 
-                  className={`${styles.oauthButton} ${styles.kakao}`}
-                  onClick={() => handleOAuthLogin('Kakao')}
-                  disabled={loading}
-                >
-                  K
-                </button>
-                <button 
-                  className={`${styles.oauthButton} ${styles.naver}`}
-                  onClick={() => handleOAuthLogin('Naver')}
-                  disabled={loading}
-                >
-                  N
-                </button>
+                {/* 소셜 로그인 링크 방식으로 변경 */}
+                <a href="/api/oauth/google/login" className={styles.oauthLink}>
+                  <button 
+                    className={`${styles.oauthButton} ${styles.google}`}
+                    type="button"
+                    disabled={loading}
+                  >
+                    G
+                  </button>
+                </a>
+                <a href="/api/oauth/kakao/login" className={styles.oauthLink}>
+                  <button 
+                    className={`${styles.oauthButton} ${styles.kakao}`}
+                    type="button"
+                    disabled={loading}
+                  >
+                    K
+                  </button>
+                </a>
+                <a href="/api/oauth/naver/login" className={styles.oauthLink}>
+                  <button 
+                    className={`${styles.oauthButton} ${styles.naver}`}
+                    type="button"
+                    disabled={loading}
+                  >
+                    N
+                  </button>
+                </a>
               </div>
             </div>
           </div>
@@ -307,6 +455,7 @@ const Login = () => {
                   required 
                   disabled={loading}
                 />
+                <small className={styles.fieldHint}>2~20자 사이로 입력해주세요.</small>
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="signup-password">비밀번호</label>
@@ -319,6 +468,7 @@ const Login = () => {
                   required 
                   disabled={loading}
                 />
+                <small className={styles.fieldHint}>8자 이상, 문자와 숫자를 포함해야 합니다.</small>
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="signup-password-check">비밀번호 확인</label>

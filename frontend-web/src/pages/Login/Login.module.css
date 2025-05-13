@@ -67,6 +67,14 @@
   box-shadow: 0 0 0 2px rgba(226, 114, 91, 0.2);
 }
 
+/* 필드 힌트 스타일 추가 */
+.fieldHint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #7f8c8d;
+}
+
 .authButton {
   width: 100%;
   padding: 12px;
@@ -97,6 +105,12 @@
   display: flex;
   justify-content: center;
   gap: 15px;
+}
+
+/* 소셜 로그인 링크 스타일 추가 */
+.oauthLink {
+  text-decoration: none;
+  display: block;
 }
 
 .oauthButton {
@@ -139,6 +153,7 @@
   margin-bottom: 15px;
   text-align: center;
   font-size: 14px;
+  white-space: pre-line; /* 줄바꿈 처리 */
 }
 
 /* 로딩 메시지 스타일 */
