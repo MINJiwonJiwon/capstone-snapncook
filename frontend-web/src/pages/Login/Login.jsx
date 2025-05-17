@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './Login.module.css';
 import useAuth from '../../hooks/useAuth';
+import { startGoogleLogin, startKakaoLogin, startNaverLogin } from '../../api/oauth';
+import { BASE_URL } from '../../api/endpoints';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ const Login = () => {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupPasswordCheck, setSignupPasswordCheck] = useState(''); // 비밀번호 확인 필드 추가
   const [formError, setFormError] = useState('');
+  const [socialLoading, setSocialLoading] = useState(false);
   
   // 이미 로그인된 경우 홈으로 리다이렉트
   useEffect(() => {
@@ -31,6 +34,54 @@ const Login = () => {
   const handleTabClick = (tab) => {
     setActiveTab(tab);
     clearErrors();
+  };
+  
+  // 소셜 로그인 핸들러
+  const handleSocialLogin = async (provider) => {
+    try {
+      setSocialLoading(true);
+      clearErrors();
+      console.log(`${provider} 로그인 시도...`);
+      
+      let redirectUrl;
+      
+      // 1-14 이슈 해결: API 호출을 통해 리다이렉션 URL 가져오기
+      switch (provider) {
+        case 'google':
+          redirectUrl = await startGoogleLogin();
+          break;
+        case 'kakao':
+          redirectUrl = await startKakaoLogin();
+          break;
+        case 'naver':
+          redirectUrl = await startNaverLogin();
+          break;
+        default:
+          throw new Error('지원하지 않는 소셜 로그인 제공자입니다.');
+      }
+      
+      // 소셜 로그인 진행 중 표시 저장
+      localStorage.setItem('social_login_pending', provider);
+      localStorage.setItem('social_login_time', new Date().getTime());
+      
+      console.log(`${provider} 리다이렉션 URL:`, redirectUrl);
+      
+      // 백엔드에서 받은 리다이렉션 URL로 이동
+      if (redirectUrl && redirectUrl.redirect_url) {
+        console.log(`${provider} 로그인 리다이렉션:`, redirectUrl.redirect_url);
+        window.location.href = redirectUrl.redirect_url;
+      } else {
+        throw new Error(`${provider} 로그인 URL을 가져오는데 실패했습니다.`);
+      }
+    } catch (err) {
+      console.error(`${provider} 로그인 오류:`, err);
+      setSocialLoading(false);
+      setFormError(err.message || `${provider} 로그인을 시작할 수 없습니다. 잠시 후 다시 시도해주세요.`);
+      
+      // 소셜 로그인 진행 중 표시 제거
+      localStorage.removeItem('social_login_pending');
+      localStorage.removeItem('social_login_time');
+    }
   };
   
   // 로그인 오류 메시지 매핑 함수
@@ -352,7 +403,7 @@ const Login = () => {
           )}
           
           {/* 로딩 표시 */}
-          {loading && (
+          {(loading || socialLoading) && (
             <div className={styles.loadingMessage}>
               처리 중입니다...
             </div>
@@ -370,7 +421,7 @@ const Login = () => {
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   required 
-                  disabled={loading}
+                  disabled={loading || socialLoading}
                 />
               </div>
               <div className={styles.formGroup}>
@@ -382,13 +433,13 @@ const Login = () => {
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   required 
-                  disabled={loading}
+                  disabled={loading || socialLoading}
                 />
               </div>
               <button 
                 type="submit" 
                 className={styles.authButton}
-                disabled={loading}
+                disabled={loading || socialLoading}
               >
                 로그인
               </button>
@@ -397,34 +448,31 @@ const Login = () => {
             <div className={styles.oauthContainer}>
               <p>또는 소셜 계정으로 로그인</p>
               <div className={styles.oauthButtons}>
-                {/* 소셜 로그인 링크 방식으로 변경 */}
-                <a href="/api/oauth/google/login" className={styles.oauthLink}>
-                  <button 
-                    className={`${styles.oauthButton} ${styles.google}`}
-                    type="button"
-                    disabled={loading}
-                  >
-                    G
-                  </button>
-                </a>
-                <a href="/api/oauth/kakao/login" className={styles.oauthLink}>
-                  <button 
-                    className={`${styles.oauthButton} ${styles.kakao}`}
-                    type="button"
-                    disabled={loading}
-                  >
-                    K
-                  </button>
-                </a>
-                <a href="/api/oauth/naver/login" className={styles.oauthLink}>
-                  <button 
-                    className={`${styles.oauthButton} ${styles.naver}`}
-                    type="button"
-                    disabled={loading}
-                  >
-                    N
-                  </button>
-                </a>
+                {/* 1-14 이슈 해결: a 태그를 버튼으로 변경하고 onClick 이벤트 핸들러 사용 */}
+                <button 
+                  className={`${styles.oauthButton} ${styles.google}`}
+                  type="button"
+                  onClick={() => handleSocialLogin('google')}
+                  disabled={loading || socialLoading}
+                >
+                  G
+                </button>
+                <button 
+                  className={`${styles.oauthButton} ${styles.kakao}`}
+                  type="button"
+                  onClick={() => handleSocialLogin('kakao')}
+                  disabled={loading || socialLoading}
+                >
+                  K
+                </button>
+                <button 
+                  className={`${styles.oauthButton} ${styles.naver}`}
+                  type="button"
+                  onClick={() => handleSocialLogin('naver')}
+                  disabled={loading || socialLoading}
+                >
+                  N
+                </button>
               </div>
             </div>
           </div>

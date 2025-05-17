@@ -125,12 +125,24 @@ h1 {
   color: #7f8c8d;
 }
 
+/* 6-6 개선: 빈 갤러리 스타일 개선 */
 .emptyGallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   padding: 30px;
   color: #7f8c8d;
-  font-style: italic;
+  background-color: #f9f9f9;
+  border-radius: 8px;
   grid-column: 1 / -1;
+  min-height: 150px;
+}
+
+.emptyGallery p {
+  margin-bottom: 15px;
+  font-size: 1rem;
 }
 
 h2 {
@@ -230,48 +242,103 @@ h2 {
   color: white;
 }
 
-/* 섹션별 로딩/에러 스타일 추가 */
+/* 6-6 개선: 섹션별 로딩/에러 스타일 개선 */
 .sectionLoading, .sectionError {
-  padding: 15px;
+  padding: 20px;
   text-align: center;
   margin: 10px 0;
-  border-radius: 5px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .sectionLoading {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: #f0f7ff;
   color: #2196F3;
-  border: 1px solid #2196F3;
+  border: 1px solid #e3f2fd;
 }
 
 .sectionError {
-  background-color: rgba(244, 67, 54, 0.1);
+  background-color: #fff6f6;
   color: #F44336;
-  border: 1px solid #F44336;
+  border: 1px solid #ffebee;
 }
 
-/* 로딩 메시지 스타일 */
+/* 6-6 개선: 로딩 스피너 추가 */
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--main-color);
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 6-6 개선: 로딩 메시지 스타일 개선 */
 .loadingMessage {
-  background-color: rgba(33, 150, 243, 0.1);
+  background-color: #f0f7ff;
   color: #2196F3;
-  border: 1px solid #2196F3;
-  border-radius: 4px;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 30px 0;
+  text-align: center;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 6-6 개선: 에러 메시지 스타일 개선 */
+.errorMessage {
+  background-color: #fff6f6;
+  color: #F44336;
+  border-radius: 8px;
   padding: 20px;
   margin: 30px 0;
   text-align: center;
   font-size: 16px;
 }
 
-/* 에러 메시지 스타일 */
-.errorMessage {
-  background-color: rgba(244, 67, 54, 0.1);
-  color: #F44336;
-  border: 1px solid #F44336;
+/* 6-6 개선: 재시도 버튼 스타일 */
+.retryButton {
+  background-color: var(--main-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
   border-radius: 4px;
-  padding: 20px;
-  margin: 30px 0;
-  text-align: center;
-  font-size: 16px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.retryButton:hover {
+  background-color: var(--hover-main);
+}
+
+/* 6-6 개선: 업로드 버튼 스타일 */
+.uploadButton {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+.uploadButton:hover {
+  background-color: #e0e0e0;
+  border-color: #ccc;
 }
 
 /* 반응형 디자인 */
@@ -294,5 +361,11 @@ h2 {
     flex: none;
     margin-right: 0;
     margin-bottom: 10px;
+  }
+  
+  /* 6-6 개선: 모바일 화면에서 로딩 스피너 사이즈 조정 */
+  .loadingSpinner {
+    width: 30px;
+    height: 30px;
   }
 }

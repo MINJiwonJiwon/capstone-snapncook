@@ -27,7 +27,18 @@ const useAuth = () => {
       return result;
     } catch (err) {
       setIsLoading(false);
-      setError(err.message || err.response?.data?.detail || '회원가입 중 오류가 발생했습니다.');
+      
+      // 1-2번 이슈 해결: Error 객체로 전달된 메시지를 우선적으로 사용
+      if (err instanceof Error) {
+        setError(err.message);
+      } else if (err.response?.data?.detail) {
+        // 백엔드에서 직접 전달된 detail 메시지 사용
+        setError(err.response.data.detail);
+      } else {
+        // 기본 오류 메시지
+        setError('회원가입 중 오류가 발생했습니다.');
+      }
+      
       throw err;
     }
   };
@@ -106,7 +117,7 @@ const useAuth = () => {
       updateLoginStatus(false, null);
       
       // 세션 만료 메시지와 함께 로그인 페이지로 리다이렉트
-      setError('세션이 만료되었습니다. 다시 로그인해주세요.');
+      setError(err.message || '세션이 만료되었습니다. 다시 로그인해주세요.');
       navigate('/login');
       throw err;
     }

@@ -198,6 +198,7 @@ h2 {
   margin-top: 30px;
 }
 
+/* 6-3 수정: 리뷰 카드의 레이아웃 안정화 */
 .reviewCard {
   background-color: white;
   border: 1px solid var(--border-color);
@@ -206,6 +207,11 @@ h2 {
   margin-bottom: 20px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s, box-shadow 0.3s;
+  /* 최소 높이 지정으로 카드 크기 안정화 */
+  min-height: 200px;
+  /* flex 레이아웃 적용 */
+  display: flex;
+  flex-direction: column;
 }
 
 .reviewCard:hover {
@@ -255,26 +261,43 @@ h2 {
   color: #d9534f;
 }
 
+/* 6-3 수정: 콘텐츠 영역이 남은 공간을 차지하도록 flex 적용 */
 .reviewContent {
   display: flex;
   flex-direction: column;
+  flex: 1;
 }
 
+/* 6-3 수정: 이미지 컨테이너에 고정 높이와 로딩 중 표시할 배경 적용 */
 .reviewImage {
   margin-bottom: 15px;
   text-align: center;
-}
-
-.reviewImage img {
-  max-width: 100%;
-  max-height: 300px;
-  object-fit: contain;
+  height: 200px;
+  position: relative;
+  background-color: #f7f7f7;
   border-radius: 8px;
+  overflow: hidden;
 }
 
+/* 6-3 수정: 이미지가 컨테이너 크기에 맞게 일관되게 표시되도록 설정 */
+.reviewImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* 6-3 수정: 이미지 없는 리뷰를 위한 최소 높이 확보 */
 .reviewText {
   line-height: 1.6;
   color: #333;
+  min-height: 50px;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* 메시지 스타일 */
@@ -319,5 +342,10 @@ h2 {
   
   .ratingSystem {
     font-size: 2rem;
+  }
+  
+  /* 6-3 수정: 모바일에서 리뷰 이미지 크기 조정 */
+  .reviewImage {
+    height: 150px;
   }
 }
