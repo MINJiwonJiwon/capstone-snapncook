@@ -23,11 +23,11 @@ const MyPage = () => {
     reviews: []
   });
   
-  // 각 섹션별 로딩/에러 상태
+  // 6-6 개선: 각 섹션별 상태 관리 강화
   const [sectionStatus, setSectionStatus] = useState({
-    bookmarks: { loading: false, error: null },
-    detections: { loading: false, error: null },
-    reviews: { loading: false, error: null }
+    bookmarks: { loading: false, error: null, dataLoaded: false },
+    detections: { loading: false, error: null, dataLoaded: false },
+    reviews: { loading: false, error: null, dataLoaded: false }
   });
   
   // 로그인 상태 확인 및 데이터 로드
@@ -40,97 +40,127 @@ const MyPage = () => {
     loadMyPageData();
   }, [isLoggedIn, navigate]);
   
-  // 마이페이지 데이터 로드 - 개선된 버전
+  // 마이페이지 데이터 로드 - 6-6 개선 버전
   const loadMyPageData = async () => {
     setLoading(true);
     setError(null);
     
     // 각 섹션의 초기 로딩 상태 설정
     setSectionStatus({
-      bookmarks: { loading: true, error: null },
-      detections: { loading: true, error: null },
-      reviews: { loading: true, error: null }
+      bookmarks: { loading: true, error: null, dataLoaded: false },
+      detections: { loading: true, error: null, dataLoaded: false },
+      reviews: { loading: true, error: null, dataLoaded: false }
     });
     
     try {
-      // Promise.allSettled를 사용하여 모든 API 요청을 독립적으로 처리
-      const [bookmarksResult, detectionsResult, summaryResult] = await Promise.allSettled([
-        // 북마크 목록 가져오기
-        fetchMyBookmarks().catch(err => {
-          console.error('Fetch bookmarks error:', err);
-          setSectionStatus(prev => ({
-            ...prev,
-            bookmarks: { loading: false, error: '북마크를 불러오는 중 오류가 발생했습니다.' }
-          }));
-          return []; // 빈 배열 반환
-        }),
+      // 6-6 개선: 요약 API 먼저 가져오기
+      let summary;
+      try {
+        summary = await getMypageSummary();
+        setPageData(summary || {
+          bookmarks: [],
+          detection_results: [],
+          reviews: []
+        });
         
-        // 탐지 결과 목록 가져오기
-        getMyDetectionResults().catch(err => {
-          console.error('Get detection results error:', err);
-          // 404 에러는 데이터 없음으로 처리
-          if (err.response && err.response.status === 404) {
-            setSectionStatus(prev => ({
-              ...prev,
-              detections: { loading: false, error: null }
-            }));
-            return []; // 데이터 없음 - 빈 배열 반환
-          }
-          
-          setSectionStatus(prev => ({
-            ...prev,
-            detections: { loading: false, error: '탐지 결과를 불러오는 중 오류가 발생했습니다.' }
-          }));
-          return [];
-        }),
+        // 각 섹션에 데이터가 있는지 확인
+        const hasBookmarks = summary && Array.isArray(summary.bookmarks) && summary.bookmarks.length > 0;
+        const hasDetections = summary && Array.isArray(summary.detection_results) && summary.detection_results.length > 0;
+        const hasReviews = summary && Array.isArray(summary.reviews) && summary.reviews.length > 0;
         
-        // 마이페이지 요약 정보 가져오기
-        getMypageSummary().catch(err => {
-          console.error('Get mypage summary error:', err);
-          setSectionStatus(prev => ({
-            ...prev,
-            reviews: { loading: false, error: '리뷰 정보를 불러오는 중 오류가 발생했습니다.' }
-          }));
-          // 기본 구조 반환
-          return {
-            bookmarks: [],
-            detection_results: [],
-            reviews: []
-          };
-        })
-      ]);
-      
-      // 결과 처리 및 로딩 상태 업데이트
-      if (bookmarksResult.status === 'fulfilled') {
+        // 섹션 상태 업데이트
         setSectionStatus(prev => ({
-          ...prev,
-          bookmarks: { loading: false, error: null }
+          bookmarks: { loading: false, error: null, dataLoaded: hasBookmarks },
+          detections: { loading: false, error: null, dataLoaded: hasDetections },
+          reviews: { loading: false, error: null, dataLoaded: hasReviews }
         }));
-      }
-      
-      if (detectionsResult.status === 'fulfilled') {
-        setDetectionResults(detectionsResult.value || []);
-        setSectionStatus(prev => ({
-          ...prev,
-          detections: { loading: false, error: null }
-        }));
-      }
-      
-      if (summaryResult.status === 'fulfilled') {
-        setPageData(summaryResult.value);
-        setSectionStatus(prev => ({
-          ...prev,
-          reviews: { loading: false, error: null }
-        }));
+      } catch (summaryError) {
+        console.error('Summary fetch error:', summaryError);
+        
+        // 요약 API 실패 시 개별 API 호출로 대체
+        await fetchFallbackData();
       }
       
       setLoading(false);
     } catch (err) {
       // 전체적인 오류 처리
-      setError('일부 데이터를 불러오는 중 오류가 발생했습니다.');
+      setError('데이터를 불러오는 중 오류가 발생했습니다.');
       setLoading(false);
       console.error('Load mypage data error:', err);
     }
+  };
+  
+  // 6-6 개선: 요약 API 실패 시 개별 API 호출
+  const fetchFallbackData = async () => {
+    console.log('Falling back to individual API calls');
+    
+    // Promise.allSettled를 사용하여 모든 API 요청을 독립적으로 처리
+    const [bookmarksResult, detectionsResult] = await Promise.allSettled([
+      // 북마크 목록 가져오기
+      fetchMyBookmarks().catch(err => {
+        console.error('Fetch bookmarks error:', err);
+        setSectionStatus(prev => ({
+          ...prev,
+          bookmarks: { loading: false, error: '북마크를 불러오는 중 오류가 발생했습니다.', dataLoaded: false }
+        }));
+        return []; // 빈 배열 반환
+      }),
+      
+      // 탐지 결과 목록 가져오기
+      getMyDetectionResults().catch(err => {
+        console.error('Get detection results error:', err);
+        // 404 에러는 데이터 없음으로 처리
+        if (err.response && err.response.status === 404) {
+          setSectionStatus(prev => ({
+            ...prev,
+            detections: { loading: false, error: null, dataLoaded: false }
+          }));
+          return []; // 데이터 없음 - 빈 배열 반환
+        }
+        
+        setSectionStatus(prev => ({
+          ...prev,
+          detections: { loading: false, error: '탐지 결과를 불러오는 중 오류가 발생했습니다.', dataLoaded: false }
+        }));
+        return [];
+      })
+    ]);
+    
+    // 결과 처리 및 로딩 상태 업데이트
+    if (bookmarksResult.status === 'fulfilled') {
+      const hasBookmarks = bookmarksResult.value && bookmarksResult.value.length > 0;
+      setSectionStatus(prev => ({
+        ...prev,
+        bookmarks: { loading: false, error: null, dataLoaded: hasBookmarks }
+      }));
+      
+      // 페이지 데이터 업데이트
+      setPageData(prev => ({
+        ...prev,
+        bookmarks: bookmarksResult.value || []
+      }));
+    }
+    
+    if (detectionsResult.status === 'fulfilled') {
+      const hasDetections = detectionsResult.value && detectionsResult.value.length > 0;
+      setDetectionResults(detectionsResult.value || []);
+      setSectionStatus(prev => ({
+        ...prev,
+        detections: { loading: false, error: null, dataLoaded: hasDetections }
+      }));
+      
+      // 페이지 데이터 업데이트
+      setPageData(prev => ({
+        ...prev,
+        detection_results: detectionsResult.value || []
+      }));
+    }
+    
+    // 리뷰는 개별 API가 없으므로 빈 배열로 설정
+    setSectionStatus(prev => ({
+      ...prev,
+      reviews: { loading: false, error: null, dataLoaded: false }
+    }));
   };
   
   // 북마크 토글 핸들러
@@ -169,7 +199,10 @@ const MyPage = () => {
         <Navbar />
         <div className={styles.container}>
           <h1>마이페이지</h1>
-          <div className={styles.loadingMessage}>데이터를 불러오는 중...</div>
+          <div className={styles.loadingMessage}>
+            <div className={styles.loadingSpinner}></div>
+            <p>데이터를 불러오는 중...</p>
+          </div>
         </div>
         <Footer />
       </>
@@ -183,7 +216,15 @@ const MyPage = () => {
         <Navbar />
         <div className={styles.container}>
           <h1>마이페이지</h1>
-          <div className={styles.errorMessage}>{error}</div>
+          <div className={styles.errorMessage}>
+            <p>{error}</p>
+            <button 
+              className={styles.retryButton}
+              onClick={loadMyPageData}
+            >
+              다시 시도
+            </button>
+          </div>
         </div>
         <Footer />
       </>
@@ -219,9 +260,20 @@ const MyPage = () => {
         <div className={styles.favoritesSection}>
           <h2>즐겨찾기한 레시피</h2>
           {sectionStatus.bookmarks.loading ? (
-            <div className={styles.sectionLoading}>즐겨찾기 목록을 불러오는 중...</div>
+            <div className={styles.sectionLoading}>
+              <div className={styles.loadingSpinner}></div>
+              <p>즐겨찾기 목록을 불러오는 중...</p>
+            </div>
           ) : sectionStatus.bookmarks.error ? (
-            <div className={styles.sectionError}>{sectionStatus.bookmarks.error}</div>
+            <div className={styles.sectionError}>
+              <p>{sectionStatus.bookmarks.error}</p>
+              <button 
+                className={styles.retryButton}
+                onClick={loadMyPageData}
+              >
+                다시 시도
+              </button>
+            </div>
           ) : (
             <div className={styles.galleryContainer}>
               {!pageData.bookmarks || pageData.bookmarks.length === 0 ? (
@@ -263,13 +315,32 @@ const MyPage = () => {
         <div className={styles.uploadsSection}>
           <h2>내가 업로드한 모든 사진</h2>
           {sectionStatus.detections.loading ? (
-            <div className={styles.sectionLoading}>업로드 사진을 불러오는 중...</div>
+            <div className={styles.sectionLoading}>
+              <div className={styles.loadingSpinner}></div>
+              <p>업로드 사진을 불러오는 중...</p>
+            </div>
           ) : sectionStatus.detections.error ? (
-            <div className={styles.sectionError}>{sectionStatus.detections.error}</div>
+            <div className={styles.sectionError}>
+              <p>{sectionStatus.detections.error}</p>
+              <button 
+                className={styles.retryButton}
+                onClick={loadMyPageData}
+              >
+                다시 시도
+              </button>
+            </div>
           ) : (
             <div className={styles.galleryContainer}>
               {!pageData.detection_results || pageData.detection_results.length === 0 ? (
-                <div className={styles.emptyGallery}>업로드한 사진이 없습니다.</div>
+                <div className={styles.emptyGallery}>
+                  <p>업로드한 사진이 없습니다.</p>
+                  <button 
+                    className={styles.uploadButton}
+                    onClick={() => navigate('/')}
+                  >
+                    사진 업로드하기
+                  </button>
+                </div>
               ) : (
                 pageData.detection_results.map((item, index) => {
                   const isFavorite = pageData.bookmarks && pageData.bookmarks.some(
@@ -314,13 +385,32 @@ const MyPage = () => {
         <div className={styles.reviewsSection}>
           <h2>내가 작성한 리뷰</h2>
           {sectionStatus.reviews.loading ? (
-            <div className={styles.sectionLoading}>리뷰를 불러오는 중...</div>
+            <div className={styles.sectionLoading}>
+              <div className={styles.loadingSpinner}></div>
+              <p>리뷰를 불러오는 중...</p>
+            </div>
           ) : sectionStatus.reviews.error ? (
-            <div className={styles.sectionError}>{sectionStatus.reviews.error}</div>
+            <div className={styles.sectionError}>
+              <p>{sectionStatus.reviews.error}</p>
+              <button 
+                className={styles.retryButton}
+                onClick={loadMyPageData}
+              >
+                다시 시도
+              </button>
+            </div>
           ) : (
             <div className={styles.reviewsList}>
               {!pageData.reviews || pageData.reviews.length === 0 ? (
-                <div className={styles.emptyGallery}>작성한 리뷰가 없습니다.</div>
+                <div className={styles.emptyGallery}>
+                  <p>작성한 리뷰가 없습니다.</p>
+                  <button 
+                    className={styles.uploadButton}
+                    onClick={() => navigate('/rate-recipe')}
+                  >
+                    리뷰 작성하기
+                  </button>
+                </div>
               ) : (
                 pageData.reviews.map((review, index) => (
                   <div key={`review-${index}`} className={styles.reviewCard}>

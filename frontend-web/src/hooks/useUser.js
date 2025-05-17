@@ -33,6 +33,7 @@ const useUser = () => {
       return result;
     } catch (err) {
       setLoading(false);
+      // 오류 메시지만 표시
       setError(err.message || '사용자 정보를 가져오는 중 오류가 발생했습니다.');
       throw err;
     }
@@ -52,6 +53,7 @@ const useUser = () => {
       return result;
     } catch (err) {
       setLoading(false);
+      // 오류 메시지만 표시
       setError(err.message || '소셜 연동 상태를 가져오는 중 오류가 발생했습니다.');
       throw err;
     }
@@ -77,6 +79,7 @@ const useUser = () => {
       return result;
     } catch (err) {
       setLoading(false);
+      // 오류 메시지만 표시
       setError(err.message || `${provider} 연동 해제 중 오류가 발생했습니다.`);
       throw err;
     }
@@ -99,6 +102,7 @@ const useUser = () => {
       return result;
     } catch (err) {
       setLoading(false);
+      // 오류 메시지만 표시
       setError(err.message || '사용자 정보 업데이트 중 오류가 발생했습니다.');
       throw err;
     }
@@ -120,8 +124,20 @@ const useUser = () => {
       return result;
     } catch (err) {
       setLoading(false);
-      setError(err.message || '비밀번호 변경 중 오류가 발생했습니다.');
-      throw err;
+      
+      // 1-9, 1-10 이슈 해결: 기술적인 에러 메시지(axios 오류)가 아닌 사용자 친화적인 메시지만 표시
+      // err 자체가 아닌 err.message만 사용하여 기술적 오류 메시지 표시 방지
+      if (err.message) {
+        setError(err.message);
+      } else if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else {
+        setError('비밀번호 변경 중 오류가 발생했습니다.');
+      }
+      
+      // 원본 에러 객체를 그대로 throw하지 않고, 새 Error 객체를 생성하여 throw
+      // 이렇게 하면 상위 컴포넌트에서 기술적인 에러 메시지가 보이지 않음
+      throw new Error(err.message || '비밀번호 변경 중 오류가 발생했습니다.');
     }
   };
 
@@ -140,6 +156,7 @@ const useUser = () => {
       return result;
     } catch (err) {
       setLoading(false);
+      // 오류 메시지만 표시
       setError(err.message || '계정 삭제 중 오류가 발생했습니다.');
       throw err;
     }

@@ -30,6 +30,15 @@ export const signup = async (userData) => {
           throw new Error('비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.');
         }
       }
+      
+      // 1-3 이슈 해결: 422 유효성 검증 오류 (비밀번호 조건 미달 등)
+      if (status === 422) {
+        // 배열 형태의 유효성 오류 메시지 처리
+        if (Array.isArray(data.detail)) {
+          const errorMessages = data.detail.map(err => err.msg).join('\n');
+          throw new Error(errorMessages);
+        }
+      }
     }
     
     console.error('Signup error:', error);
@@ -62,24 +71,45 @@ export const login = async (credentials) => {
     
     return response.data;
   } catch (error) {
+    console.error('Login error:', error);
+    
     // 오류 메시지 한글화 및 상세화
     if (error.response) {
       const { status, data } = error.response;
       
-      // 잘못된 자격 증명
+      // 1-5, 1-6 이슈 해결: 401 인증 실패 처리 개선
       if (status === 401) {
-        if (data.detail && data.detail.includes('Invalid credentials')) {
+        // 디버깅을 위한 상세 로깅
+        console.log('401 Unauthorized error details:', data);
+        console.log('Detail message exact value:', data.detail);
+        
+        // 1-6 이슈 해결: 존재하지 않는 이메일 - "Invalid credentials" 메시지 명확히 처리
+        if (data.detail === "Invalid credentials") {
           throw new Error('존재하지 않는 이메일입니다.');
         }
         
-        if (data.detail && data.detail.includes('Incorrect password')) {
+        // 1-5 이슈 해결: 잘못된 비밀번호
+        if (data.detail === "Incorrect password") {
           throw new Error('비밀번호가 올바르지 않습니다.');
         }
+        
+        // 기타 401 오류 - 백엔드 메시지를 그대로 사용
+        if (data.detail) {
+          throw new Error(data.detail);
+        }
+        
+        // 401 오류이지만 자세한 메시지가 없는 경우
+        throw new Error('아이디 또는 비밀번호가 올바르지 않습니다.');
+      }
+      
+      // 그 외 HTTP 오류
+      if (data.detail) {
+        throw new Error(data.detail);
       }
     }
     
-    console.error('Login error:', error);
-    throw error.response?.data?.detail ? new Error(error.response.data.detail) : error;
+    // 서버 연결 실패 등의 네트워크 오류
+    throw new Error('서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
   }
 };
 

@@ -363,153 +363,114 @@ const ProfileEdit = () => {
   };
 
   // 비밀번호 변경 처리
-  const handlePasswordSubmit = async () => {
-    // 필드별 유효성 검사
-    let hasErrors = false;
-    const newFieldErrors = { ...fieldErrors };
-    
-    // 현재 비밀번호 입력 확인
-    if (!password.trim()) {
-      newFieldErrors.password = '현재 비밀번호를 입력해주세요.';
+const handlePasswordSubmit = async () => {
+  // 필드별 유효성 검사
+  let hasErrors = false;
+  const newFieldErrors = { ...fieldErrors };
+  
+  // 현재 비밀번호 입력 확인
+  if (!password.trim()) {
+    newFieldErrors.password = '현재 비밀번호를 입력해주세요.';
+    hasErrors = true;
+  }
+  
+  // 새 비밀번호 입력 확인
+  if (!newPassword.trim()) {
+    newFieldErrors.newPassword = '새 비밀번호를 입력해주세요.';
+    hasErrors = true;
+  }
+  
+  // 새 비밀번호 확인 입력 확인
+  if (!confirmPassword.trim()) {
+    newFieldErrors.confirmPassword = '비밀번호 확인을 입력해주세요.';
+    hasErrors = true;
+  }
+  
+  // 비밀번호 일치 확인
+  if (newPassword !== confirmPassword) {
+    newFieldErrors.confirmPassword = '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.';
+    hasErrors = true;
+  }
+  
+  // 비밀번호와 현재 비밀번호가 같은 경우 추가 검사
+  if (password === newPassword && password.trim() !== '') {
+    newFieldErrors.newPassword = '새 비밀번호는 현재 비밀번호와 달라야 합니다.';
+    hasErrors = true;
+  }
+  
+  // 비밀번호 복잡성 검사
+  if (newPassword.trim() !== '') {
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      newFieldErrors.newPassword = '비밀번호는 최소 8자 이상이며, 문자와 숫자를 포함해야 합니다.';
       hasErrors = true;
     }
+  }
+  
+  // 오류가 있으면 상태 업데이트 후 중단
+  if (hasErrors) {
+    setFieldErrors(newFieldErrors);
+    return;
+  }
+  
+  try {
+    // 비밀번호 변경 API 호출
+    await changePassword({
+      current_password: password,
+      new_password: newPassword,
+      new_password_check: confirmPassword
+    });
     
-    // 새 비밀번호 입력 확인
-    if (!newPassword.trim()) {
-      newFieldErrors.newPassword = '새 비밀번호를 입력해주세요.';
-      hasErrors = true;
-    }
+    // 폼 초기화
+    setPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
     
-    // 새 비밀번호 확인 입력 확인
-    if (!confirmPassword.trim()) {
-      newFieldErrors.confirmPassword = '비밀번호 확인을 입력해주세요.';
-      hasErrors = true;
-    }
+    setFormSuccess('비밀번호가 성공적으로 변경되었습니다.');
+  } catch (err) {
+    console.error('Password change error:', err);
     
-    // 비밀번호 일치 확인
-    if (newPassword !== confirmPassword) {
-      newFieldErrors.confirmPassword = '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.';
-      hasErrors = true;
-    }
+    // 1-10 이슈 해결: ProfileEdit 컴포넌트에서 오류 메시지 표시 개선
+    // 이미 useUser.js에서 사용자 친화적인 메시지로 변환된 err.message만 사용
+    // err.response 등의 기술적 메시지는 사용하지 않음
     
-    // 비밀번호와 현재 비밀번호가 같은 경우 추가 검사
-    if (password === newPassword && password.trim() !== '') {
-      newFieldErrors.newPassword = '새 비밀번호는 현재 비밀번호와 달라야 합니다.';
-      hasErrors = true;
-    }
-    
-    // 비밀번호 복잡성 검사
-    if (newPassword.trim() !== '') {
-      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
-      if (!passwordRegex.test(newPassword)) {
-        newFieldErrors.newPassword = '비밀번호는 최소 8자 이상이며, 문자와 숫자를 포함해야 합니다.';
-        hasErrors = true;
+    // 직접적인 에러 메시지가 있는 경우 표시
+    if (err.message) {
+      // 현재 비밀번호 불일치 (1-9 이슈)
+      if (err.message.includes('현재 비밀번호가 일치하지 않습니다')) {
+        setFieldErrors(prev => ({
+          ...prev,
+          password: '현재 비밀번호가 일치하지 않습니다.'
+        }));
+        return;
       }
-    }
-    
-    // 오류가 있으면 상태 업데이트 후 중단
-    if (hasErrors) {
-      setFieldErrors(newFieldErrors);
-      return;
-    }
-    
-    try {
-      // 비밀번호 변경 API 호출
-      await changePassword({
-        current_password: password,
-        new_password: newPassword,
-        new_password_check: confirmPassword
-      });
       
-      // 폼 초기화
-      setPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      
-      setFormSuccess('비밀번호가 성공적으로 변경되었습니다.');
-    } catch (err) {
-      console.error('Password change error:', err);
-      
-      // 오류 응답에 따른 메시지 구분 처리
-      if (err.response) {
-        const { status, data } = err.response;
-        
-        // 필드별 오류 메시지 처리
-        if (data.detail && typeof data.detail === 'object') {
-          // 필드별 오류 메시지가 있는 경우
-          const newErrors = { ...fieldErrors };
-          
-          if (data.detail.current_password) {
-            newErrors.password = getPasswordErrorMessage(data.detail.current_password, status);
-          }
-          
-          if (data.detail.new_password) {
-            newErrors.newPassword = getPasswordErrorMessage(data.detail.new_password, status);
-          }
-          
-          if (data.detail.new_password_check) {
-            newErrors.confirmPassword = getPasswordErrorMessage(data.detail.new_password_check, status);
-          }
-          
-          setFieldErrors(newErrors);
-          
-          // 일반 오류 메시지도 표시
-          setFormError('비밀번호 변경 중 오류가 발생했습니다. 입력 내용을 확인해주세요.');
-        } else if (Array.isArray(data.detail)) {
-          // 배열 형태의 오류 메시지
-          const errorMessages = data.detail.map(error => 
-            typeof error === 'string' ? error : error.msg || JSON.stringify(error)
-          ).join('\n');
-          setFormError(getPasswordErrorMessage(errorMessages, status));
-        } else {
-          // 현재 비밀번호 오류 (400)
-          if (status === 400 && data.detail && typeof data.detail === 'string' && 
-              data.detail.includes('Current password is incorrect')) {
-            setFieldErrors(prev => ({
-              ...prev,
-              password: '현재 비밀번호가 올바르지 않습니다.'
-            }));
-            return;
-          }
-          
-          // 동일한 비밀번호 오류 (400)
-          if (status === 400 && data.detail && typeof data.detail === 'string' && 
-              data.detail.includes('same as')) {
-            setFieldErrors(prev => ({
-              ...prev,
-              newPassword: '새 비밀번호는 이전 비밀번호와 달라야 합니다.'
-            }));
-            return;
-          }
-          
-          // 유효성 검사 오류 (422)
-          if (status === 422 && data.detail) {
-            if (Array.isArray(data.detail)) {
-              const errorMessages = data.detail.map(error => error.msg).join('\n');
-              setFormError(errorMessages);
-              return;
-            } else if (typeof data.detail === 'string') {
-              setFormError(data.detail);
-              return;
-            }
-          }
-          
-          // 기타 오류는 상세 메시지 그대로 표시
-          if (data.detail) {
-            setFormError(typeof data.detail === 'string' ? 
-              data.detail : JSON.stringify(data.detail));
-            return;
-          }
-          
-          // 상태 코드 기반 메시지
-          setFormError(getPasswordErrorMessage(null, status));
-        }
-      } else {
-        // 네트워크 오류 등
-        setFormError('서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
+      // 비밀번호 조건 미달 (1-10 이슈)
+      if (err.message.includes('비밀번호는 8자 이상이며')) {
+        setFieldErrors(prev => ({
+          ...prev,
+          newPassword: '비밀번호는 8자 이상이며, 숫자와 특수문자(@$!%*#?&)를 포함해야 합니다.'
+        }));
+        return;
       }
+      
+      // 새 비밀번호 불일치
+      if (err.message.includes('새 비밀번호가 일치하지 않습니다')) {
+        setFieldErrors(prev => ({
+          ...prev,
+          confirmPassword: '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.'
+        }));
+        return;
+      }
+      
+      // 그 외 오류 메시지는 그대로 표시
+      setFormError(err.message);
+    } else {
+      // 기본 오류 메시지
+      setFormError('비밀번호 변경 중 오류가 발생했습니다. 입력 내용을 확인해주세요.');
     }
-  };
+  }
+};
   
   const handleCancel = () => {
     navigate('/mypage');

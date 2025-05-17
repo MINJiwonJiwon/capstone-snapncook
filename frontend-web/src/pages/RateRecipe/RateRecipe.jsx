@@ -18,6 +18,9 @@ const FoodReviewPage = () => {
   const [previewPhoto, setPreviewPhoto] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   
+  // 6-3 수정: 이미지 로딩 상태 관리 추가
+  const [imageLoading, setImageLoading] = useState({});
+  
   // 커스텀 훅 사용
   const {
     reviews,
@@ -56,6 +59,24 @@ const FoodReviewPage = () => {
   const handleImageError = (e) => {
     console.warn('이미지 로드 실패:', e.target.src);
     e.target.src = '/assets/images/default-food.svg';
+    
+    // 6-3 수정: 이미지 로드 상태 업데이트
+    if (e.target.dataset.reviewId) {
+      setImageLoading(prev => ({
+        ...prev,
+        [e.target.dataset.reviewId]: false
+      }));
+    }
+  };
+  
+  // 6-3 수정: 이미지 로드 완료 핸들러
+  const handleImageLoad = (e) => {
+    if (e.target.dataset.reviewId) {
+      setImageLoading(prev => ({
+        ...prev,
+        [e.target.dataset.reviewId]: false
+      }));
+    }
   };
 
   // 리뷰 데이터 갱신 - useCallback으로 최적화
@@ -71,6 +92,18 @@ const FoodReviewPage = () => {
       loadReviews(selectedFood.id);
     }
   }, [selectedFood, loadReviews]);
+  
+  // 리뷰 데이터가 변경될 때 이미지 로딩 상태 초기화
+  useEffect(() => {
+    // 6-3 수정: 리뷰 데이터가 변경될 때 이미지 로딩 상태 초기화
+    const loadingState = {};
+    reviews.forEach(review => {
+      if (review.photo_url) {
+        loadingState[review.id] = true;
+      }
+    });
+    setImageLoading(loadingState);
+  }, [reviews]);
 
   // 음식 선택 핸들러
   const handleFoodSelect = (food) => {
@@ -354,12 +387,15 @@ const FoodReviewPage = () => {
                 </div>
                 
                 <div className={styles.reviewContent}>
+                  {/* 6-3 수정: 이미지 컨테이너에 고정 크기 적용하고 로딩/에러 핸들러 추가 */}
                   {review.photo_url && (
                     <figure className={styles.reviewImage}>
                       <img
                         src={review.photo_url}
                         alt="리뷰 첨부 이미지"
+                        data-review-id={review.id}
                         onError={handleImageError}
+                        onLoad={handleImageLoad}
                       />
                     </figure>
                   )}

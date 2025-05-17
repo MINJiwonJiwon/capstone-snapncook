@@ -5,11 +5,14 @@ import Footer from '../../components/Footer/Footer';
 import styles from './Recipe.module.css';
 import useRecipe from '../../hooks/useRecipe';
 import useBookmark from '../../hooks/useBookmark';
+import useRecommend from '../../hooks/useRecommend';
+import useAuth from '../../hooks/useAuth';
 import { getFoodById } from '../../api/food';
 import { getRecipesByFoodId } from '../../api/recipe';
 
 const Recipe = () => {
   const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
   const [currentImage, setCurrentImage] = useState('');
   const [foodName, setFoodName] = useState('음식 이름');
   const [foodId, setFoodId] = useState(null);
@@ -17,6 +20,15 @@ const Recipe = () => {
   const [recipes, setRecipes] = useState([]);
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(false);
   const [errorRecipes, setErrorRecipes] = useState(null);
+  const [detectionId, setDetectionId] = useState(null);
+  
+  // 추천 관련 훅 추가
+  const {
+    recommendedRecipes,
+    loading: loadingRecommendations,
+    error: errorRecommendations,
+    getRecommendationByDetection
+  } = useRecommend();
   
   const { 
     recipeDetail,
@@ -49,12 +61,36 @@ const Recipe = () => {
       // 세션 스토리지에서 선택된 음식 정보 가져오기
       const selectedFood = sessionStorage.getItem('selectedFood');
       const selectedFoodId = sessionStorage.getItem('selectedFoodId');
+      const selectedDetectionId = sessionStorage.getItem('detectionId');
       
       if (selectedFood) {
         setFoodName(selectedFood);
       }
       
-      if (selectedFoodId) {
+      if (selectedDetectionId) {
+        // 탐지 결과 ID가 있다면 저장
+        setDetectionId(parseInt(selectedDetectionId));
+        
+        // 탐지 결과 ID로 추천 받기 (로그인 상태에 관계없이 공개 API 사용)
+        try {
+          const recommendations = await getRecommendationByDetection(
+            parseInt(selectedDetectionId),
+            !isLoggedIn // 로그인 상태가 아니면 강제로 공개 API 사용
+          );
+          
+          if (recommendations && recommendations.length > 0) {
+            setRecipes(recommendations);
+            // 첫 번째 레시피를 기본 선택
+            setActiveRecipeId(recommendations[0].id);
+            await fetchRecipeDetail(recommendations[0].id);
+          } else {
+            setErrorRecipes('추천된 레시피가 없습니다.');
+          }
+        } catch (err) {
+          console.error('Failed to get recommendations by detection:', err);
+          setErrorRecipes('추천 레시피를 불러오는 데 실패했습니다.');
+        }
+      } else if (selectedFoodId) {
         // 음식 ID를 세션 스토리지에서 가져왔다면 그대로 사용
         setFoodId(parseInt(selectedFoodId));
         await loadRecipesByFoodId(parseInt(selectedFoodId));
@@ -72,12 +108,14 @@ const Recipe = () => {
         }
       }
       
-      // 북마크 목록 가져오기
-      await fetchMyBookmarks();
+      // 북마크 목록 가져오기 (로그인한 경우에만)
+      if (isLoggedIn) {
+        await fetchMyBookmarks();
+      }
     };
     
     loadRecipeData();
-  }, [navigate, fetchMyBookmarks]);
+  }, [navigate, fetchMyBookmarks, isLoggedIn, getRecommendationByDetection, fetchRecipeDetail]);
   
   // 음식 ID로 레시피 목록 가져오기
   const loadRecipesByFoodId = async (foodId) => {
@@ -111,6 +149,13 @@ const Recipe = () => {
   
   // 북마크 토글 처리
   const handleToggleBookmark = async (recipeId) => {
+    // 로그인 상태 확인 - 로그인하지 않은 경우 로그인 페이지로 이동
+    if (!isLoggedIn) {
+      alert('북마크를 이용하려면 로그인이 필요합니다.');
+      navigate('/login');
+      return;
+    }
+    
     const bookmark = isBookmarked(recipeId);
     
     try {
@@ -144,7 +189,7 @@ const Recipe = () => {
   
   // 레시피 카드 렌더링
   const renderRecipeCards = () => {
-    if (isLoadingRecipes) {
+    if (isLoadingRecipes || loadingRecommendations) {
       return (
         <div className={styles.cardsContainer}>
           <div className={styles.skeletonCard}></div>
@@ -154,8 +199,8 @@ const Recipe = () => {
       );
     }
     
-    if (errorRecipes) {
-      return <p className={styles.errorMessage}>{errorRecipes}</p>;
+    if (errorRecipes || errorRecommendations) {
+      return <p className={styles.errorMessage}>{errorRecipes || errorRecommendations}</p>;
     }
     
     if (!recipes || recipes.length === 0) {
@@ -175,13 +220,13 @@ const Recipe = () => {
               <p>소스: {recipe.source_detail || recipe.source_type}</p>
               {/* 북마크 버튼 추가 */}
               <button 
-                className={`${styles.bookmarkButton} ${isBookmarked(recipe.id) ? styles.bookmarked : ''}`}
+                className={`${styles.bookmarkButton} ${isLoggedIn && isBookmarked(recipe.id) ? styles.bookmarked : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleToggleBookmark(recipe.id);
                 }}
               >
-                {isBookmarked(recipe.id) ? '★' : '☆'}
+                {isLoggedIn && isBookmarked(recipe.id) ? '★' : '☆'}
               </button>
             </div>
           </div>
@@ -259,6 +304,11 @@ const Recipe = () => {
             <img id="detected-food-image" src={currentImage} alt="추출된 음식" />
           </div>
           <h2 id="food-name">{foodName}</h2>
+          {!isLoggedIn && (
+            <div className={styles.publicModeNotice}>
+              <p>👉 로그인하지 않아도 공개 레시피 추천을 이용할 수 있습니다.</p>
+            </div>
+          )}
         </div>
         
         {/* 레시피 카드 선택 영역 */}
@@ -274,6 +324,11 @@ const Recipe = () => {
         
         <div className={styles.buttonGroup}>
           <button className={styles.backButton} onClick={handleBackClick}>다른 사진 업로드하기</button>
+          {!isLoggedIn && (
+            <button className={styles.loginButton} onClick={() => navigate('/login')}>
+              로그인하여 더 많은 기능 이용하기
+            </button>
+          )}
         </div>
       </div>
       
