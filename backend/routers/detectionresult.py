@@ -51,6 +51,4 @@ def get_my_detection_results(
     results = db.query(models.DetectionResult).filter(
         models.DetectionResult.user_id == current_user.id
     ).all()
-    if not results:
-        raise HTTPException(status_code=404, detail="No detection results found for this user")
-    return results
+    return results  # ✅ raise 제거 → 빈 리스트 자동 반환됨
