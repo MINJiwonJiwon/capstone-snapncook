@@ -1,9 +1,11 @@
 # backend/tests/test_userlog.py
 
-from uuid import uuid4
+from typing import Any, Dict
+from fastapi.testclient import TestClient
+from backend.models import User
 
-def test_create_user_log(auth_client, test_user):
-    user_log_data = {
+def test_create_user_log(auth_client: TestClient, test_user: User):
+    user_log_data: Dict[str, Any] = {
         "action": "회원가입",
         "target_id": 0,
         "target_type": "user",
@@ -16,9 +18,9 @@ def test_create_user_log(auth_client, test_user):
     assert response.json()["user_id"] == test_user.id
     assert response.json()["action"] == "회원가입"
 
-def test_get_user_logs(auth_client, test_user):
+def test_get_user_logs(auth_client: TestClient, test_user: User):
     # 먼저 로그 생성
-    user_log_data = {
+    user_log_data: Dict[str, Any] = {
         "action": "회원가입",
         "target_id": 0,
         "target_type": "user",

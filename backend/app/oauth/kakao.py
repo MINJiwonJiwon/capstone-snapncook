@@ -1,6 +1,8 @@
 # backend/app/oauth/kakao.py
-from fastapi import APIRouter, Request, Depends, HTTPException
+from typing import Any, Dict, cast
+from fastapi import APIRouter, Request, Depends
 from authlib.integrations.starlette_client import OAuth
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from backend.app.auth.utils import create_access_token
 from backend.db import get_db
@@ -10,7 +12,7 @@ import os
 router = APIRouter()
 oauth = OAuth()
 
-oauth.register(
+oauth.register( # type: ignore
     name="kakao",
     client_id=os.getenv("KAKAO_CLIENT_ID"),
     client_secret=os.getenv("KAKAO_CLIENT_SECRET"),
@@ -21,17 +23,17 @@ oauth.register(
 )
 
 @router.get("/login")
-async def login(request: Request):
+async def login(request: Request) -> RedirectResponse:
     redirect_uri = os.getenv("KAKAO_REDIRECT_URI")
-    return await oauth.kakao.authorize_redirect(request, redirect_uri)
+    return await oauth.kakao.authorize_redirect(request, redirect_uri) # type: ignore
 
 @router.get("/callback")
 async def callback(request: Request, db: Session = Depends(get_db)):
     try:
-        token = await oauth.kakao.authorize_access_token(request)
-        resp = await oauth.kakao.get("https://kapi.kakao.com/v2/user/me", token=token)
-        profile = resp.json()
-
+        token: Any = await oauth.kakao.authorize_access_token(request) # type: ignore
+        resp = await oauth.kakao.get("https://kapi.kakao.com/v2/user/me", token=token)  # type: ignore
+        profile = cast(Dict[str, Any], resp.json())   # type: ignore
+        
         print("🔥 Kakao userinfo:", profile)
 
         kakao_id = str(profile["id"])
@@ -45,7 +47,7 @@ async def callback(request: Request, db: Session = Depends(get_db)):
         print(f"🔥 email: {email}")
         print(f"🔥 kakao_id: {kakao_id}")
 
-        user_data = {
+        user_data: Dict[str, Any] = {
             "email": email,
             "nickname": nickname,
             "profile_image_url": profile_image_url,

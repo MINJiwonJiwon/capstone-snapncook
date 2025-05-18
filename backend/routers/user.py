@@ -1,6 +1,5 @@
 # backend/routers/user.py
 
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from backend import crud, models, schemas
@@ -84,7 +83,7 @@ def change_password(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    if not verify_password(password_update.current_password, current_user.password_hash):
+    if not current_user.password_hash or not verify_password(password_update.current_password, current_user.password_hash):
         raise HTTPException(status_code=400, detail="현재 비밀번호가 일치하지 않습니다.")
 
     if password_update.new_password != password_update.new_password_check:

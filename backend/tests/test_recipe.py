@@ -1,13 +1,14 @@
 # backend/tests/test_recipe.py
 
+from typing import Any, Dict, List
 import pytest
 from fastapi.testclient import TestClient
 from backend.main import app
 from backend.db import get_db
 from sqlalchemy.orm import Session
 
+from backend.models import User
 from backend.tests.test_food import create_food_helper
-from backend.tests.test_user import test_create_user
 
 client = TestClient(app)
 
@@ -18,9 +19,9 @@ def db_session():
     yield db
     db.rollback()
 
-def test_create_recipe(auth_client, db_session, test_user):
+def test_create_recipe(auth_client: TestClient, db_session: Session, test_user: User):
     food_id = create_food_helper(db_session)
-    recipe_data = {
+    recipe_data: Dict[str, Any] = {
         "food_id": food_id,
         "source_type": "User",
         "title": "김치찌개 레시피",
@@ -36,7 +37,7 @@ def test_create_recipe(auth_client, db_session, test_user):
 def test_get_recipe_by_id(db_session: Session):
     food_id = create_food_helper(db_session)
 
-    recipe_data = {
+    recipe_data: Dict[str, Any] = {
         "food_id": food_id,
         "source_type": "User",
         "title": "불고기 레시피",
@@ -58,7 +59,7 @@ def test_get_recipes_by_food_id(db_session: Session):
     food_id = create_food_helper(db_session)
 
     # food_id를 사용해서 레시피 생성
-    recipe_data = {
+    recipe_data: Dict[str, Any] = {
         "food_id": food_id,
         "source_type": "User",
         "title": "된장찌개 레시피",
@@ -71,12 +72,14 @@ def test_get_recipes_by_food_id(db_session: Session):
 
     response = client.get(f"/api/recipes/food/{food_id}")
     assert response.status_code == 200
-    recipes = response.json()
+
+    recipes: List[Dict[str, Any]] = response.json()
+
     assert isinstance(recipes, list)
     assert any(recipe["title"] == recipe_data["title"] for recipe in recipes)
 
 # helper 함수
-def create_recipe_helper(db_session, food_id: int):
+def create_recipe_helper(db_session: Session, food_id: int):
     from backend import models
     recipe = models.Recipe(
         food_id=food_id,

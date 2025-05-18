@@ -1,5 +1,7 @@
 # backend/app/oauth/google.py
-from fastapi import APIRouter, Depends, Request
+from typing import Any, Dict, cast
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from backend.db import get_db
 from sqlalchemy.orm import Session
 from backend.app.auth.utils import create_access_token
@@ -11,7 +13,7 @@ router = APIRouter()
 oauth = OAuth()
 
 # 🔐 Google OAuth 설정
-oauth.register(
+oauth.register( # type: ignore
     name='google',
     client_id=os.getenv('GOOGLE_CLIENT_ID'),
     client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
@@ -27,28 +29,31 @@ oauth.register(
 
 # 🔗 로그인 리디렉션 엔드포인트
 @router.get("/login")
-async def login(request: Request):
+async def login(request: Request) -> RedirectResponse:
     redirect_uri = os.getenv('GOOGLE_REDIRECT_URI')
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    return await oauth.google.authorize_redirect(request, redirect_uri) # type: ignore
 
 # 🔁 콜백 핸들러
 @router.get("/callback")
 async def callback(request: Request, db: Session = Depends(get_db)):
     try:
-        token = await oauth.google.authorize_access_token(request)
-        profile = (await oauth.google.get('userinfo', token=token)).json()
-
+        token: Any = await oauth.google.authorize_access_token(request) # type: ignore
+        profile = cast(Dict[str, Any], (await oauth.google.get('userinfo', token=token)).json())   # type: ignore
+        
         print("🔥 Google userinfo:", profile)
         print("🔥 email:", profile.get("email"))
         print("🔥 sub:", profile.get("sub"))
 
+        if not profile.get("email") or not profile.get("id"):
+            raise HTTPException(status_code=400, detail="Google 계정 정보가 불완전합니다.")
+
         user = get_or_create_oauth_user(
             db=db,
-            email=profile.get("email"),
-            nickname=profile.get("name"),
-            profile_image_url=profile.get("picture"),
+            email=cast(str, profile.get("email")),
+            nickname=cast(str, profile.get("name")),
+            profile_image_url=cast(str, profile.get("picture")),
             oauth_provider="google",
-            oauth_id=profile.get("id")
+            oauth_id=cast(str, profile.get("id")),
         )
 
         return {"access_token": create_access_token(data={"sub": str(user.id)})}

@@ -35,3 +35,4 @@ alembic/old_versions/
 
 # ───── API 명세서 관련 ─────
 generate_fastapi_docs.py
+sample_data.py

@@ -18,7 +18,7 @@ def delete_expired_refresh_tokens():
     finally:
         db.close()
 
-def calculate_search_ranking(period="day"):
+def calculate_search_ranking(period: str = "day"):
     db = SessionLocal()
     try:
         today = date.today()
@@ -56,12 +56,12 @@ def calculate_search_ranking(period="day"):
 def start_scheduler():
     scheduler = BackgroundScheduler(timezone=pytz.utc)
     
-    scheduler.add_job(delete_expired_refresh_tokens, 'cron', hour=3, minute=0)
+    scheduler.add_job(delete_expired_refresh_tokens, 'cron', hour=3, minute=0) # type: ignore
 
     # ✅ 테스트용 job (10초마다 실행) — 테스트 후 주석처리
     # scheduler.add_job(delete_expired_refresh_tokens, 'interval', seconds=10)
 
-    scheduler.add_job(calculate_search_ranking, 'cron', hour=0, minute=0, kwargs={"period": "day"})
-    scheduler.add_job(calculate_search_ranking, 'cron', day_of_week="mon", hour=1, minute=0, kwargs={"period": "week"})
+    scheduler.add_job(calculate_search_ranking, 'cron', hour=0, minute=0, kwargs={"period": "day"}) # type: ignore
+    scheduler.add_job(calculate_search_ranking, 'cron', day_of_week="mon", hour=1, minute=0, kwargs={"period": "week"}) # type: ignore
 
-    scheduler.start()
+    scheduler.start() # type: ignore

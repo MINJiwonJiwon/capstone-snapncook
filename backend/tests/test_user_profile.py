@@ -1,12 +1,12 @@
 # backend/tests/test_user_profile.py
 
-import pytest
+from typing import Dict
 from fastapi.testclient import TestClient
 from backend.main import app
 
 client = TestClient(app)
 
-def test_update_profile_nickname_and_image(authenticated_headers):
+def test_update_profile_nickname_and_image(authenticated_headers: Dict[str, str]):
     data = {
         "nickname": "바뀐닉네임",
         "profile_image_url": "http://example.com/new-image.jpg"
@@ -16,7 +16,7 @@ def test_update_profile_nickname_and_image(authenticated_headers):
     assert res.json()["nickname"] == data["nickname"]
     assert res.json()["profile_image_url"] == data["profile_image_url"]
 
-def test_update_profile_nickname_only(authenticated_headers):
+def test_update_profile_nickname_only(authenticated_headers: Dict[str, str]):
     data = {
         "nickname": "닉네임만변경"
     }
@@ -24,7 +24,7 @@ def test_update_profile_nickname_only(authenticated_headers):
     assert res.status_code == 200
     assert res.json()["nickname"] == data["nickname"]
 
-def test_update_profile_image_only(authenticated_headers):
+def test_update_profile_image_only(authenticated_headers: Dict[str, str]):
     data = {
         "profile_image_url": "http://example.com/only-image.jpg"
     }
@@ -32,7 +32,7 @@ def test_update_profile_image_only(authenticated_headers):
     assert res.status_code == 200
     assert res.json()["profile_image_url"] == data["profile_image_url"]
 
-def test_change_password(authenticated_headers):
+def test_change_password(authenticated_headers: Dict[str, str]):
     new_password_data = {
         "current_password": "TestPassword123!",
         "new_password": "NewPassword456!",
@@ -42,18 +42,18 @@ def test_change_password(authenticated_headers):
     assert res.status_code == 200
     assert res.json()["message"] == "비밀번호가 성공적으로 변경되었습니다."
 
-def test_get_social_status(authenticated_headers):
+def test_get_social_status(authenticated_headers: Dict[str, str]):
     res = client.get("/api/users/me/social", headers=authenticated_headers)
     assert res.status_code == 200
     assert res.json()["oauth_provider"] is None  # 기본은 소셜 계정이 아님
 
-def test_disconnect_social_account_fails_for_non_social_user(authenticated_headers):
+def test_disconnect_social_account_fails_for_non_social_user(authenticated_headers: Dict[str, str]):
     # 소셜 계정이 아닌 경우에는 disconnect 시도 시 실패해야 함
     res = client.delete("/api/users/me/social/naver", headers=authenticated_headers)
     assert res.status_code == 400
     assert res.json()["detail"] == "No such social provider connected"
 
-def test_delete_current_user(authenticated_headers):
+def test_delete_current_user(authenticated_headers: Dict[str, str]):
     res = client.delete("/api/users/me", headers=authenticated_headers)
     assert res.status_code == 204
 

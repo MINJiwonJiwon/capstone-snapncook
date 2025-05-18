@@ -1,10 +1,13 @@
 # backend/tests/test_mypage.py
 
-import pytest
+from typing import Any, Dict
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+from backend.models import User
 from backend.tests.test_food import create_food_helper
 from backend.tests.test_recipe import create_recipe_helper
 
-def test_mypage_summary(auth_client, db_session, test_user):
+def test_mypage_summary(auth_client: TestClient, db_session: Session, test_user: User):
     # 음식 및 레시피 생성
     food_id = create_food_helper(db_session)
     recipe_id = create_recipe_helper(db_session, food_id=food_id)
@@ -14,7 +17,7 @@ def test_mypage_summary(auth_client, db_session, test_user):
     assert response.status_code == 200
 
     # 탐지 결과 등록
-    detection_data = {
+    detection_data: Dict[str, Any] = {
         "food_id": food_id,
         "image_path": "path/to/image.jpg",
         "confidence": 0.88
@@ -23,7 +26,7 @@ def test_mypage_summary(auth_client, db_session, test_user):
     assert response.status_code == 200
 
     # 리뷰 작성
-    review_data = {
+    review_data: Dict[str, Any] = {
         "food_id": food_id,
         "content": "맛있어요!",
         "rating": 5
