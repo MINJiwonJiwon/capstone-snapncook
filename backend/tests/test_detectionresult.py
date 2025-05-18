@@ -47,3 +47,10 @@ def test_create_detection_result_with_invalid_food_id(auth_client):
     assert response.status_code == 400
     assert response.json()["detail"]["error_code"] == "FOOD_NOT_FOUND"
     assert "등록되어 있지 않습니다" in response.json()["detail"]["message"]
+
+# 빈 결과 확인 테스트
+def test_get_detection_results_when_empty(auth_client):
+    # 먼저 사용자 계정은 있으나 탐지 결과가 없는 상태에서 호출
+    response = auth_client.get("/api/detection-results/me")
+    assert response.status_code == 200
+    assert response.json() == []  # 빈 리스트 반환 확인

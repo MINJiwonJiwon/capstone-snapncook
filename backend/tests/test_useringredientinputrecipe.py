@@ -38,3 +38,18 @@ def test_create_user_ingredient_input_recipe(authenticated_headers, db_session: 
     response = client.post("/api/user-ingredient-input-recipes/", json=input_recipe_data, headers=authenticated_headers)
     assert response.status_code == 200
     assert response.json()["rank"] == 1
+
+# 빈 결과 확인 테스트
+def test_get_recommended_recipes_when_empty(authenticated_headers, db_session):
+    # 본인의 user_ingredient_input 생성
+    input_data = {
+        "input_text": "없는 재료"
+    }
+    input_response = client.post("/api/user-ingredient-inputs/", json=input_data, headers=authenticated_headers)
+    assert input_response.status_code in [200, 201]
+    input_id = input_response.json()["id"]
+
+    # 해당 input에 대해 아무 추천도 없을 때 GET 요청
+    response = client.get(f"/api/user-ingredient-input-recipes/input/{input_id}", headers=authenticated_headers)
+    assert response.status_code == 200
+    assert response.json() == []  # ✅ 빈 리스트 반환 확인
