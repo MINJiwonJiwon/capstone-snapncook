@@ -33,6 +33,9 @@ alembic/old_versions/
 # ───── 테스트 요청 파일 (.http) 무시 ─────
 *.http
 
-# ───── API 명세서 관련 ─────
+# ───── Python 파일 ─────
 generate_fastapi_docs.py
 sample_data.py
+
+# ───── 타입 정보 보완 파일 ─────
+typings/
