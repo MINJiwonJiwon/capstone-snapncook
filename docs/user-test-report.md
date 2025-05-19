@@ -8,3 +8,4 @@
 - [4차 테스트 결과](./user-test-report/4th.md)
     - U-1, 1-8, 5-1 성공
 - [5차 테스트 결과](./user-test-report/5th.md)
+    - 4-2, 6-6 성공
