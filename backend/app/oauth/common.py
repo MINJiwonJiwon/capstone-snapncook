@@ -1,5 +1,5 @@
 # backend/app/oauth/common.py
-from fastapi import HTTPException
+
 from sqlalchemy.orm import Session
 from backend import models, schemas
 

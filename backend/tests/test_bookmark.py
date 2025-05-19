@@ -1,13 +1,15 @@
 # backend/tests/test_bookmark.py
 
-import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+from backend.models import User
 from backend.tests.test_food import create_food_helper
 from backend.tests.test_recipe import create_recipe_helper
 
 # auth_client: 토큰 포함된 client
 # test_user: 현재 로그인된 유저 객체
 
-def test_bookmark_flow(auth_client, db_session, test_user):
+def test_bookmark_flow(auth_client: TestClient, db_session: Session, test_user: User):
     # 1. 음식 + 레시피 생성
     food_id = create_food_helper(db_session)
     recipe_id = create_recipe_helper(db_session, food_id)
@@ -32,7 +34,7 @@ def test_bookmark_flow(auth_client, db_session, test_user):
     assert all(bm["id"] != bookmark_id for bm in response.json())
 
 
-def test_duplicate_bookmark(auth_client, db_session, test_user):
+def test_duplicate_bookmark(auth_client: TestClient, db_session: Session, test_user: User):
     # 1. 음식 & 레시피 생성
     food_id = create_food_helper(db_session)
     recipe_id = create_recipe_helper(db_session, food_id=food_id)

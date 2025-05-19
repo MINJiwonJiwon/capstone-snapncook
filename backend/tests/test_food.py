@@ -1,6 +1,6 @@
 # backend/tests/test_food.py
 
-import pytest
+from sqlalchemy.orm import Session
 from backend.main import app
 from fastapi.testclient import TestClient
 
@@ -37,7 +37,7 @@ def test_get_food_by_id():
     assert get_response.json()["description"] == food_data["description"]
 
 # helper 함수
-def create_food_helper(db_session):
+def create_food_helper(db_session: Session):
     from backend import models
     food = models.Food(name="김치찌개", description="얼큰한 국물요리")
     db_session.add(food)

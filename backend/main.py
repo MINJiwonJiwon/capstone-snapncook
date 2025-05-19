@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from backend.db import SessionLocal, get_db 
+from backend.db import get_db 
 from backend.routers import admin, home, mypage, user, food, recipe, recipestep, detectionresult, review, userlog, useringredientinput, useringredientinputrecipe, recommend, bookmark
 from backend.routers import auth_routes as auth
 from backend.routers import oauth_routes as oauth

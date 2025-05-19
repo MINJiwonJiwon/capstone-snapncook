@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from backend.main import app
-from backend.db import get_db, SessionLocal
+from backend.db import SessionLocal
 from backend import models
 from backend.app.auth.utils import create_access_token, hash_password
 

@@ -1,10 +1,10 @@
 # backend/schemas.py
+
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List
+from typing import Optional, List, Literal, Any
 from datetime import datetime
 
 # ---------- User ----------
-# 공통 유저 속성 (Base)
 class UserBase(BaseModel):
     email: str
     nickname: str
@@ -12,7 +12,6 @@ class UserBase(BaseModel):
     oauth_provider: Optional[str] = None
     oauth_id: Optional[str] = None
 
-# 소셜 계정 정보
 class SocialAccountRead(BaseModel):
     provider: str
     oauth_id: str
@@ -20,7 +19,6 @@ class SocialAccountRead(BaseModel):
     class Config:
         from_attributes = True
 
-# 일반 회원가입용 - 비밀번호 필수 + 유효성 검사 포함
 class UserCreateWithPassword(UserBase):
     password: str = Field(
         ..., min_length=8, max_length=128,
@@ -31,18 +29,16 @@ class UserCreateWithPassword(UserBase):
 
     @field_validator("password")
     @classmethod
-    def validate_password(cls, v):
+    def validate_password(cls, v: str) -> str:
         if not any(char.isdigit() for char in v):
             raise ValueError("비밀번호에는 최소 1개의 숫자가 포함되어야 합니다.")
         if not any(char in "@$!%*#?&" for char in v):
             raise ValueError("비밀번호에는 최소 1개의 특수문자(@$!%*#?&)가 포함되어야 합니다.")
         return v
 
-# 소셜 로그인용 - 비밀번호 없이 생성
 class UserCreateOAuth(UserBase):
     password_hash: Optional[str] = None
 
-# 응답용 유저 정보
 class UserOut(UserBase):
     id: int
     created_at: datetime
@@ -52,28 +48,23 @@ class UserOut(UserBase):
     class Config:
         from_attributes = True
 
-# 로그인 요청용
 class UserLogin(BaseModel):
     email: str
     password: str
 
-# 프로필 수정 용도
 class UserUpdateProfile(BaseModel):
     nickname: Optional[str] = None
     profile_image_url: Optional[str] = None
 
-# 비밀번호 수정 용도
 class UserUpdatePassword(BaseModel):
     current_password: str
     new_password: str
     new_password_check: str
 
-# User 수정용 스키마(관리자)
 class UserUpdate(BaseModel):
     nickname: Optional[str] = None
     is_admin: Optional[bool] = None
 
-# 토큰 관련
 class Token(BaseModel):
     access_token: str
     refresh_token: Optional[str] = None
@@ -99,7 +90,6 @@ class FoodOut(FoodBase):
     class Config:
         from_attributes = True
 
-# Food 수정용(관리자)
 class FoodUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
@@ -125,7 +115,6 @@ class RecipeOut(RecipeBase):
     class Config:
         from_attributes = True
 
-# Recipe 수정용(관리자)
 class RecipeUpdate(BaseModel):
     title: Optional[str] = None
     ingredients: Optional[str] = None
@@ -191,7 +180,7 @@ class UserLogBase(BaseModel):
     action: str
     target_id: int
     target_type: str
-    meta: Optional[dict] = None
+    meta: Optional[dict[str, Any]] = None
 
 class UserLogCreate(UserLogBase):
     pass
@@ -235,7 +224,6 @@ class UserIngredientInputRecipeOut(UserIngredientInputRecipeBase):
         from_attributes = True
 
 # ---------- Recipe Detail 통합 응답 ----------
-
 class FoodSummary(BaseModel):
     id: int
     name: str
@@ -259,7 +247,6 @@ class RecipeDetailResponse(BaseModel):
     steps: List[RecipeStepSummary]
 
 # ---------- Bookmark ----------
-
 class BookmarkBase(BaseModel):
     recipe_id: int
 
@@ -274,7 +261,6 @@ class BookmarkOut(BookmarkBase):
         from_attributes = True
 
 # ---------- Mypage ----------
-
 class BookmarkSummary(BaseModel):
     id: int
     recipe_id: int
@@ -300,19 +286,16 @@ class MypageSummaryResponse(BaseModel):
     reviews: List[ReviewSummary]
 
 # ---------- Home ----------
-
-# ✅ 인기 검색어 응답용 스키마
 class PopularSearchRanking(BaseModel):
     rank: int
     keyword: str
     previous_rank: Optional[int] = None
-    trend: str  # 'up', 'down', 'same', 'new'
+    trend: Literal["up", "down", "same", "new"]
 
 class PopularSearchResponse(BaseModel):
-    period: str
+    period: Literal["day", "week"]
     rankings: List[PopularSearchRanking]
 
-# ✅ 추천 음식 응답용 스키마
 class TodayRecommendedFood(BaseModel):
     id: int
     name: str

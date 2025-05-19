@@ -1,6 +1,5 @@
 # backend/tests/test_home.py
 
-import pytest
 from fastapi.testclient import TestClient
 from backend.main import app
 

@@ -1,4 +1,5 @@
 # backend/app/oauth/naver.py
+from typing import Any, Dict, cast
 from fastapi import APIRouter, HTTPException, Request, Depends
 from authlib.integrations.starlette_client import OAuth
 from sqlalchemy.orm import Session
@@ -11,7 +12,7 @@ import os
 router = APIRouter()
 oauth = OAuth()
 
-oauth.register(
+oauth.register( # type: ignore
     name="naver",
     client_id=os.getenv("NAVER_CLIENT_ID"),
     client_secret=os.getenv("NAVER_CLIENT_SECRET"),
@@ -22,18 +23,18 @@ oauth.register(
 )
 
 @router.get("/login")
-async def login(request: Request):
+async def login(request: Request) -> RedirectResponse:
     redirect_uri = os.getenv("NAVER_REDIRECT_URI")
-    return await oauth.naver.authorize_redirect(request, redirect_uri)
+    return await oauth.naver.authorize_redirect(request, redirect_uri) # type: ignore
 
 @router.get("/callback")
 async def callback(request: Request, db: Session = Depends(get_db)):
     try:
-        token = await oauth.naver.authorize_access_token(request)
+        token: Any = await oauth.naver.authorize_access_token(request) # type: ignore
 
         # 사용자 정보 요청
-        resp = await oauth.naver.get("https://openapi.naver.com/v1/nid/me", token=token)
-        profile = resp.json()
+        resp = await oauth.naver.get("https://openapi.naver.com/v1/nid/me", token=token) # type: ignore
+        profile = cast(Dict[str, Any], resp.json()) # type: ignore
 
         print("🔥 Naver userinfo:", profile)
 
@@ -48,7 +49,7 @@ async def callback(request: Request, db: Session = Depends(get_db)):
         if not naver_id or not email:
             raise HTTPException(status_code=400, detail="네이버 사용자 정보 부족 (id 또는 email 없음)")
 
-        user_data = {
+        user_data: Dict[str, Any] =  {
             "email": email,
             "nickname": name,
             "profile_image_url": response_data.get("profile_image", None),
