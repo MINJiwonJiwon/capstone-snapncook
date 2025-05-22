@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './Login.module.css';
 import useAuth from '../../hooks/useAuth';
-import { startGoogleLogin, startKakaoLogin, startNaverLogin } from '../../api/oauth';
-import { BASE_URL } from '../../api/endpoints';
+import { redirectToSocialLogin } from '../../api/oauth';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -15,9 +14,8 @@ const Login = () => {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupNickname, setSignupNickname] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
-  const [signupPasswordCheck, setSignupPasswordCheck] = useState(''); // 비밀번호 확인 필드 추가
+  const [signupPasswordCheck, setSignupPasswordCheck] = useState('');
   const [formError, setFormError] = useState('');
-  const [socialLoading, setSocialLoading] = useState(false);
   
   // 이미 로그인된 경우 홈으로 리다이렉트
   useEffect(() => {
@@ -36,161 +34,64 @@ const Login = () => {
     clearErrors();
   };
   
-  // 소셜 로그인 핸들러
-  const handleSocialLogin = async (provider) => {
+  // 1-14 이슈 해결: 소셜 로그인 핸들러 (직접 리디렉션)
+  const handleSocialLogin = (provider) => {
     try {
-      setSocialLoading(true);
       clearErrors();
       console.log(`${provider} 로그인 시도...`);
       
-      let redirectUrl;
+      // 직접 리디렉션 방식 사용
+      redirectToSocialLogin(provider);
       
-      // 1-14 이슈 해결: API 호출을 통해 리다이렉션 URL 가져오기
-      switch (provider) {
-        case 'google':
-          redirectUrl = await startGoogleLogin();
-          break;
-        case 'kakao':
-          redirectUrl = await startKakaoLogin();
-          break;
-        case 'naver':
-          redirectUrl = await startNaverLogin();
-          break;
-        default:
-          throw new Error('지원하지 않는 소셜 로그인 제공자입니다.');
-      }
-      
-      // 소셜 로그인 진행 중 표시 저장
-      localStorage.setItem('social_login_pending', provider);
-      localStorage.setItem('social_login_time', new Date().getTime());
-      
-      console.log(`${provider} 리다이렉션 URL:`, redirectUrl);
-      
-      // 백엔드에서 받은 리다이렉션 URL로 이동
-      if (redirectUrl && redirectUrl.redirect_url) {
-        console.log(`${provider} 로그인 리다이렉션:`, redirectUrl.redirect_url);
-        window.location.href = redirectUrl.redirect_url;
-      } else {
-        throw new Error(`${provider} 로그인 URL을 가져오는데 실패했습니다.`);
-      }
     } catch (err) {
       console.error(`${provider} 로그인 오류:`, err);
-      setSocialLoading(false);
       setFormError(err.message || `${provider} 로그인을 시작할 수 없습니다. 잠시 후 다시 시도해주세요.`);
-      
-      // 소셜 로그인 진행 중 표시 제거
-      localStorage.removeItem('social_login_pending');
-      localStorage.removeItem('social_login_time');
     }
   };
   
-  // 로그인 오류 메시지 매핑 함수
-  const getLoginErrorMessage = (error, status) => {
-    // 자주 발생하는 오류 패턴 매핑
-    if (typeof error === 'string') {
-      if (error.includes('Invalid credentials') || error.includes('not found')) {
-        return '존재하지 않는 이메일입니다.';
-      }
-      if (error.includes('Incorrect password')) {
-        return '비밀번호가 올바르지 않습니다.';
-      }
-      if (error.includes('Not authenticated') || error.includes('Invalid token')) {
-        return '인증에 실패했습니다. 다시 로그인해주세요.';
-      }
-      if (error.includes('disabled') || error.includes('inactive')) {
-        return '비활성화된 계정입니다. 관리자에게 문의하세요.';
-      }
-      if (error.includes('too many') || error.includes('limit')) {
-        return '로그인 시도 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.';
-      }
-      if (error.includes('banned') || error.includes('suspended')) {
-        return '계정이 일시 정지되었습니다. 관리자에게 문의하세요.';
+  /**
+   * 1-2, 1-3, 1-5, 1-6 통합 해결: 통합 오류 처리 함수
+   * auth.js에서 이미 적절한 Error 객체로 변환된 메시지를 처리
+   */
+  const handleAuthError = (err, context = '') => {
+    // 개발 환경에서 디버깅 정보 출력
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`${context} error details:`, {
+        error: err,
+        message: err.message,
+        response: err.response,
+        stack: err.stack
+      });
+    }
+    
+    // 1순위: auth.js에서 이미 처리된 Error 객체의 메시지 사용
+    if (err instanceof Error && err.message) {
+      // 메시지가 너무 기술적이거나 길면 사용자 친화적으로 변환
+      const message = err.message;
+      
+      // 일반적인 기술적 용어를 사용자 친화적으로 변환
+      if (message.includes('HTTP') || message.includes('API') || message.includes('axios')) {
+        setFormError(context === 'signup' 
+          ? '회원가입 중 오류가 발생했습니다. 입력 정보를 확인해주세요.'
+          : '로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+        return;
       }
       
-      // 그 외 알 수 있는 오류는 그대로 표시
-      return error;
+      // 메시지가 적절하면 그대로 사용
+      setFormError(message);
+      return;
     }
     
-    // HTTP 상태 코드 기반 메시지
-    if (status) {
-      switch (status) {
-        case 400:
-          return '잘못된 요청입니다. 입력 정보를 확인해주세요.';
-        case 401:
-          return '이메일 또는 비밀번호가 올바르지 않습니다.';
-        case 403:
-          return '접근이 거부되었습니다. 권한을 확인해주세요.';
-        case 404:
-          return '해당 계정을 찾을 수 없습니다.';
-        case 429:
-          return '너무 많은 로그인 시도가 있었습니다. 잠시 후 다시 시도해주세요.';
-        case 500:
-        case 502:
-        case 503:
-          return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-        default:
-          return '로그인 중 오류가 발생했습니다.';
-      }
+    // 2순위: 네트워크 오류 등 (err.response가 없는 경우)
+    if (!err.response) {
+      setFormError('서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
+      return;
     }
     
-    return '로그인에 실패했습니다. 다시 시도해주세요.';
-  };
-  
-  // 회원가입 오류 메시지 매핑 함수
-  const getSignupErrorMessage = (error, status) => {
-    // 자주 발생하는 회원가입 오류 패턴 매핑
-    if (typeof error === 'string') {
-      if (error.includes('already registered') || error.includes('already exists')) {
-        return '이미 등록된 이메일입니다.';
-      }
-      if (error.includes('nickname') && (error.includes('already') || error.includes('taken'))) {
-        return '이미 사용 중인 닉네임입니다. 다른 닉네임을 선택해주세요.';
-      }
-      if (error.includes('password') && error.includes('match')) {
-        return '비밀번호와 비밀번호 확인이 일치하지 않습니다.';
-      }
-      if (error.includes('password') && error.includes('weak')) {
-        return '보안에 취약한 비밀번호입니다. 더 강력한 비밀번호를 사용해주세요.';
-      }
-      if (error.includes('password') && error.includes('common')) {
-        return '너무 흔한 비밀번호입니다. 더 독특한 비밀번호를 사용해주세요.';
-      }
-      if (error.includes('password') && (error.includes('character') || error.includes('digit') || error.includes('letter'))) {
-        return '비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.';
-      }
-      if (error.includes('email') && error.includes('valid')) {
-        return '유효한 이메일 주소를 입력해주세요.';
-      }
-      if (error.includes('nickname') && error.includes('length')) {
-        return '닉네임은 2자 이상, 20자 이하로 입력해주세요.';
-      }
-      if (error.includes('nickname') && error.includes('character')) {
-        return '닉네임에 허용되지 않는 문자가 포함되어 있습니다.';
-      }
-      
-      // 그 외 알 수 있는 오류는 그대로 표시
-      return error;
-    }
-    
-    // HTTP 상태 코드 기반 메시지
-    if (status) {
-      switch (status) {
-        case 400:
-          return '잘못된 요청입니다. 입력 정보를 확인해주세요.';
-        case 409:
-          return '이미 등록된 이메일 또는 닉네임입니다.';
-        case 422:
-          return '입력한 정보가 유효하지 않습니다. 양식을 확인해주세요.';
-        case 500:
-        case 502:
-        case 503:
-          return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-        default:
-          return '회원가입 중 오류가 발생했습니다.';
-      }
-    }
-    
-    return '회원가입에 실패했습니다. 다시 시도해주세요.';
+    // 3순위: 예상치 못한 오류 형태 (auth.js에서 처리되지 않은 경우)
+    setFormError(context === 'signup' 
+      ? '회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      : '로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
   };
   
   // 로그인 폼 제출 핸들러
@@ -223,34 +124,8 @@ const Login = () => {
       });
       navigate('/');
     } catch (err) {
-      // 향상된 오류 메시지 처리
-      if (err.response && err.response.data) {
-        const { status, data } = err.response;
-        const errorDetail = data.detail;
-        
-        // 응답 형식에 따른 다양한 처리
-        if (typeof errorDetail === 'string') {
-          setFormError(getLoginErrorMessage(errorDetail, status));
-        } else if (Array.isArray(errorDetail)) {
-          // 배열 형태의 오류 메시지
-          const errorMessages = errorDetail.map(error => 
-            typeof error === 'string' ? error : error.msg || JSON.stringify(error)
-          ).join('\n');
-          setFormError(errorMessages);
-        } else if (typeof errorDetail === 'object') {
-          // 객체 형태의 오류 메시지
-          const errorMessages = Object.entries(errorDetail)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join('\n');
-          setFormError(errorMessages);
-        } else {
-          // 기타 상태 코드 기반 메시지
-          setFormError(getLoginErrorMessage(null, status));
-        }
-      } else {
-        // 네트워크 오류 등
-        setFormError('서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
-      }
+      // 1-5, 1-6 이슈 해결: 로그인 오류 통합 처리
+      handleAuthError(err, 'login');
     }
   };
   
@@ -322,51 +197,8 @@ const Login = () => {
       
       alert('회원가입이 완료되었습니다. 로그인해주세요.');
     } catch (err) {
-      // 향상된 오류 메시지 처리
-      if (err.response && err.response.data) {
-        const { status, data } = err.response;
-        const errorDetail = data.detail;
-        
-        // 이메일 중복 오류 특별 처리 (400)
-        if (status === 400 && typeof errorDetail === 'string' && 
-            errorDetail.includes('Email already registered')) {
-          setFormError('이미 등록된 이메일입니다.');
-          return;
-        }
-        
-        // 응답 형식에 따른 다양한 처리
-        if (typeof errorDetail === 'string') {
-          setFormError(getSignupErrorMessage(errorDetail, status));
-        } else if (Array.isArray(errorDetail)) {
-          // 배열 형태의 오류 메시지 (주로 유효성 검사)
-          const errorMessages = errorDetail.map(error => 
-            typeof error === 'string' ? error : error.msg || JSON.stringify(error)
-          ).join('\n');
-          setFormError(errorMessages);
-        } else if (typeof errorDetail === 'object') {
-          // 객체 형태의 오류 메시지
-          const errorMessages = Object.entries(errorDetail)
-            .map(([key, value]) => {
-              // 필드명을 한글로 변환
-              const fieldNameMap = {
-                'email': '이메일',
-                'password': '비밀번호',
-                'password_check': '비밀번호 확인',
-                'nickname': '닉네임'
-              };
-              const fieldName = fieldNameMap[key] || key;
-              return `${fieldName}: ${value}`;
-            })
-            .join('\n');
-          setFormError(errorMessages);
-        } else {
-          // 기타 상태 코드 기반 메시지
-          setFormError(getSignupErrorMessage(null, status));
-        }
-      } else {
-        // 네트워크 오류 등
-        setFormError('서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
-      }
+      // 1-2, 1-3 이슈 해결: 회원가입 오류 통합 처리
+      handleAuthError(err, 'signup');
     }
   };
   
@@ -403,7 +235,7 @@ const Login = () => {
           )}
           
           {/* 로딩 표시 */}
-          {(loading || socialLoading) && (
+          {loading && (
             <div className={styles.loadingMessage}>
               처리 중입니다...
             </div>
@@ -421,7 +253,7 @@ const Login = () => {
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
                   required 
-                  disabled={loading || socialLoading}
+                  disabled={loading}
                 />
               </div>
               <div className={styles.formGroup}>
@@ -433,13 +265,13 @@ const Login = () => {
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   required 
-                  disabled={loading || socialLoading}
+                  disabled={loading}
                 />
               </div>
               <button 
                 type="submit" 
                 className={styles.authButton}
-                disabled={loading || socialLoading}
+                disabled={loading}
               >
                 로그인
               </button>
@@ -448,12 +280,12 @@ const Login = () => {
             <div className={styles.oauthContainer}>
               <p>또는 소셜 계정으로 로그인</p>
               <div className={styles.oauthButtons}>
-                {/* 1-14 이슈 해결: a 태그를 버튼으로 변경하고 onClick 이벤트 핸들러 사용 */}
+                {/* 1-14 이슈 해결: 직접 리디렉션 방식으로 변경 */}
                 <button 
                   className={`${styles.oauthButton} ${styles.google}`}
                   type="button"
                   onClick={() => handleSocialLogin('google')}
-                  disabled={loading || socialLoading}
+                  disabled={loading}
                 >
                   G
                 </button>
@@ -461,7 +293,7 @@ const Login = () => {
                   className={`${styles.oauthButton} ${styles.kakao}`}
                   type="button"
                   onClick={() => handleSocialLogin('kakao')}
-                  disabled={loading || socialLoading}
+                  disabled={loading}
                 >
                   K
                 </button>
@@ -469,7 +301,7 @@ const Login = () => {
                   className={`${styles.oauthButton} ${styles.naver}`}
                   type="button"
                   onClick={() => handleSocialLogin('naver')}
-                  disabled={loading || socialLoading}
+                  disabled={loading}
                 >
                   N
                 </button>

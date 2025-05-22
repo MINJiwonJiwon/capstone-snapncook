@@ -124,13 +124,46 @@
     background: var(--hover-secondary);
   }
   
+  /* 5-3 수정: 빈 결과 메시지 스타일 개선 */
   .noResults {
     text-align: center;
-    color: var(--error-color);
+    color: var(--text-color);
     font-size: 1.05rem;
-    margin-top: 28px;
-    padding: 10px 0;
+    margin-top: 40px;
+    padding: 20px;
+    background-color: var(--accent-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
   }
+  
+  .noResults > p:first-child {
+    color: var(--secondary-color);
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+  
+  /* 5-3 추가: 데이터 부족 안내 스타일 */
+  .dataLackInfo {
+    margin-top: 20px;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-left: 4px solid var(--main-color);
+    border-radius: 4px;
+  }
+  
+  .dataLackInfo > p:first-child {
+    color: var(--main-color);
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+  
+  .additionalInfo {
+    color: var(--text-color);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    text-align: left;
+  }
+  
   .resultSection {
     margin-top: 40px;
     min-height: 320px; /* 결과가 없을 때도 공간 유지 */
@@ -138,7 +171,23 @@
     flex-direction: column;
     align-items: center;
   }
-  .error{
+  
+  /* 5-3 수정: 로딩 상태 스타일 개선 */
+  .loading {
+    text-align: center;
+    color: var(--main-color);
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-top: 40px;
+    padding: 20px;
+  }
+  
+  .error {
     color: var(--error-color);
     text-align: center;
+    background-color: #ffeaea;
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 1px solid #ffcdd2;
+    margin-bottom: 20px;
   }

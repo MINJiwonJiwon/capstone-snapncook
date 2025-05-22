@@ -15,6 +15,7 @@ const useAuth = () => {
 
   /**
    * 회원가입 처리 함수
+   * 1-2, 1-3 이슈 해결: 원본 에러를 그대로 전달하여 Login.jsx에서 적절한 메시지 표시
    * @param {Object} userData - 사용자 정보
    */
   const handleSignup = async (userData) => {
@@ -28,23 +29,25 @@ const useAuth = () => {
     } catch (err) {
       setIsLoading(false);
       
-      // 1-2번 이슈 해결: Error 객체로 전달된 메시지를 우선적으로 사용
-      if (err instanceof Error) {
-        setError(err.message);
-      } else if (err.response?.data?.detail) {
-        // 백엔드에서 직접 전달된 detail 메시지 사용
-        setError(err.response.data.detail);
-      } else {
-        // 기본 오류 메시지
-        setError('회원가입 중 오류가 발생했습니다.');
+      // 개발 환경에서 디버깅 정보 출력
+      if (process.env.NODE_ENV === 'development') {
+        console.log('useAuth signup error:', {
+          error: err,
+          message: err.message,
+          response: err.response,
+          stack: err.stack
+        });
       }
       
+      // auth.js에서 이미 적절한 Error 객체로 변환되었으므로
+      // 원본 에러를 그대로 throw하여 Login.jsx에서 처리
       throw err;
     }
   };
 
   /**
    * 로그인 처리 함수
+   * 1-5, 1-6 이슈 해결: 원본 에러를 그대로 전달하여 Login.jsx에서 적절한 메시지 표시
    * @param {Object} credentials - 로그인 정보
    */
   const handleLogin = async (credentials) => {
@@ -67,7 +70,19 @@ const useAuth = () => {
       return result;
     } catch (err) {
       setIsLoading(false);
-      setError(err.message || err.response?.data?.detail || '로그인 중 오류가 발생했습니다.');
+      
+      // 개발 환경에서 디버깅 정보 출력
+      if (process.env.NODE_ENV === 'development') {
+        console.log('useAuth login error:', {
+          error: err,
+          message: err.message,
+          response: err.response,
+          stack: err.stack
+        });
+      }
+      
+      // auth.js에서 이미 적절한 Error 객체로 변환되었으므로
+      // 원본 에러를 그대로 throw하여 Login.jsx에서 처리
       throw err;
     }
   };
@@ -90,11 +105,15 @@ const useAuth = () => {
       navigate('/');
     } catch (err) {
       setIsLoading(false);
-      setError(err.message || err.response?.data?.detail || '로그아웃 중 오류가 발생했습니다.');
       
-      // 오류가 발생해도 로컬 상태 초기화
+      // 로그아웃은 실패해도 로컬 상태 초기화
       updateLoginStatus(false, null);
       navigate('/');
+      
+      // 개발 환경에서만 오류 로그 출력
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Logout error:', err);
+      }
     }
   };
 
@@ -138,7 +157,7 @@ const useAuth = () => {
       return userInfo;
     } catch (err) {
       setIsLoading(false);
-      setError(err.message || err.response?.data?.detail || '사용자 정보를 가져오는 중 오류가 발생했습니다.');
+      setError(err.message || '사용자 정보를 가져오는 중 오류가 발생했습니다.');
       
       // 인증 오류 발생 시 토큰 갱신 시도
       if (err.response?.status === 401) {

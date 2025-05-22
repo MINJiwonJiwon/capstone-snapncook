@@ -33,12 +33,6 @@ const Home = () => {
   }, [isLoggedIn]);
   
   const handleFileChange = (e) => {
-    if (!isLoggedIn) {
-      alert('사진을 업로드하려면 로그인이 필요합니다.');
-      navigate('/login');
-      return;
-    }
-    
     if (e.target.files.length) {
       handleFile(e.target.files[0]);
     }
@@ -56,12 +50,6 @@ const Home = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    
-    if (!isLoggedIn) {
-      alert('사진을 업로드하려면 로그인이 필요합니다.');
-      navigate('/login');
-      return;
-    }
     
     if (e.dataTransfer.files.length) {
       handleFile(e.dataTransfer.files[0]);
@@ -113,6 +101,13 @@ const Home = () => {
         image_path,
         confidence
       });
+      
+      // 4-4 이슈 해결: detectionId를 세션 스토리지에 저장
+      // Recipe.jsx에서 이 ID로 공개 추천 API를 호출할 수 있도록 함
+      if (detectionResult && detectionResult.id) {
+        sessionStorage.setItem('detectionId', detectionResult.id.toString());
+        console.log('Detection ID saved:', detectionResult.id);
+      }
       
       // 이미지를 로컬 스토리지에 저장
       saveImageToHistory(previewUrl);
@@ -184,23 +179,17 @@ const Home = () => {
             {!previewUrl ? (
               <div
                 className={`${styles.uploadArea} ${dragOver ? styles.dragover : ''}`}
-                onClick={() => {
-                  if (isLoggedIn) {
-                    document.getElementById('file-input').click();
-                  } else {
-                    alert('사진을 업로드하려면 로그인이 필요합니다.');
-                    navigate('/login');
-                  }
-                }}
+                onClick={() => document.getElementById('file-input').click()}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
               >
-                <p>
-                  {isLoggedIn 
-                    ? '이미지를 여기에 드래그하거나 클릭하여 업로드하세요' 
-                    : '사진을 업로드하려면 로그인이 필요합니다.'}
-                </p>
+                <div>
+                  <p>이미지를 여기에 드래그하거나 클릭하여 업로드하세요</p>
+                  {!isLoggedIn && (
+                    <p className={styles.nonLoginMessage}>💡 로그인하지 않아도 이미지 분석이 가능합니다</p>
+                  )}
+                </div>
                 <input
                   type="file"
                   id="file-input"

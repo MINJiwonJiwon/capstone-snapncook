@@ -14,8 +14,6 @@ const ProfileEdit = () => {
     updateUserInfo, 
     changePassword, 
     loading, 
-    error, 
-    success,
     clearMessages
   } = useUser();
   
@@ -26,10 +24,9 @@ const ProfileEdit = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [profileImageUrl, setProfileImageUrl] = useState(null);
   const [previewImageUrl, setPreviewImageUrl] = useState(null);
-  const [formError, setFormError] = useState('');
-  const [formSuccess, setFormSuccess] = useState('');
   
-  // 필드별 오류 메시지 상태
+  // 1-9, 1-10 이슈 해결: 전역 메시지와 필드별 오류를 명확히 분리
+  const [globalMessage, setGlobalMessage] = useState({ type: null, text: '' }); // success, error, null
   const [fieldErrors, setFieldErrors] = useState({
     email: '',
     nickname: '',
@@ -57,10 +54,9 @@ const ProfileEdit = () => {
     }
   }, [isLoggedIn, user, navigate]);
 
-  // 에러 및 성공 메시지 초기화
+  // 1-9, 1-10 이슈 해결: 메시지 초기화 함수 개선
   const resetMessages = () => {
-    setFormError('');
-    setFormSuccess('');
+    setGlobalMessage({ type: null, text: '' });
     setFieldErrors({
       email: '',
       nickname: '',
@@ -75,115 +71,6 @@ const ProfileEdit = () => {
   // 프로필 이미지 클릭 시 파일 선택 다이얼로그 열기
   const handleProfileImageClick = () => {
     fileInputRef.current.click();
-  };
-  
-  // 오류 메시지 변환 함수 - 비밀번호 변경
-  const getPasswordErrorMessage = (error, status) => {
-    // 문자열 패턴 매칭
-    if (typeof error === 'string') {
-      if (error.includes('Current password is incorrect')) {
-        return '현재 비밀번호가 올바르지 않습니다.';
-      }
-      if (error.includes('same as')) {
-        return '새 비밀번호는 이전 비밀번호와 달라야 합니다.';
-      }
-      if (error.includes('password') && error.includes('match')) {
-        return '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.';
-      }
-      if (error.includes('password') && (error.includes('character') || error.includes('digit') || error.includes('letter'))) {
-        return '비밀번호는 최소 8자 이상, 문자와 숫자를 포함해야 합니다.';
-      }
-      if (error.includes('password') && error.includes('weak')) {
-        return '보안에 취약한 비밀번호입니다. 더 강력한 비밀번호를 사용해주세요.';
-      }
-      if (error.includes('password') && error.includes('common')) {
-        return '너무 흔한 비밀번호입니다. 더 독특한 비밀번호를 사용해주세요.';
-      }
-      
-      // 그 외 알 수 있는 오류는 그대로 표시
-      return error;
-    }
-    
-    // HTTP 상태 코드 기반 메시지
-    if (status) {
-      switch (status) {
-        case 400:
-          return '비밀번호 변경 요청이 올바르지 않습니다.';
-        case 401:
-          return '인증에 실패했습니다. 다시 로그인해주세요.';
-        case 403:
-          return '비밀번호 변경 권한이 없습니다.';
-        case 422:
-          return '비밀번호가 유효하지 않습니다. 입력한 정보를 확인해주세요.';
-        case 500:
-        case 502:
-        case 503:
-          return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-        default:
-          return '비밀번호 변경 중 오류가 발생했습니다.';
-      }
-    }
-    
-    return '비밀번호 변경에 실패했습니다. 다시 시도해주세요.';
-  };
-  
-  // 오류 메시지 변환 함수 - 프로필 정보 수정
-  const getProfileErrorMessage = (error, status) => {
-    // 문자열 패턴 매칭
-    if (typeof error === 'string') {
-      if (error.includes('email') && error.includes('already')) {
-        return '이미 등록된 이메일입니다.';
-      }
-      if (error.includes('nickname') && error.includes('already')) {
-        return '이미 사용 중인 닉네임입니다. 다른 닉네임을 선택해주세요.';
-      }
-      if (error.includes('email') && error.includes('valid')) {
-        return '유효한 이메일 주소를 입력해주세요.';
-      }
-      if (error.includes('nickname') && error.includes('length')) {
-        return '닉네임은 2자 이상, 20자 이하로 입력해주세요.';
-      }
-      if (error.includes('nickname') && error.includes('character')) {
-        return '닉네임에 허용되지 않는 문자가 포함되어 있습니다.';
-      }
-      if (error.includes('image') && error.includes('size')) {
-        return '이미지 크기가 너무 큽니다. 5MB 이하의 이미지를 사용해주세요.';
-      }
-      if (error.includes('image') && error.includes('format') || error.includes('type')) {
-        return '지원되지 않는 이미지 형식입니다. JPG, PNG, GIF 형식을 사용해주세요.';
-      }
-      
-      // 그 외 알 수 있는 오류는 그대로 표시
-      return error;
-    }
-    
-    // HTTP 상태 코드 기반 메시지
-    if (status) {
-      switch (status) {
-        case 400:
-          return '프로필 수정 요청이 올바르지 않습니다.';
-        case 401:
-          return '인증에 실패했습니다. 다시 로그인해주세요.';
-        case 403:
-          return '프로필 수정 권한이 없습니다.';
-        case 409:
-          return '중복된 정보가 있습니다. 다른 이메일이나 닉네임을 사용해주세요.';
-        case 413:
-          return '파일 크기가 너무 큽니다. 5MB 이하의 이미지를 사용해주세요.';
-        case 415:
-          return '지원되지 않는 파일 형식입니다.';
-        case 422:
-          return '입력한 정보가 유효하지 않습니다. 양식을 확인해주세요.';
-        case 500:
-        case 502:
-        case 503:
-          return '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-        default:
-          return '프로필 수정 중 오류가 발생했습니다.';
-      }
-    }
-    
-    return '프로필 수정에 실패했습니다. 다시 시도해주세요.';
   };
   
   // 프로필 이미지 변경
@@ -221,11 +108,6 @@ const ProfileEdit = () => {
       setPreviewImageUrl(fileReader.result);
     };
     fileReader.readAsDataURL(file);
-    
-    // TODO: 파일 업로드 API 연동
-    // 실제 구현 시에는 FormData를 사용하여 서버에 업로드하고, 
-    // 반환된 URL을 setProfileImageUrl에 설정해야 함
-    // 이 예제에서는 미리보기 URL을 사용
   };
   
   // 폼 제출 시 API 호출
@@ -241,19 +123,32 @@ const ProfileEdit = () => {
     
     const hasPasswordChanges = password && newPassword && confirmPassword;
     
-    // 비밀번호 변경이 있는 경우 검증
-    if (hasPasswordChanges) {
-      await handlePasswordSubmit();
-    }
-
-    // 프로필 정보 변경이 있는 경우 처리
-    if (hasProfileChanges) {
-      await handleProfileSubmit();
-    }
-
     // 변경사항이 없는 경우
     if (!hasProfileChanges && !hasPasswordChanges) {
-      setFormError('변경할 내용이 없습니다.');
+      setGlobalMessage({ type: 'error', text: '변경할 내용이 없습니다.' });
+      return;
+    }
+
+    let profileSuccess = false;
+    let passwordSuccess = false;
+
+    // 비밀번호 변경 처리
+    if (hasPasswordChanges) {
+      passwordSuccess = await handlePasswordSubmit();
+    }
+
+    // 프로필 정보 변경 처리
+    if (hasProfileChanges) {
+      profileSuccess = await handleProfileSubmit();
+    }
+
+    // 성공 메시지 표시
+    if (profileSuccess && passwordSuccess) {
+      setGlobalMessage({ type: 'success', text: '프로필 정보와 비밀번호가 성공적으로 변경되었습니다.' });
+    } else if (profileSuccess) {
+      setGlobalMessage({ type: 'success', text: '프로필 정보가 성공적으로 업데이트되었습니다.' });
+    } else if (passwordSuccess) {
+      setGlobalMessage({ type: 'success', text: '비밀번호가 성공적으로 변경되었습니다.' });
     }
   };
 
@@ -283,37 +178,33 @@ const ProfileEdit = () => {
     // 오류가 있으면 상태 업데이트 후 중단
     if (hasErrors) {
       setFieldErrors(newFieldErrors);
-      return;
+      return false;
     }
     
     try {
       // 사용자 정보 업데이트
       const updatedInfo = {};
       
-      // 사용자 이름이 변경되었는지 확인
       if (nickname !== user?.nickname) {
         updatedInfo.nickname = nickname;
       }
       
-      // 이메일이 변경되었는지 확인
       if (email !== user?.email) {
         updatedInfo.email = email;
       }
       
-      // 프로필 이미지가 변경되었는지 확인
       if (previewImageUrl !== user?.profile_image_url) {
-        // 실제 구현 시에는 이미 업로드된 이미지의 URL을 사용
         updatedInfo.profile_image_url = previewImageUrl;
       }
       
       // 변경된 정보가 있을 경우에만 업데이트
       if (Object.keys(updatedInfo).length > 0) {
         await updateUserInfo(updatedInfo);
-        
-        // 사용자 정보 새로고침
         await refreshUserInfo();
-        setFormSuccess('프로필 정보가 성공적으로 업데이트되었습니다.');
+        return true;
       }
+      
+      return false;
     } catch (err) {
       console.error('Profile update error:', err);
       
@@ -323,154 +214,151 @@ const ProfileEdit = () => {
         
         // 필드별 오류 메시지 처리
         if (data.detail && typeof data.detail === 'object') {
-          // 필드별 오류 메시지가 있는 경우
           const newErrors = { ...fieldErrors };
           
           if (data.detail.email) {
-            newErrors.email = getProfileErrorMessage(data.detail.email, status);
+            newErrors.email = data.detail.email;
           }
           
           if (data.detail.nickname) {
-            newErrors.nickname = getProfileErrorMessage(data.detail.nickname, status);
+            newErrors.nickname = data.detail.nickname;
           }
           
           if (data.detail.profile_image_url) {
-            newErrors.profileImage = getProfileErrorMessage(data.detail.profile_image_url, status);
+            newErrors.profileImage = data.detail.profile_image_url;
           }
           
           setFieldErrors(newErrors);
-          
-          // 일반 오류 메시지도 표시
-          setFormError('프로필 업데이트 중 오류가 발생했습니다. 입력 내용을 확인해주세요.');
-        } else if (Array.isArray(data.detail)) {
-          // 배열 형태의 오류 메시지
-          const errorMessages = data.detail.map(error => 
-            typeof error === 'string' ? error : error.msg || JSON.stringify(error)
-          ).join('\n');
-          setFormError(getProfileErrorMessage(errorMessages, status));
         } else if (typeof data.detail === 'string') {
-          // 문자열 형태의 오류 메시지
-          setFormError(getProfileErrorMessage(data.detail, status));
+          // 전역 오류로 표시 (필드 구분이 어려운 경우)
+          setGlobalMessage({ type: 'error', text: data.detail });
         } else {
-          // 상태 코드 기반 메시지
-          setFormError(getProfileErrorMessage(null, status));
+          setGlobalMessage({ type: 'error', text: '프로필 업데이트 중 오류가 발생했습니다.' });
         }
       } else {
-        // 네트워크 오류 등
-        setFormError('서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.');
+        setGlobalMessage({ type: 'error', text: '서버에 연결할 수 없습니다. 인터넷 연결을 확인하거나 잠시 후 다시 시도해주세요.' });
       }
+      
+      return false;
     }
   };
 
-  // 비밀번호 변경 처리
-const handlePasswordSubmit = async () => {
-  // 필드별 유효성 검사
-  let hasErrors = false;
-  const newFieldErrors = { ...fieldErrors };
-  
-  // 현재 비밀번호 입력 확인
-  if (!password.trim()) {
-    newFieldErrors.password = '현재 비밀번호를 입력해주세요.';
-    hasErrors = true;
-  }
-  
-  // 새 비밀번호 입력 확인
-  if (!newPassword.trim()) {
-    newFieldErrors.newPassword = '새 비밀번호를 입력해주세요.';
-    hasErrors = true;
-  }
-  
-  // 새 비밀번호 확인 입력 확인
-  if (!confirmPassword.trim()) {
-    newFieldErrors.confirmPassword = '비밀번호 확인을 입력해주세요.';
-    hasErrors = true;
-  }
-  
-  // 비밀번호 일치 확인
-  if (newPassword !== confirmPassword) {
-    newFieldErrors.confirmPassword = '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.';
-    hasErrors = true;
-  }
-  
-  // 비밀번호와 현재 비밀번호가 같은 경우 추가 검사
-  if (password === newPassword && password.trim() !== '') {
-    newFieldErrors.newPassword = '새 비밀번호는 현재 비밀번호와 달라야 합니다.';
-    hasErrors = true;
-  }
-  
-  // 비밀번호 복잡성 검사
-  if (newPassword.trim() !== '') {
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
-    if (!passwordRegex.test(newPassword)) {
-      newFieldErrors.newPassword = '비밀번호는 최소 8자 이상이며, 문자와 숫자를 포함해야 합니다.';
+  // 1-9, 1-10 이슈 해결: 비밀번호 변경 처리 개선
+  const handlePasswordSubmit = async () => {
+    // 필드별 유효성 검사
+    let hasErrors = false;
+    const newFieldErrors = { ...fieldErrors };
+    
+    // 현재 비밀번호 입력 확인
+    if (!password.trim()) {
+      newFieldErrors.password = '현재 비밀번호를 입력해주세요.';
       hasErrors = true;
     }
-  }
-  
-  // 오류가 있으면 상태 업데이트 후 중단
-  if (hasErrors) {
-    setFieldErrors(newFieldErrors);
-    return;
-  }
-  
-  try {
-    // 비밀번호 변경 API 호출
-    await changePassword({
-      current_password: password,
-      new_password: newPassword,
-      new_password_check: confirmPassword
-    });
     
-    // 폼 초기화
-    setPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-    
-    setFormSuccess('비밀번호가 성공적으로 변경되었습니다.');
-  } catch (err) {
-    console.error('Password change error:', err);
-    
-    // 1-10 이슈 해결: ProfileEdit 컴포넌트에서 오류 메시지 표시 개선
-    // 이미 useUser.js에서 사용자 친화적인 메시지로 변환된 err.message만 사용
-    // err.response 등의 기술적 메시지는 사용하지 않음
-    
-    // 직접적인 에러 메시지가 있는 경우 표시
-    if (err.message) {
-      // 현재 비밀번호 불일치 (1-9 이슈)
-      if (err.message.includes('현재 비밀번호가 일치하지 않습니다')) {
-        setFieldErrors(prev => ({
-          ...prev,
-          password: '현재 비밀번호가 일치하지 않습니다.'
-        }));
-        return;
-      }
-      
-      // 비밀번호 조건 미달 (1-10 이슈)
-      if (err.message.includes('비밀번호는 8자 이상이며')) {
-        setFieldErrors(prev => ({
-          ...prev,
-          newPassword: '비밀번호는 8자 이상이며, 숫자와 특수문자(@$!%*#?&)를 포함해야 합니다.'
-        }));
-        return;
-      }
-      
-      // 새 비밀번호 불일치
-      if (err.message.includes('새 비밀번호가 일치하지 않습니다')) {
-        setFieldErrors(prev => ({
-          ...prev,
-          confirmPassword: '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.'
-        }));
-        return;
-      }
-      
-      // 그 외 오류 메시지는 그대로 표시
-      setFormError(err.message);
-    } else {
-      // 기본 오류 메시지
-      setFormError('비밀번호 변경 중 오류가 발생했습니다. 입력 내용을 확인해주세요.');
+    // 새 비밀번호 입력 확인
+    if (!newPassword.trim()) {
+      newFieldErrors.newPassword = '새 비밀번호를 입력해주세요.';
+      hasErrors = true;
     }
-  }
-};
+    
+    // 새 비밀번호 확인 입력 확인
+    if (!confirmPassword.trim()) {
+      newFieldErrors.confirmPassword = '비밀번호 확인을 입력해주세요.';
+      hasErrors = true;
+    }
+    
+    // 비밀번호 일치 확인
+    if (newPassword && confirmPassword && newPassword !== confirmPassword) {
+      newFieldErrors.confirmPassword = '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.';
+      hasErrors = true;
+    }
+    
+    // 현재 비밀번호와 새 비밀번호가 같은 경우
+    if (password && newPassword && password === newPassword) {
+      newFieldErrors.newPassword = '새 비밀번호는 현재 비밀번호와 달라야 합니다.';
+      hasErrors = true;
+    }
+    
+    // 비밀번호 복잡성 검사
+    if (newPassword.trim() !== '') {
+      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+      if (!passwordRegex.test(newPassword)) {
+        newFieldErrors.newPassword = '비밀번호는 최소 8자 이상이며, 문자와 숫자를 포함해야 합니다.';
+        hasErrors = true;
+      }
+    }
+    
+    // 오류가 있으면 상태 업데이트 후 중단
+    if (hasErrors) {
+      setFieldErrors(newFieldErrors);
+      return false;
+    }
+    
+    try {
+      // 비밀번호 변경 API 호출
+      await changePassword({
+        current_password: password,
+        new_password: newPassword,
+        new_password_check: confirmPassword
+      });
+      
+      // 폼 초기화
+      setPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      
+      return true;
+    } catch (err) {
+      console.error('Password change error:', err);
+      
+      // 1-9, 1-10 이슈 해결: 필드별 오류 메시지만 표시, 전역 오류는 사용하지 않음
+      if (err.message) {
+        // 1-9 이슈: 현재 비밀번호 불일치
+        if (err.message.includes('현재 비밀번호가 일치하지 않습니다')) {
+          setFieldErrors(prev => ({
+            ...prev,
+            password: '현재 비밀번호가 일치하지 않습니다.'
+          }));
+          return false;
+        }
+        
+        // 1-10 이슈: 비밀번호 조건 미달
+        if (err.message.includes('비밀번호는 8자 이상이며')) {
+          setFieldErrors(prev => ({
+            ...prev,
+            newPassword: '비밀번호는 8자 이상이며, 숫자와 특수문자(@$!%*#?&)를 포함해야 합니다.'
+          }));
+          return false;
+        }
+        
+        // 새 비밀번호 불일치
+        if (err.message.includes('새 비밀번호가 일치하지 않습니다')) {
+          setFieldErrors(prev => ({
+            ...prev,
+            confirmPassword: '새 비밀번호와 확인 비밀번호가 일치하지 않습니다.'
+          }));
+          return false;
+        }
+        
+        // 기타 오류는 전역 메시지로 표시 (필드 구분이 어려운 경우만)
+        if (err.message.includes('로그인') || err.message.includes('서버') || err.message.includes('네트워크')) {
+          setGlobalMessage({ type: 'error', text: err.message });
+          return false;
+        }
+        
+        // 필드를 특정할 수 없는 비밀번호 관련 오류는 새 비밀번호 필드에 표시
+        setFieldErrors(prev => ({
+          ...prev,
+          newPassword: err.message
+        }));
+      } else {
+        // 예상치 못한 오류
+        setGlobalMessage({ type: 'error', text: '비밀번호 변경 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' });
+      }
+      
+      return false;
+    }
+  };
   
   const handleCancel = () => {
     navigate('/mypage');
@@ -483,21 +371,10 @@ const handlePasswordSubmit = async () => {
       <div className={styles.container}>
         <h1>내 정보 수정</h1>
         
-        {formError && (
-          <div className={styles.errorMessage}>
-            {formError}
-          </div>
-        )}
-        
-        {error && (
-          <div className={styles.errorMessage}>
-            {error}
-          </div>
-        )}
-        
-        {(formSuccess || success) && (
-          <div className={styles.successMessage}>
-            {formSuccess || success}
+        {/* 1-9, 1-10 이슈 해결: 전역 메시지 표시 개선 */}
+        {globalMessage.text && (
+          <div className={globalMessage.type === 'success' ? styles.successMessage : styles.errorMessage}>
+            {globalMessage.text}
           </div>
         )}
         
@@ -572,6 +449,7 @@ const handlePasswordSubmit = async () => {
               className={fieldErrors.password ? styles.inputError : ''}
               disabled={loading}
             />
+            {/* 1-9 이슈 해결: 현재 비밀번호 오류는 필드 하단에만 표시 */}
             {fieldErrors.password && (
               <p className={styles.fieldError}>{fieldErrors.password}</p>
             )}
@@ -587,6 +465,7 @@ const handlePasswordSubmit = async () => {
               className={fieldErrors.newPassword ? styles.inputError : ''}
               disabled={loading}
             />
+            {/* 1-10 이슈 해결: 새 비밀번호 조건 오류는 필드 하단에만 표시 */}
             {fieldErrors.newPassword && (
               <p className={styles.fieldError}>{fieldErrors.newPassword}</p>
             )}

@@ -158,13 +158,6 @@ const RecipeSuggest = () => {
               : '재료를 입력해보세요'}
           </h1>
           
-          {/* 5-3 개선: 빈 결과일 때의 알림 메시지 */}
-          {emptyResult && searchedIngredients && !error && !recipeError && (
-            <div className={styles.emptyResultNotice}>
-              <p>{resultMessage || '입력하신 재료로 만들 수 있는 추천 레시피가 없습니다.'}</p>
-            </div>
-          )}
-          
           <div className={styles.recipeGrid}>
             {recipeLoading || inputLoading ? (
               <div className={styles.loading}>레시피를 찾고 있습니다...</div>
@@ -191,11 +184,11 @@ const RecipeSuggest = () => {
               ) : (
                 searchedIngredients && (
                   <div className={styles.noResults}>
-                    {/* 5-3 개선: 다양한 조건에 따른 개선된 메시지 */}
+                    {/* 5-3 수정: 중복 메시지 제거 - 한 곳에서만 표시 */}
                     <p>
                       {emptyResult && resultMessage
                         ? resultMessage
-                        : '검색 결과가 없습니다. 다른 재료를 입력해보세요.'}
+                        : '입력하신 재료로 추천할 수 있는 레시피가 없습니다. 다른 재료를 입력해보세요.'}
                     </p>
                     
                     {/* 레시피 데이터 부족 시 안내 메시지 추가 */}
