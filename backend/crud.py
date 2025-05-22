@@ -1,9 +1,9 @@
 # backend/crud.py
 
 from datetime import date
+from typing import Optional, Dict, List
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from typing import Optional
 from backend import models, schemas
 
 # ---------- User ----------
@@ -17,7 +17,7 @@ def create_user(db: Session, user: schemas.UserCreateWithPassword) -> models.Use
 def get_user(db: Session, user_id: int) -> Optional[models.User]:
     return db.query(models.User).filter(models.User.id == user_id).first()
 
-def get_user_by_oauth(db: Session, provider: str, oauth_id: str):
+def get_user_by_oauth(db: Session, provider: str, oauth_id: str) -> Optional[models.User]:
     return (
         db.query(models.User)
         .join(models.SocialAccount)
@@ -92,30 +92,26 @@ def create_user_ingredient_input_recipe(db: Session, item: schemas.UserIngredien
     return db_item
 
 # ---------- Home ----------
-
-def get_search_rankings(db: Session, period: str, on_date: date, limit: int = 3):
+def get_search_rankings(db: Session, period: str, on_date: date, limit: int = 3) -> List[models.SearchRanking]:
     return (
         db.query(models.SearchRanking)
-        .filter(models.SearchRanking.period == period, models.SearchRanking.date == on_date)
+        .filter(models.SearchRanking.period == period, models.SearchRanking.base_date == on_date)
         .order_by(models.SearchRanking.rank.asc())
         .limit(limit)
         .all()
     )
 
-
-def get_previous_rankings_dict(db: Session, period: str, on_date: date) -> dict:
+def get_previous_rankings_dict(db: Session, period: str, on_date: date) -> Dict[str, int]:
     previous = (
         db.query(models.SearchRanking)
-        .filter(models.SearchRanking.period == period, models.SearchRanking.date == on_date)
+        .filter(models.SearchRanking.period == period, models.SearchRanking.base_date == on_date)
         .all()
     )
     return {r.keyword: r.rank for r in previous}
 
-
-def get_random_food(db: Session):
+def get_random_food(db: Session) -> Optional[models.Food]:
     return db.query(models.Food).order_by(func.random()).first()
 
-
-def get_average_rating_for_food(db: Session, food_id: int):
+def get_average_rating_for_food(db: Session, food_id: int) -> float:
     avg = db.query(func.avg(models.Review.rating)).filter(models.Review.food_id == food_id).scalar()
     return round(avg or 0, 2)

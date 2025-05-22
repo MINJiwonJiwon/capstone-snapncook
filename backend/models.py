@@ -1,180 +1,181 @@
 # backend/models.py
-from sqlalchemy import Boolean, Column, Date, Integer, String, Text, Float, ForeignKey, DateTime, JSON, func
-from sqlalchemy.orm import relationship, declarative_base
-from datetime import datetime, timezone
+
+from typing import Any
+from sqlalchemy import ForeignKey, Text, DateTime, JSON, func
+from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
+from datetime import datetime, timezone, date
 
 Base = declarative_base()
 
 # 공통 생성일/수정일 필드용 Mixin
 class TimestampMixin:
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 class User(Base, TimestampMixin):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, nullable=False, unique=True)
-    password_hash = Column(String, nullable=True)
-    oauth_provider = Column(String, nullable=True)
-    oauth_id = Column(String, nullable=True)
-    nickname = Column(String, nullable=False)
-    profile_image_url = Column(String, nullable=True)
-    is_admin = Column(Boolean, default=False)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(nullable=False, unique=True)
+    password_hash: Mapped[str | None] = mapped_column(nullable=True)
+    oauth_provider: Mapped[str | None] = mapped_column(nullable=True)
+    oauth_id: Mapped[str | None] = mapped_column(nullable=True)
+    nickname: Mapped[str] = mapped_column(nullable=False)
+    profile_image_url: Mapped[str | None] = mapped_column(nullable=True)
+    is_admin: Mapped[bool] = mapped_column(default=False)
 
-    detection_results = relationship("DetectionResult", back_populates="user")
-    reviews = relationship("Review", back_populates="user")
-    logs = relationship("UserLog", back_populates="user")
-    ingredient_inputs = relationship("UserIngredientInput", back_populates="user")
-    social_accounts = relationship("SocialAccount", back_populates="user")
-    bookmarks = relationship("Bookmark", back_populates="user", cascade="all, delete-orphan")
+    detection_results: Mapped[list["DetectionResult"]] = relationship("DetectionResult", back_populates="user")
+    reviews: Mapped[list["Review"]] = relationship("Review", back_populates="user")
+    logs: Mapped[list["UserLog"]] = relationship("UserLog", back_populates="user")
+    ingredient_inputs: Mapped[list["UserIngredientInput"]] = relationship("UserIngredientInput", back_populates="user")
+    social_accounts: Mapped[list["SocialAccount"]] = relationship("SocialAccount", back_populates="user")
+    bookmarks: Mapped[list["Bookmark"]] = relationship("Bookmark", back_populates="user", cascade="all, delete-orphan")
 
 class SocialAccount(Base):
     __tablename__ = "social_accounts"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    provider = Column(String, nullable=False)  # 'google', 'kakao', 'naver'
-    oauth_id = Column(String, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    provider: Mapped[str] = mapped_column(nullable=False)
+    oauth_id: Mapped[str] = mapped_column(nullable=False)
 
-    user = relationship("User", back_populates="social_accounts")
+    user: Mapped["User"] = relationship("User", back_populates="social_accounts")
 
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    token = Column(String, nullable=False, unique=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    expires_at = Column(DateTime, nullable=False)
-    revoked = Column(Boolean, default=False)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    token: Mapped[str] = mapped_column(nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    expires_at: Mapped[datetime] = mapped_column(nullable=False)
+    revoked: Mapped[bool] = mapped_column(default=False)
 
-    user = relationship("User")
+    user: Mapped["User"] = relationship("User")
 
 class Food(Base, TimestampMixin):
     __tablename__ = "foods"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    description = Column(Text, nullable=True)
-    image_url = Column(String, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_url: Mapped[str | None] = mapped_column(nullable=True)
 
-    recipes = relationship("Recipe", back_populates="food")
-    detection_results = relationship("DetectionResult", back_populates="food")
-    reviews = relationship("Review", back_populates="food")
+    recipes: Mapped[list["Recipe"]] = relationship("Recipe", back_populates="food")
+    detection_results: Mapped[list["DetectionResult"]] = relationship("DetectionResult", back_populates="food")
+    reviews: Mapped[list["Review"]] = relationship("Review", back_populates="food")
 
 class Recipe(Base, TimestampMixin):
     __tablename__ = "recipes"
 
-    id = Column(Integer, primary_key=True, index=True)
-    food_id = Column(Integer, ForeignKey("foods.id"), nullable=False)
-    source_type = Column(String, nullable=False)
-    title = Column(String, nullable=True)
-    ingredients = Column(Text, nullable=True)
-    instructions = Column(Text, nullable=True)
-    source_detail = Column(Text, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    food_id: Mapped[int] = mapped_column(ForeignKey("foods.id"), nullable=False)
+    source_type: Mapped[str] = mapped_column(nullable=False)
+    title: Mapped[str | None] = mapped_column(nullable=True)
+    ingredients: Mapped[str | None] = mapped_column(Text, nullable=True)
+    instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    food = relationship("Food", back_populates="recipes")
-    steps = relationship("RecipeStep", back_populates="recipe")
-    recommended_by_inputs = relationship("UserIngredientInputRecipe", back_populates="recipe")
-    bookmarks = relationship("Bookmark", back_populates="recipe", cascade="all, delete-orphan")
+    food: Mapped["Food"] = relationship("Food", back_populates="recipes")
+    steps: Mapped[list["RecipeStep"]] = relationship("RecipeStep", back_populates="recipe")
+    recommended_by_inputs: Mapped[list["UserIngredientInputRecipe"]] = relationship("UserIngredientInputRecipe", back_populates="recipe")
+    bookmarks: Mapped[list["Bookmark"]] = relationship("Bookmark", back_populates="recipe", cascade="all, delete-orphan")
 
 class RecipeStep(Base):
     __tablename__ = "recipe_steps"
 
-    id = Column(Integer, primary_key=True, index=True)
-    recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False)
-    step_order = Column(Integer, nullable=False)
-    description = Column(Text, nullable=False)
-    image_url = Column(String, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"), nullable=False)
+    step_order: Mapped[int] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    image_url: Mapped[str | None] = mapped_column(nullable=True)
 
-    recipe = relationship("Recipe", back_populates="steps")
+    recipe: Mapped["Recipe"] = relationship("Recipe", back_populates="steps")
 
 class DetectionResult(Base, TimestampMixin):
     __tablename__ = "detection_results"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    food_id = Column(Integer, ForeignKey("foods.id"), nullable=False)
-    image_path = Column(String, nullable=False)
-    confidence = Column(Float, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    food_id: Mapped[int] = mapped_column(ForeignKey("foods.id"), nullable=False)
+    image_path: Mapped[str] = mapped_column(nullable=False)
+    confidence: Mapped[float] = mapped_column(nullable=False)
 
-    user = relationship("User", back_populates="detection_results")
-    food = relationship("Food", back_populates="detection_results")
+    user: Mapped["User"] = relationship("User", back_populates="detection_results")
+    food: Mapped["Food"] = relationship("Food", back_populates="detection_results")
 
 class Review(Base, TimestampMixin):
     __tablename__ = "reviews"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    food_id = Column(Integer, ForeignKey("foods.id"), nullable=False)
-    content = Column(Text, nullable=False)
-    rating = Column(Integer, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    food_id: Mapped[int] = mapped_column(ForeignKey("foods.id"), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    rating: Mapped[int] = mapped_column(nullable=False)
 
-    user = relationship("User", back_populates="reviews")
-    food = relationship("Food", back_populates="reviews")
+    user: Mapped["User"] = relationship("User", back_populates="reviews")
+    food: Mapped["Food"] = relationship("Food", back_populates="reviews")
 
 class UserLog(Base):
     __tablename__ = "user_logs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    action = Column(String, nullable=False)
-    target_id = Column(Integer, nullable=False)
-    target_type = Column(String, nullable=False)
-    meta = Column(JSON, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    action: Mapped[str] = mapped_column(nullable=False)
+    target_id: Mapped[int] = mapped_column(nullable=False)
+    target_type: Mapped[str] = mapped_column(nullable=False)
+    meta: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    user = relationship("User", back_populates="logs")
+    user: Mapped["User"] = relationship("User", back_populates="logs")
 
 class UserIngredientInput(Base):
     __tablename__ = "user_ingredient_inputs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    input_text = Column(Text, nullable=False)
-    matched_food_ids = Column(JSON, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    input_text: Mapped[str] = mapped_column(Text, nullable=False)
+    matched_food_ids: Mapped[list[int] | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    user = relationship("User", back_populates="ingredient_inputs")
-    recommended_recipes = relationship("UserIngredientInputRecipe", back_populates="input")
+    user: Mapped["User"] = relationship("User", back_populates="ingredient_inputs")
+    recommended_recipes: Mapped[list["UserIngredientInputRecipe"]] = relationship("UserIngredientInputRecipe", back_populates="input")
 
 class UserIngredientInputRecipe(Base):
     __tablename__ = "user_ingredient_input_recipes"
 
-    id = Column(Integer, primary_key=True, index=True)
-    input_id = Column(Integer, ForeignKey("user_ingredient_inputs.id"), nullable=False)
-    recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False)
-    rank = Column(Integer, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    input_id: Mapped[int] = mapped_column(ForeignKey("user_ingredient_inputs.id"), nullable=False)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"), nullable=False)
+    rank: Mapped[int | None] = mapped_column(nullable=True)
 
-    input = relationship("UserIngredientInput", back_populates="recommended_recipes")
-    recipe = relationship("Recipe", back_populates="recommended_by_inputs")
+    input: Mapped["UserIngredientInput"] = relationship("UserIngredientInput", back_populates="recommended_recipes")
+    recipe: Mapped["Recipe"] = relationship("Recipe", back_populates="recommended_by_inputs")
 
 class Bookmark(Base):
     __tablename__ = "bookmarks"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    recipe_id = Column(Integer, ForeignKey("recipes.id"), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-    user = relationship("User", back_populates="bookmarks")
-    recipe = relationship("Recipe", back_populates="bookmarks")
-    
-    # ✅ 인기 검색 기록 테이블
+    user: Mapped["User"] = relationship("User", back_populates="bookmarks")
+    recipe: Mapped["Recipe"] = relationship("Recipe", back_populates="bookmarks")
+
 class SearchLog(Base, TimestampMixin):
     __tablename__ = "search_logs"
 
-    id = Column(Integer, primary_key=True, index=True)
-    keyword = Column(String, nullable=False, index=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    keyword: Mapped[str] = mapped_column(nullable=False, index=True)
 
-# ✅ 인기 검색 순위 테이블
 class SearchRanking(Base, TimestampMixin):
     __tablename__ = "search_rankings"
 
-    id = Column(Integer, primary_key=True, index=True)
-    keyword = Column(String, nullable=False, index=True)
-    rank = Column(Integer, nullable=False)
-    count = Column(Integer, nullable=False)
-    period = Column(String, nullable=False)  # 'day' or 'week'
-    date = Column(Date, nullable=False)  # 기준일자
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    keyword: Mapped[str] = mapped_column(nullable=False, index=True)
+    rank: Mapped[int] = mapped_column(nullable=False)
+    count: Mapped[int] = mapped_column(nullable=False)
+    period: Mapped[str] = mapped_column(nullable=False)
+    base_date: Mapped[date] = mapped_column(nullable=False)
+

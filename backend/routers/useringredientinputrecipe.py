@@ -59,8 +59,5 @@ def get_recipes_by_input_id(
     results = db.query(models.UserIngredientInputRecipe).filter(
         models.UserIngredientInputRecipe.input_id == input_id
     ).order_by(models.UserIngredientInputRecipe.rank.asc()).all()
-
-    if not results:
-        raise HTTPException(status_code=404, detail="No recommended recipes found for given input_id")
-
+    
     return results

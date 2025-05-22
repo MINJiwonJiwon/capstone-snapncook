@@ -1,12 +1,12 @@
 # backend/tests/test_useringredientinput.py
 
-import pytest
+from typing import Dict
 from fastapi.testclient import TestClient
 from backend.main import app
 
 client = TestClient(app)
 
-def test_create_user_ingredient_input(authenticated_headers):
+def test_create_user_ingredient_input(authenticated_headers: Dict[str, str]):
     input_data = {
         "input_text": "김치, 돼지고기, 마늘"
     }
@@ -14,7 +14,7 @@ def test_create_user_ingredient_input(authenticated_headers):
     assert res.status_code == 200
     assert "id" in res.json()
 
-def test_get_user_ingredient_input(authenticated_headers):
+def test_get_user_ingredient_input(authenticated_headers: Dict[str, str]):
     input_data = {
         "input_text": "김치, 돼지고기, 마늘"
     }

@@ -1,11 +1,14 @@
 # backend/tests/test_review.py
 
-import pytest
+from typing import Any, Dict
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+from backend.models import User
 from backend.tests.test_food import create_food_helper
 
-def test_create_review(auth_client, db_session, test_user):
+def test_create_review(auth_client: TestClient, db_session: Session, test_user: User):
     food_id = create_food_helper(db_session)
-    review_data = {
+    review_data: Dict[str, Any] = {
         "food_id": food_id,
         "content": "이 김치찌개 정말 맛있어요!",
         "rating": 5
@@ -14,7 +17,7 @@ def test_create_review(auth_client, db_session, test_user):
     assert response.status_code == 200
     assert response.json()["content"] == review_data["content"]
 
-def test_get_reviews_by_food(auth_client, db_session, test_user):
+def test_get_reviews_by_food(auth_client: TestClient, db_session: Session, test_user: User):
     food_id = create_food_helper(db_session)
 
     # 리뷰 등록
@@ -30,7 +33,7 @@ def test_get_reviews_by_food(auth_client, db_session, test_user):
     assert isinstance(response.json(), list)
     assert len(response.json()) >= 1
 
-def test_update_review(auth_client, db_session, test_user):
+def test_update_review(auth_client: TestClient, db_session: Session, test_user: User):
     food_id = create_food_helper(db_session)
 
     # 리뷰 생성
@@ -50,7 +53,7 @@ def test_update_review(auth_client, db_session, test_user):
     assert update_resp.json()["content"] == "수정된 리뷰"
     assert update_resp.json()["rating"] == 4
 
-def test_delete_review(auth_client, db_session, test_user):
+def test_delete_review(auth_client: TestClient, db_session: Session, test_user: User):
     food_id = create_food_helper(db_session)
 
     # 리뷰 생성
