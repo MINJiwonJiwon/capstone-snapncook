@@ -8,7 +8,7 @@ import {
 } from '../api/review';
 
 /**
- * 리뷰 관련 기능을 제공하는 커스텀 훅 - 개선된 버전
+ * 리뷰 관련 기능을 제공하는 커스텀 훅 - 6-3 수정: 무한 호출 문제 해결
  * @returns {Object} 리뷰 관련 상태 및 함수들
  */
 const useReview = () => {
@@ -34,29 +34,29 @@ const useReview = () => {
         setReviews(updatedReviews);
       }
       
-      setLoading(false);
       return result;
     } catch (err) {
       setError('리뷰 작성 중 오류가 발생했습니다.');
-      setLoading(false);
       console.error('Create review error:', err);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
   /**
-   * 음식별 리뷰 목록 가져오기 (useCallback으로 최적화)
+   * 음식별 리뷰 목록 가져오기 (6-3 수정: 의존성 배열에서 reviews.length 제거)
    * @param {number} foodId
    */
   const fetchReviewsByFood = useCallback(async (foodId) => {
-    // 이미 동일한 foodId로 요청 중이면 중복 요청 방지
-    if (loading && lastFoodId === foodId) {
+    // 6-3 수정: 중복 요청 방지 로직 개선
+    if (!foodId) {
       return;
     }
     
-    // 이미 조회한 동일한 foodId라면 API 호출 스킵
-    if (lastFoodId === foodId && reviews.length > 0) {
-      return reviews;
+    // 현재 로딩 중이고 동일한 foodId 요청이면 중복 방지
+    if (loading && lastFoodId === foodId) {
+      return;
     }
     
     setLoading(true);
@@ -65,21 +65,23 @@ const useReview = () => {
     
     try {
       const result = await getReviewsByFood(foodId);
-      setReviews(result);
-      setLoading(false);
-      return result;
+      setReviews(result || []); // 6-3 수정: null/undefined 방어 코드 추가
+      return result || [];
     } catch (err) {
       if (err.response && err.response.status === 404) {
         // 데이터가 없는 경우는 에러가 아닌 빈 배열로 처리
         setReviews([]);
+        return [];
       } else {
         setError(`리뷰를 가져오는 중 오류가 발생했습니다. (음식 ID: ${foodId})`);
         console.error(`Fetch reviews by food ID ${foodId} error:`, err);
+        setReviews([]);
+        return [];
       }
+    } finally {
       setLoading(false);
-      return [];
     }
-  }, [loading, lastFoodId, reviews.length]);
+  }, [loading, lastFoodId]); // 6-3 수정: reviews.length 의존성 제거
 
   /**
    * 내가 작성한 리뷰 목록 가져오기
@@ -89,19 +91,21 @@ const useReview = () => {
     setError(null);
     try {
       const result = await getMyReviews();
-      setMyReviews(result);
-      setLoading(false);
-      return result;
+      setMyReviews(result || []); // 6-3 수정: null/undefined 방어 코드 추가
+      return result || [];
     } catch (err) {
       if (err.response && err.response.status === 404) {
         // 데이터가 없는 경우는 에러가 아닌 빈 배열로 처리
         setMyReviews([]);
+        return [];
       } else {
         setError('내 리뷰를 가져오는 중 오류가 발생했습니다.');
         console.error('Fetch my reviews error:', err);
+        setMyReviews([]);
+        return [];
       }
+    } finally {
       setLoading(false);
-      return [];
     }
   }, []);
 
@@ -119,16 +123,16 @@ const useReview = () => {
       // 성공 시 리뷰 목록 갱신
       if (lastFoodId) {
         const updatedReviews = await getReviewsByFood(lastFoodId);
-        setReviews(updatedReviews);
+        setReviews(updatedReviews || []);
       }
       
-      setLoading(false);
       return result;
     } catch (err) {
       setError('리뷰 수정 중 오류가 발생했습니다.');
-      setLoading(false);
       console.error('Update review error:', err);
       throw err;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -146,14 +150,24 @@ const useReview = () => {
       setReviews(prev => prev.filter(review => review.id !== reviewId));
       setMyReviews(prev => prev.filter(review => review.id !== reviewId));
       
-      setLoading(false);
       return { success: true };
     } catch (err) {
       setError('리뷰 삭제 중 오류가 발생했습니다.');
-      setLoading(false);
       console.error('Delete review error:', err);
       throw err;
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // 6-3 추가: 상태 초기화 함수
+  const clearError = () => {
+    setError(null);
+  };
+
+  const clearReviews = () => {
+    setReviews([]);
+    setLastFoodId(null);
   };
 
   return {
@@ -165,7 +179,9 @@ const useReview = () => {
     fetchReviewsByFood,
     fetchMyReviews,
     editReview,
-    removeReview
+    removeReview,
+    clearError,
+    clearReviews
   };
 };
 
