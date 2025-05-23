@@ -20,6 +20,8 @@ httpx = "^0.28.1"
 itsdangerous = "^2.2.0"
 apscheduler = "^3.11.0"
 pytz = "^2025.2"
+ultralytics = "^8.3.141"
+opencv-python = "^4.11.0.86"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
