@@ -36,6 +36,14 @@ h2 {
   margin-bottom: 30px;
 }
 
+/* 업로드 메시지 스타일 - 새로 추가 */
+.nonLoginMessage {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #1565c0;
+  font-weight: 500;
+}
+
 .uploadArea {
   border: 2px dashed var(--secondary-color);
   border-radius: 8px;
@@ -155,6 +163,14 @@ button:hover {
   
   .historyContainer {
     width: 50%;
+  }
+}
+
+/* 반응형 대응 - 업로드 메시지 */
+@media (max-width: 768px) {
+  .uploadMessage {
+    font-size: 0.85rem;
+    padding: 10px 12px;
   }
 }
 

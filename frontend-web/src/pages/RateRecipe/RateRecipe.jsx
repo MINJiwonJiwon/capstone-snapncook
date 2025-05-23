@@ -5,6 +5,42 @@ import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import styles from './RateRecipe.module.css';
 
+// 6-3 추가: 안전한 이미지 컴포넌트
+const SafeImage = ({ src, alt, className, onLoad, onError, ...props }) => {
+  const [imgSrc, setImgSrc] = useState(src || '/assets/images/default-food.svg');
+  const [isLoading, setIsLoading] = useState(true);
+
+  const handleError = (e) => {
+    console.warn('이미지 로드 실패:', e.target.src);
+    setImgSrc('/assets/images/default-food.svg');
+    setIsLoading(false);
+    if (onError) onError(e);
+  };
+
+  const handleLoad = (e) => {
+    setIsLoading(false);
+    if (onLoad) onLoad(e);
+  };
+
+  useEffect(() => {
+    setImgSrc(src || '/assets/images/default-food.svg');
+    setIsLoading(true);
+  }, [src]);
+
+  return (
+    <div className={`${styles.imageContainer} ${className || ''}`} {...props}>
+      {isLoading && <div className={styles.imageLoader}>이미지 로딩 중...</div>}
+      <img 
+        src={imgSrc}
+        alt={alt}
+        onError={handleError}
+        onLoad={handleLoad}
+        style={{ opacity: isLoading ? 0 : 1 }}
+      />
+    </div>
+  );
+};
+
 const FoodReviewPage = () => {
   // API로부터 받아온 음식 데이터 상태
   const [foodList, setFoodList] = useState([]);
@@ -18,9 +54,9 @@ const FoodReviewPage = () => {
   const [previewPhoto, setPreviewPhoto] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // 6-3 수정: 이미지 로딩 상태 관리 추가
-  const [imageLoading, setImageLoading] = useState({});
-  
+  // 6-3 추가: 전체 UI 로딩 상태 관리
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
   // 커스텀 훅 사용
   const {
     reviews,
@@ -29,12 +65,15 @@ const FoodReviewPage = () => {
     submitReview,
     fetchReviewsByFood,
     editReview,
-    removeReview
+    removeReview,
+    clearError,
+    clearReviews
   } = useReview();
 
   // 음식 데이터 초기 로드
   useEffect(() => {
     const loadFoodData = async () => {
+      setIsInitialLoading(true);
       try {
         const response = await getAllFoods();
         if (Array.isArray(response)) {
@@ -50,71 +89,33 @@ const FoodReviewPage = () => {
         }
       } catch (err) {
         console.error('음식 데이터 로딩 오류:', err);
+      } finally {
+        setIsInitialLoading(false);
       }
     };
     loadFoodData();
   }, []);
 
-  // 이미지 로드 오류 처리 핸들러
-  const handleImageError = (e) => {
-    console.warn('이미지 로드 실패:', e.target.src);
-    e.target.src = '/assets/images/default-food.svg';
-    
-    // 6-3 수정: 이미지 로드 상태 업데이트
-    if (e.target.dataset.reviewId) {
-      setImageLoading(prev => ({
-        ...prev,
-        [e.target.dataset.reviewId]: false
-      }));
-    }
-  };
-  
-  // 6-3 수정: 이미지 로드 완료 핸들러
-  const handleImageLoad = (e) => {
-    if (e.target.dataset.reviewId) {
-      setImageLoading(prev => ({
-        ...prev,
-        [e.target.dataset.reviewId]: false
-      }));
-    }
-  };
-
-  // 리뷰 데이터 갱신 - useCallback으로 최적화
-  const loadReviews = useCallback(async (foodId) => {
-    if (foodId) {
-      await fetchReviewsByFood(foodId);
-    }
-  }, [fetchReviewsByFood]);
-
-  // 선택된 음식이 변경될 때 리뷰 데이터 로드
+  // 6-3 수정: 선택된 음식이 변경될 때만 리뷰 데이터 로드 (단순화)
   useEffect(() => {
     if (selectedFood?.id) {
-      loadReviews(selectedFood.id);
+      clearError(); // 이전 오류 상태 초기화
+      fetchReviewsByFood(selectedFood.id);
+    } else {
+      clearReviews(); // 선택된 음식이 없으면 리뷰 목록 초기화
     }
-  }, [selectedFood, loadReviews]);
-  
-  // 리뷰 데이터가 변경될 때 이미지 로딩 상태 초기화
-  useEffect(() => {
-    // 6-3 수정: 리뷰 데이터가 변경될 때 이미지 로딩 상태 초기화
-    const loadingState = {};
-    reviews.forEach(review => {
-      if (review.photo_url) {
-        loadingState[review.id] = true;
-      }
-    });
-    setImageLoading(loadingState);
-  }, [reviews]);
+  }, [selectedFood?.id, fetchReviewsByFood, clearError, clearReviews]);
 
   // 음식 선택 핸들러
-  const handleFoodSelect = (food) => {
+  const handleFoodSelect = useCallback((food) => {
     setSelectedFood(food);
     setIsEditMode(false);
     setSelectedReview(null);
     resetForm();
-  };
+  }, []);
 
   // 리뷰 선택 핸들러
-  const handleReviewSelect = (review) => {
+  const handleReviewSelect = useCallback((review) => {
     setSelectedReview(review);
     setRating(review.rating);
     setReviewText(review.content);
@@ -126,30 +127,36 @@ const FoodReviewPage = () => {
       setPreviewPhoto('');
       setReviewPhoto(null);
     }
-  };
+  }, []);
 
   // 폼 초기화
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setRating(0);
     setReviewText('');
     setReviewPhoto(null);
     setPreviewPhoto('');
     setIsEditMode(false);
     setSelectedReview(null);
-  };
+  }, []);
 
   // 사진 업로드 핸들러
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = useCallback((e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // 파일 크기 체크 (5MB 제한)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('파일 크기는 5MB 이하로 업로드해주세요.');
+      return;
+    }
 
     const reader = new FileReader();
     reader.onloadend = () => setPreviewPhoto(reader.result);
     reader.readAsDataURL(file);
     setReviewPhoto(file);
-  };
+  }, []);
 
-  // 리뷰 제출 핸들러
+  // 리뷰 제출 핸들러 (6-3 수정: 안전성 강화)
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -178,18 +185,28 @@ const FoodReviewPage = () => {
         alert('리뷰가 수정되었습니다.');
       } else {
         // 새 리뷰 등록
-        const formData = new FormData();
-        formData.append('food_id', selectedFood.id);
-        formData.append('rating', rating);
-        formData.append('content', reviewText);
-        reviewPhoto && formData.append('photo', reviewPhoto);
+        const reviewData = {
+          food_id: selectedFood.id,
+          rating: rating,
+          content: reviewText
+        };
 
-        await submitReview(formData);
+        // 6-3 수정: FormData는 파일 업로드가 있을 때만 사용
+        if (reviewPhoto) {
+          const formData = new FormData();
+          Object.keys(reviewData).forEach(key => {
+            formData.append(key, reviewData[key]);
+          });
+          formData.append('photo', reviewPhoto);
+          await submitReview(formData);
+        } else {
+          await submitReview(reviewData);
+        }
+        
         alert('리뷰가 정상 등록되었습니다!');
       }
       
       resetForm();
-      await loadReviews(selectedFood.id);
     } catch (err) {
       console.error('리뷰 처리 오류:', err);
       alert(isEditMode ? 
@@ -208,12 +225,26 @@ const FoodReviewPage = () => {
       await removeReview(reviewId);
       alert('리뷰가 삭제되었습니다.');
       resetForm();
-      await loadReviews(selectedFood.id);
     } catch (err) {
       console.error('리뷰 삭제 오류:', err);
       alert('리뷰 삭제에 실패했습니다. 다시 시도해주세요.');
     }
   };
+
+  // 6-3 추가: 초기 로딩 중 화면
+  if (isInitialLoading) {
+    return (
+      <>
+        <Navbar />
+        <div className={styles.container}>
+          <div className={styles.loadingMessage}>
+            음식 목록을 불러오는 중입니다...
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -237,11 +268,11 @@ const FoodReviewPage = () => {
                   onClick={() => handleFoodSelect(food)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <img 
-                    src={food.imageUrl} 
+                  {/* 6-3 수정: SafeImage 컴포넌트 사용 */}
+                  <SafeImage
+                    src={food.imageUrl}
                     alt={food.name}
                     className={styles.foodThumbnail}
-                    onError={handleImageError}
                   />
                   <h3 className={styles.foodTitle}>{food.name}</h3>
                 </article>
@@ -256,11 +287,11 @@ const FoodReviewPage = () => {
             <h2>{isEditMode ? '리뷰 수정' : `${selectedFood.name} 리뷰 작성`}</h2>
             
             <div className={styles.selectedFoodPreview}>
-              <img 
-                src={selectedFood.imageUrl} 
+              {/* 6-3 수정: SafeImage 컴포넌트 사용 */}
+              <SafeImage
+                src={selectedFood.imageUrl}
                 alt={`선택된 음식: ${selectedFood.name}`}
                 className={styles.mainFoodImage}
-                onError={handleImageError}
               />
             </div>
 
@@ -291,11 +322,11 @@ const FoodReviewPage = () => {
                   className={styles.hiddenInput}
                 />
                 {previewPhoto ? (
-                  <img 
-                    src={previewPhoto} 
+                  /* 6-3 수정: SafeImage 컴포넌트 사용 */
+                  <SafeImage
+                    src={previewPhoto}
                     alt="리뷰 사진 미리보기"
                     className={styles.photoPreview}
-                    onError={handleImageError}
                   />
                 ) : (
                   <div className={styles.uploadPrompt}>
@@ -336,13 +367,17 @@ const FoodReviewPage = () => {
 
         {/* 리뷰 목록 표시 */}
         <section className={styles.reviewList}>
-          <h2>등록된 리뷰 현황 ({reviews.length}건)</h2>
+          <h2>
+            {selectedFood ? `${selectedFood.name}의 리뷰` : '등록된 리뷰 현황'} ({reviews.length}건)
+          </h2>
           {error && <p className={styles.errorMessage}>{error}</p>}
           
           {loading ? (
             <p className={styles.loadingMessage}>리뷰를 불러오는 중...</p>
           ) : reviews.length === 0 ? (
-            <p className={styles.emptyMessage}>등록된 리뷰가 없습니다</p>
+            <p className={styles.emptyMessage}>
+              {selectedFood ? '이 음식에 대한 리뷰가 없습니다' : '등록된 리뷰가 없습니다'}
+            </p>
           ) : (
             reviews.map(review => (
               <article 
@@ -387,15 +422,12 @@ const FoodReviewPage = () => {
                 </div>
                 
                 <div className={styles.reviewContent}>
-                  {/* 6-3 수정: 이미지 컨테이너에 고정 크기 적용하고 로딩/에러 핸들러 추가 */}
+                  {/* 6-3 수정: 리뷰 이미지도 SafeImage 컴포넌트 사용 */}
                   {review.photo_url && (
                     <figure className={styles.reviewImage}>
-                      <img
+                      <SafeImage
                         src={review.photo_url}
                         alt="리뷰 첨부 이미지"
-                        data-review-id={review.id}
-                        onError={handleImageError}
-                        onLoad={handleImageLoad}
                       />
                     </figure>
                   )}

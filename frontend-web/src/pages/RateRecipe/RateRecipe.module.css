@@ -48,10 +48,34 @@ h2 {
   transform: scale(1.05);
 }
 
-.foodThumbnail {
+/* 6-3 수정: 이미지 컨테이너 안정성 개선 */
+.imageContainer {
+  position: relative;
   width: 100%;
-  height: 100px;
+  overflow: hidden;
+}
+
+.imageContainer img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  transition: opacity 0.3s ease;
+}
+
+.imageLoader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-color);
+  font-size: 0.8rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.foodThumbnail {
+  height: 100px;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -81,7 +105,6 @@ h2 {
 .mainFoodImage {
   width: 200px;
   height: 150px;
-  object-fit: cover;
   border-radius: 8px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
@@ -138,7 +161,6 @@ h2 {
 .photoPreview {
   width: 200px;
   height: 150px;
-  object-fit: cover;
   border-radius: 8px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
@@ -198,7 +220,7 @@ h2 {
   margin-top: 30px;
 }
 
-/* 6-3 수정: 리뷰 카드의 레이아웃 안정화 */
+/* 6-3 수정: 리뷰 카드의 레이아웃 안정화 강화 */
 .reviewCard {
   background-color: white;
   border: 1px solid var(--border-color);
@@ -207,11 +229,12 @@ h2 {
   margin-bottom: 20px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s, box-shadow 0.3s;
-  /* 최소 높이 지정으로 카드 크기 안정화 */
-  min-height: 200px;
-  /* flex 레이아웃 적용 */
+  /* 6-3 수정: 고정 최소 높이로 카드 크기 안정화 */
+  min-height: 180px;
+  /* flex 레이아웃으로 내부 요소 안정적 배치 */
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .reviewCard:hover {
@@ -231,6 +254,8 @@ h2 {
   margin-bottom: 15px;
   border-bottom: 1px solid #eee;
   padding-bottom: 10px;
+  /* 6-3 수정: flex-shrink로 헤더 크기 고정 */
+  flex-shrink: 0;
 }
 
 .ratingDisplay {
@@ -261,72 +286,102 @@ h2 {
   color: #d9534f;
 }
 
-/* 6-3 수정: 콘텐츠 영역이 남은 공간을 차지하도록 flex 적용 */
+/* 6-3 수정: 콘텐츠 영역 레이아웃 개선 */
 .reviewContent {
   display: flex;
   flex-direction: column;
   flex: 1;
+  gap: 15px;
 }
 
-/* 6-3 수정: 이미지 컨테이너에 고정 높이와 로딩 중 표시할 배경 적용 */
+/* 6-3 수정: 리뷰 이미지 컨테이너 크기 고정 및 안정화 */
 .reviewImage {
-  margin-bottom: 15px;
-  text-align: center;
+  width: 100%;
   height: 200px;
   position: relative;
   background-color: #f7f7f7;
   border-radius: 8px;
   overflow: hidden;
+  margin: 0;
+  /* 6-3 수정: flex-shrink로 이미지 영역 크기 고정 */
+  flex-shrink: 0;
 }
 
-/* 6-3 수정: 이미지가 컨테이너 크기에 맞게 일관되게 표시되도록 설정 */
+/* 6-3 수정: 리뷰 이미지 안정적 표시 */
+.reviewImage .imageContainer {
+  width: 100%;
+  height: 100%;
+}
+
 .reviewImage img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 8px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transition: opacity 0.3s ease;
 }
 
-/* 6-3 수정: 이미지 없는 리뷰를 위한 최소 높이 확보 */
+/* 6-3 수정: 리뷰 텍스트 영역 개선 */
 .reviewText {
   line-height: 1.6;
   color: #333;
-  min-height: 50px;
   overflow-wrap: break-word;
   word-break: break-word;
+  /* 6-3 수정: flex 성장으로 남은 공간 차지 */
+  flex: 1;
+  margin: 0;
 }
 
-/* 메시지 스타일 */
+/* 메시지 스타일 개선 */
 .emptyMessage, .errorMessage, .loadingMessage {
   text-align: center;
-  padding: 20px;
+  padding: 40px 20px;
   border-radius: 8px;
   margin: 20px 0;
+  font-size: 1.1rem;
 }
 
 .emptyMessage {
   background-color: #f8f9fa;
   color: #6c757d;
+  border: 1px solid #e9ecef;
 }
 
 .errorMessage {
   background-color: #f8d7da;
   color: #721c24;
+  border: 1px solid #f5c6cb;
 }
 
 .loadingMessage {
   background-color: #e2f0fd;
   color: #0c63e4;
+  border: 1px solid #b3d9ff;
 }
 
-/* 반응형 스타일 */
+/* 6-3 추가: 이미지 로딩 상태를 위한 스타일 */
+.imageContainer .imageLoader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  z-index: 1;
+}
+
+/* 반응형 스타일 개선 */
 @media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  
   .photoGrid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
   }
   
   .reviewForm {
@@ -344,8 +399,39 @@ h2 {
     font-size: 2rem;
   }
   
-  /* 6-3 수정: 모바일에서 리뷰 이미지 크기 조정 */
+  /* 6-3 수정: 모바일에서 리뷰 카드 레이아웃 최적화 */
+  .reviewCard {
+    padding: 12px;
+    min-height: 150px;
+  }
+  
   .reviewImage {
     height: 150px;
+  }
+  
+  .reviewHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .reviewActions {
+    align-self: flex-end;
+  }
+  
+  /* 6-3 추가: 매우 작은 화면에서 폰트 크기 조정 */
+  @media (max-width: 480px) {
+    .foodTitle {
+      font-size: 0.8rem;
+      padding: 6px;
+    }
+    
+    .ratingSystem {
+      font-size: 1.8rem;
+    }
+    
+    .star {
+      margin: 0 3px;
+    }
   }
 }
