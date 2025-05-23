@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from backend import crud, schemas, models
+from backend.app.services.matching import auto_match_foods_from_input
 from backend.db import get_db
 from backend.app.auth.dependencies import get_current_user
 
@@ -11,7 +12,7 @@ router = APIRouter(
     tags=["UserIngredientInput"]
 )
 
-# ✅ 재료 입력 저장 (user_id는 current_user 기준으로 자동 설정)
+# ✅ 재료 입력 저장 (user_id는 current_user 기준 + 자동 음식 매칭 포함)
 @router.post(
     "/",
     response_model=schemas.UserIngredientInputOut,
@@ -23,11 +24,12 @@ def create_user_ingredient_input(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    # ✅ user_id를 수동으로 할당한 ORM 객체를 생성해서 넘김
+    matched_ids = auto_match_foods_from_input(input_data.input_text, db)
+
     new_input = models.UserIngredientInput(
         user_id=current_user.id,
         input_text=input_data.input_text,
-        matched_food_ids=input_data.matched_food_ids
+        matched_food_ids=matched_ids
     )
     return crud.create_user_ingredient_input(db=db, input_obj=new_input)
 

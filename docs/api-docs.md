@@ -1256,8 +1256,7 @@ Authorization: Bearer <access_token>
 
 ```json
 {
-  "input_text": "김치, 돼지고기, 두부",
-  "matched_food_ids": [1, 2]
+  "input_text": "김치, 돼지고기, 두부"
 }
 ```
 

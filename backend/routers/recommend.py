@@ -92,10 +92,10 @@ def private_recommend_by_detection(
 @router.get(
     "/private/by-ingredient/{input_id}",
     response_model=List[schemas.RecipeOut],
-    summary="🔐 개인 - 재료 입력 기반 추천",
-    description="로그인한 사용자 본인의 재료 입력 ID를 기반으로 매칭된 레시피를 안전하게 추천합니다."
+    summary="🔐 개인 - 입력 재료 기반 완전 포함 레시피 추천",
+    description="로그인한 사용자의 입력 재료가 레시피에 모두 포함된 경우에만 해당 레시피를 추천합니다. 입력 재료 중 하나라도 빠진 경우 추천에서 제외됩니다."
 )
-def private_recommend_by_ingredient_input(
+def private_recommend_by_ingredient(
     input_id: int,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
@@ -104,13 +104,16 @@ def private_recommend_by_ingredient_input(
         models.UserIngredientInput.id == input_id,
         models.UserIngredientInput.user_id == current_user.id
     ).first()
-    if not input_record:
-        raise HTTPException(status_code=404, detail="Ingredient input not found or access denied")
+    if not input_record or not input_record.matched_food_ids:
+        raise HTTPException(status_code=404, detail="No matched foods for this input")
 
-    if not input_record.matched_food_ids:
-        raise HTTPException(status_code=400, detail="No matched foods found for this input")
-
+    user_ingredients = set(map(str.strip, input_record.input_text.split(",")))
     recipes = db.query(models.Recipe).filter(models.Recipe.food_id.in_(input_record.matched_food_ids)).all()
-    if not recipes:
-        raise HTTPException(status_code=404, detail="No recipes found for matched foods")
-    return recipes
+
+    def includes_all_user_ingredients(recipe: models.Recipe) -> bool:
+        if not recipe.ingredients:
+            return False
+        recipe_ingredients = set(map(str.strip, recipe.ingredients.split(",")))
+        return user_ingredients.issubset(recipe_ingredients)
+
+    return [r for r in recipes if includes_all_user_ingredients(r)]
