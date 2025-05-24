@@ -22,6 +22,7 @@ apscheduler = "^3.11.0"
 pytz = "^2025.2"
 ultralytics = "^8.3.141"
 opencv-python = "^4.11.0.86"
+email-validator = "^1.3.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"
