@@ -1,0 +1,17 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 원 -->
+  <circle cx="100" cy="100" r="100" fill="#556B2F" />
+  
+  <!-- 얼굴 -->
+  <circle cx="100" cy="85" r="40" fill="#E2725B" />
+  
+  <!-- 몸통 -->
+  <path d="M100 150 C 65 150, 45 120, 45 95 C 45 90, 48 85, 50 82 C 60 70, 80 65, 100 65 C 120 65, 140 70, 150 82 C 152 85, 155 90, 155 95 C 155 120, 135 150, 100 150 Z" fill="#E2725B" />
+  
+  <!-- 요리사 모자 -->
+  <path d="M60 70 C 60 40, 140 40, 140 70 C 120 65, 80 65, 60 70 Z" fill="white" />
+  <ellipse cx="100" cy="40" rx="30" ry="10" fill="white" />
+  
+  <!-- 탐지 요소 -->
+  <text x="100" y="170" font-family="Arial" font-size="14" fill="white" text-anchor="middle">SnapNCook</text>
+</svg>

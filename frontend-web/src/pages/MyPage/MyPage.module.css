@@ -1,0 +1,371 @@
+.container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: white;
+  flex: 1;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--main-color);
+}
+
+/* 프로필 섹션 스타일 */
+.profileSection {
+  margin-bottom: 40px;
+}
+
+.profileCard {
+  display: flex;
+  align-items: center;
+  background-color: var(--accent-color);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 8px var(--border-color);
+}
+
+.profileInfo {
+  margin-left: 30px;
+}
+
+.profileInfo h2 {
+  margin: 0 0 10px 0;
+  color: var(--main-color);
+  font-size: 1.8rem;
+}
+
+.email {
+  color: var(--text-color);
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+.editProfileButton {
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+
+.editProfileButton:hover {
+  background-color: var(--hover-secondary);
+}
+
+/* 기존 갤러리 스타일 유지 */
+.favoritesSection, .uploadsSection, .reviewsSection {
+  margin-bottom: 30px;
+}
+
+.galleryContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.galleryItem {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px var(--border-color);
+  transition: transform 0.3s;
+  cursor: pointer;
+}
+
+.galleryItem:hover {
+  transform: scale(1.03);
+  border: 1px solid var(--secondary-color);
+}
+
+.galleryItem img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.favoriteButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--light-text);
+  cursor: pointer;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
+.favoriteButton.active {
+  color: var(--secondary-color);
+}
+
+.imageInfo {
+  padding: 10px;
+  background-color: white;
+}
+
+.imageInfo h4 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--main-color);
+}
+
+.imageInfo p {
+  margin: 5px 0 0;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+/* 6-6 개선: 빈 갤러리 스타일 개선 */
+.emptyGallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px;
+  color: #7f8c8d;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  grid-column: 1 / -1;
+  min-height: 150px;
+}
+
+.emptyGallery p {
+  margin-bottom: 15px;
+  font-size: 1rem;
+}
+
+h2 {
+  color: var(--secondary-color);
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+/* 리뷰 섹션 스타일 */
+.reviewsList {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.reviewCard {
+  background-color: var(--accent-color);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 5px var(--border-color);
+}
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.reviewHeader h4 {
+  margin: 0;
+  color: var(--main-color);
+  font-size: 1.2rem;
+}
+
+.reviewRating {
+  display: flex;
+}
+
+.starFilled {
+  color: gold;
+  font-size: 1.2rem;
+}
+
+.starEmpty {
+  color: #e0e0e0;
+  font-size: 1.2rem;
+}
+
+.reviewContent {
+  display: flex;
+  margin: 10px 0;
+}
+
+.reviewImageContainer {
+  flex: 0 0 150px;
+  margin-right: 15px;
+}
+
+.reviewImage {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.reviewText {
+  flex: 1;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.reviewFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: #7f8c8d;
+}
+
+.editReviewButton {
+  background-color: transparent;
+  color: var(--secondary-color);
+  border: 1px solid var(--secondary-color);
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.3s;
+}
+
+.editReviewButton:hover {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+/* 6-6 개선: 섹션별 로딩/에러 스타일 개선 */
+.sectionLoading, .sectionError {
+  padding: 20px;
+  text-align: center;
+  margin: 10px 0;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sectionLoading {
+  background-color: #f0f7ff;
+  color: #2196F3;
+  border: 1px solid #e3f2fd;
+}
+
+.sectionError {
+  background-color: #fff6f6;
+  color: #F44336;
+  border: 1px solid #ffebee;
+}
+
+/* 6-6 개선: 로딩 스피너 추가 */
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--main-color);
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 6-6 개선: 로딩 메시지 스타일 개선 */
+.loadingMessage {
+  background-color: #f0f7ff;
+  color: #2196F3;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 30px 0;
+  text-align: center;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 6-6 개선: 에러 메시지 스타일 개선 */
+.errorMessage {
+  background-color: #fff6f6;
+  color: #F44336;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 30px 0;
+  text-align: center;
+  font-size: 16px;
+}
+
+/* 6-6 개선: 재시도 버튼 스타일 */
+.retryButton {
+  background-color: var(--main-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.retryButton:hover {
+  background-color: var(--hover-main);
+}
+
+/* 6-6 개선: 업로드 버튼 스타일 */
+.uploadButton {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+.uploadButton:hover {
+  background-color: #e0e0e0;
+  border-color: #ccc;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .profileCard {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .profileInfo {
+    margin-left: 0;
+    margin-top: 20px;
+  }
+  
+  .reviewContent {
+    flex-direction: column;
+  }
+  
+  .reviewImageContainer {
+    flex: none;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  /* 6-6 개선: 모바일 화면에서 로딩 스피너 사이즈 조정 */
+  .loadingSpinner {
+    width: 30px;
+    height: 30px;
+  }
+}

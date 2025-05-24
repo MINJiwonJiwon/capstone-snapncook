@@ -1,0 +1,198 @@
+.container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 20px;
+  box-sizing: border-box;
+  background-color: white;
+  flex: 1;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--main-color);
+}
+
+.foodInfo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.foodImage {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto 20px;
+}
+
+.foodImage img {
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px var(--border-color);
+}
+
+/* 레시피 카드 스타일 */
+.recipeCards {
+  margin-bottom: 30px;
+}
+
+.cardsContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px var(--border-color);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card.active {
+  border: 2px solid var(--secondary-color);
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cardContent {
+  padding: 20px;
+}
+
+.cardContent h4 {
+  margin-bottom: 10px;
+  color: var(--main-color);
+}
+
+/* 레시피 표시 영역 */
+.recipeDisplay {
+  background-color: var(--accent-color);
+  border-radius: 8px;
+  padding: 20px;
+  min-height: 300px;
+}
+
+.recipePlaceholder {
+  text-align: center;
+  color: var(--text-color);
+  font-style: italic;
+}
+
+.recipeContent {
+  margin-top: 20px;
+}
+
+.recipeContent h3 {
+  margin-bottom: 15px;
+  color: var(--main-color);
+}
+
+.recipeContent h4 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: var(--secondary-color);
+}
+
+.recipeContent ul, .recipeContent ol {
+  margin-left: 20px;
+  margin-bottom: 15px;
+}
+
+.recipeContent li {
+  margin-bottom: 8px;
+}
+
+/* 버튼 스타일 */
+.buttonGroup {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.backButton {
+  padding: 10px 20px;
+  background-color: var(--text-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.backButton:hover {
+  background-color: #222222;
+}
+
+/* 기존 스타일 외에 추가되는 스타일 */
+
+/* 로딩 스켈레톤 UI 스타일 */
+.skeletonContainer {
+  padding: 20px;
+}
+
+.skeletonTitle {
+  height: 24px;
+  width: 60%;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonText {
+  height: 16px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeletonText:nth-child(2) {
+  width: 90%;
+}
+
+.skeletonText:nth-child(3) {
+  width: 80%;
+}
+
+.skeletonText:nth-child(4) {
+  width: 85%;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* 에러 메시지 스타일 */
+.errorMessage {
+  color: #F44336;
+  padding: 15px;
+  border: 1px solid #F44336;
+  border-radius: 4px;
+  background-color: rgba(244, 67, 54, 0.1);
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* 데이터 없음 메시지 스타일 */
+.emptyMessage {
+  text-align: center;
+  padding: 20px;
+  color: #9E9E9E;
+  font-style: italic;
+}

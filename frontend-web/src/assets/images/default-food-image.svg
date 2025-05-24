@@ -1,0 +1,25 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 -->
+  <rect width="200" height="200" fill="#FFFAF0" />
+  
+  <!-- 그릇 -->
+  <path d="M40 110 C40 150, 160 150, 160 110 L160 90 C160 70, 40 70, 40 90 Z" fill="white" stroke="#DDD8C4" stroke-width="2" />
+  <ellipse cx="100" cy="90" rx="60" ry="20" fill="white" stroke="#DDD8C4" stroke-width="2" />
+  
+  <!-- 음식 (비빔밥 형태) -->
+  <ellipse cx="100" cy="90" rx="50" ry="15" fill="#FFFAF0" />
+  
+  <!-- 비빔밥 재료들 -->
+  <circle cx="85" cy="85" r="8" fill="#E2725B" /> <!-- 고추장 -->
+  <ellipse cx="110" cy="83" rx="10" ry="6" fill="#556B2F" /> <!-- 시금치 -->
+  <ellipse cx="95" cy="95" rx="12" ry="5" fill="#FFD700" /> <!-- 계란 -->
+  <ellipse cx="75" cy="95" rx="7" ry="5" fill="#FF8C00" /> <!-- 당근 -->
+  <ellipse cx="120" cy="92" rx="8" ry="6" fill="#8B4513" /> <!-- 고기 -->
+  
+  <!-- 젓가락 -->
+  <line x1="140" y1="60" x2="120" y2="90" stroke="#556B2F" stroke-width="2" />
+  <line x1="145" y1="60" x2="125" y2="88" stroke="#556B2F" stroke-width="2" />
+  
+  <!-- 텍스트 -->
+  <text x="100" y="170" font-family="Arial" font-size="14" fill="#556B2F" text-anchor="middle" font-weight="bold">음식</text>
+</svg>

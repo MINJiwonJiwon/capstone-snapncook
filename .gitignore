@@ -1,21 +1,41 @@
-# Python
+# ───── Python 관련 ─────
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
-.env
 
-# VS Code
+# ───── 가상환경 ─────
+.env
+.venv/
+env/
+venv/
+
+# ───── VS Code ─────
 .vscode/
 
-# Node (React 등)
+# ───── Node.js (React, React Native 등) ─────
 node_modules/
 dist/
 build/
 
-# Jupyter
+# ───── Jupyter Notebook ─────
 .ipynb_checkpoints/
 
-# Mac/Windows 시스템
+# ───── 시스템 파일 ─────
 .DS_Store
 Thumbs.db
+
+# ───── Alembic ─────
+alembic/versions/__pycache__/
+alembic/versions/*.pyc
+alembic/old_versions/
+
+# ───── 테스트 요청 파일 (.http) 무시 ─────
+*.http
+
+# ───── Python 파일 ─────
+generate_fastapi_docs.py
+sample_data.py
+
+# ───── 타입 정보 보완 파일 ─────
+typings/

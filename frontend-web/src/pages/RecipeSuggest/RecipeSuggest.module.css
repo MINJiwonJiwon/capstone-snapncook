@@ -1,0 +1,193 @@
+.container {
+    width: 100%;
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 30px 20px;
+    background-color: var(--background-color);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px var(--border-color);
+  }
+  
+  h1 {
+    text-align: center;
+    color: var(--main-color);
+    margin-bottom: 25px;
+  }
+  
+  .recipeGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 450px));
+    gap: 24px;
+    margin-top: 20px;
+  }
+  
+  .recipeCard {
+    background: var(--accent-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px var(--border-color);
+    padding: 20px 15px;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+  
+  .recipeCard:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 6px 16px var(--border-color);
+  }
+  
+  .recipeCard img {
+    width: 100%;
+    max-width: 180px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+  
+  .recipeCard h3 {
+    color: var(--secondary-color);
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+  
+  .recipeCard p {
+    color: var(--text-color);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+  
+  .recipeCard div {
+    color: black;
+    font-size: 1.1rem;
+    margin: 0;
+    text-align : left;
+  }
+  /* 반응형 */
+  @media (max-width: 600px) {
+    .container {
+      padding: 10px;
+    }
+    .recipeGrid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .recipeCard {
+      padding: 12px 6px;
+    }
+  }
+  .searchContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 32px;
+    margin-top: 30px;
+  }
+  
+  .inputGroup {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto 32px auto;
+  }
+  
+  .ingredientInput {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+    background: white;
+  }
+  
+  .ingredientInput:focus {
+    border-color: var(--secondary-color);
+    background: white;
+  }
+  
+  .searchButton {
+    padding: 12px 18px;
+    background: var(--hover-main);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    box-shadow: 0 2px 6px var(--border-color);
+  }
+  
+  .searchButton:hover {
+    background: var(--hover-secondary);
+  }
+  
+  /* 5-3 수정: 빈 결과 메시지 스타일 개선 */
+  .noResults {
+    text-align: center;
+    color: var(--text-color);
+    font-size: 1.05rem;
+    margin-top: 40px;
+    padding: 20px;
+    background-color: var(--accent-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+  
+  .noResults > p:first-child {
+    color: var(--secondary-color);
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+  
+  /* 5-3 추가: 데이터 부족 안내 스타일 */
+  .dataLackInfo {
+    margin-top: 20px;
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-left: 4px solid var(--main-color);
+    border-radius: 4px;
+  }
+  
+  .dataLackInfo > p:first-child {
+    color: var(--main-color);
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+  
+  .additionalInfo {
+    color: var(--text-color);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    text-align: left;
+  }
+  
+  .resultSection {
+    margin-top: 40px;
+    min-height: 320px; /* 결과가 없을 때도 공간 유지 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* 5-3 수정: 로딩 상태 스타일 개선 */
+  .loading {
+    text-align: center;
+    color: var(--main-color);
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-top: 40px;
+    padding: 20px;
+  }
+  
+  .error {
+    color: var(--error-color);
+    text-align: center;
+    background-color: #ffeaea;
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 1px solid #ffcdd2;
+    margin-bottom: 20px;
+  }

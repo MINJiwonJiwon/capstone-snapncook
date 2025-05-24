@@ -1,0 +1,93 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ "main", "dev", "feature/backend-dbapi" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: capstone
+          POSTGRES_PASSWORD: capstone10
+          POSTGRES_DB: capstone_db
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # PostgreSQL 설정
+      POSTGRES_USER: capstone
+      POSTGRES_PASSWORD: capstone10
+      POSTGRES_DB: capstone_db
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      DATABASE_URL: postgresql://capstone:capstone10@localhost:5432/capstone_db
+      
+      # 인증 관련 설정
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      SESSION_SECRET_KEY: ${{ secrets.SESSION_SECRET_KEY }}
+
+      # GOOGLE OAuth
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}  
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REDIRECT_URI: http://localhost:8000/oauth/google/callback
+
+      # Kakao OAuth
+      KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+      KAKAO_REDIRECT_URI: http://localhost:8000/oauth/kakao/callback
+
+      # Naver OAuth
+      NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+      NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+      NAVER_REDIRECT_URI: http://localhost:8000/oauth/naver/callback
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies with Poetry
+        run: |
+          poetry install --no-root
+
+      - name: Wait for Postgres to be ready
+        run: |
+          until pg_isready -h localhost -p 5432; do
+            echo "Waiting for Postgres..."
+            sleep 1
+          done
+          echo "Postgres is ready"
+
+      - name: Run Alembic migrations
+        run: |
+          set -e
+          for i in {1..5}; do
+            poetry run alembic upgrade head && break
+            echo "Alembic migration failed, retrying in 3s..."
+            sleep 3
+          done
+
+      - name: Run backend tests
+        run: |
+          poetry run pytest backend/tests

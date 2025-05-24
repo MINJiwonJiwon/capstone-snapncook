@@ -1,0 +1,276 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--main-color);
+  color: var(--light-text);
+  padding: 1rem 2rem;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 좌측 영역: 로고 + 메뉴 */
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* 로고 스타일 */
+.logoContainer {
+  display: flex;
+  align-items: center;
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--light-text);
+  text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.logoImage {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0; /* 이미지 크기 고정 */
+}
+
+/* 우측 영역 */
+.rightSection {
+  display: flex;
+  align-items: center;
+  list-style: none !important; /* 리스트 마커 제거 */
+}
+
+/* 리스트 마커 완전 제거 */
+.rightSection li {
+  list-style: none !important;
+  list-style-type: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.rightSection li::before,
+.rightSection li::after,
+.rightSection li::marker {
+  display: none !important;
+  content: none !important;
+}
+
+/* 기존 navLinks 스타일 유지 */
+.navLinks {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navItem {
+  position: relative;
+  margin-left: 20px;
+}
+
+.navItem a, .navItem span {
+  color: var(--light-text);
+  text-decoration: none;
+  transition: color 0.3s;
+  font-size: 1.2rem; /* 메뉴 글자 크기 더 크게 */
+  font-weight: 500; /* 글자 굵기도 조금 증가 */
+  white-space: nowrap;
+  display: block;
+  padding: 8px 0; /* 패딩도 조금 증가 */
+}
+
+.navItem a:hover {
+  color: var(--accent-color);
+}
+
+/* 기존 드롭다운 스타일 유지 */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: var(--main-color);
+  min-width: 150px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  z-index: 10;
+  border-top: 2px solid var(--secondary-color);
+  padding: 5px 0;
+}
+
+.dropdown a {
+  padding: 10px 15px;
+  display: block;
+}
+
+.dropdown a:hover {
+  background-color: var(--hover-main);
+  color: var(--accent-color);
+}
+
+.navItem:hover .dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* 프로필 이미지 문제 해결 - 더 강력한 스타일 적용 */
+.profileImageWrapper,
+.profileMenuImageWrapper {
+  border: none !important;
+  background: none !important;
+}
+
+.profileImageWrapper > *,
+.profileMenuImageWrapper > * {
+  border: none !important;
+  background-color: #6c757d !important; /* 회색 배경으로 통일 */
+}
+
+.profileButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 20px;
+  transition: background-color 0.3s;
+  border: none !important;
+  background: none !important;
+}
+
+.profileButton:hover {
+  background-color: var(--hover-main) !important;
+}
+.profileContainer {
+  position: relative;
+}
+
+.profileButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 20px;
+  transition: background-color 0.3s;
+}
+
+.profileButton:hover {
+  background-color: var(--hover-main);
+}
+
+.username {
+  color: var(--light-text);
+  font-size: 0.9rem;
+}
+
+.dropdownArrow {
+  font-size: 0.7rem;
+  color: var(--light-text);
+  margin-left: 2px;
+}
+
+/* 기존 프로필 드롭다운 스타일 유지 */
+.profileDropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  background-color: white;
+  min-width: 250px;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.profileMenuHeader {
+  background-color: var(--accent-color);
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.profileMenuInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.profileName {
+  margin: 0;
+  font-weight: bold;
+  color: var(--main-color);
+  font-size: 1rem;
+}
+
+.profileEmail {
+  margin: 5px 0 0 0;
+  color: var(--text-color);
+  font-size: 0.8rem;
+}
+
+.profileMenuItems {
+  padding: 10px 0;
+}
+
+.profileMenuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  text-align: left;
+  transition: background-color 0.3s;
+}
+
+.profileMenuItem:hover {
+  background-color: var(--accent-color);
+}
+
+.icon {
+  margin-right: 10px;
+  font-style: normal;
+}
+
+/* 기존 반응형 스타일 유지 */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 1rem;
+  }
+  
+  .leftSection {
+    gap: 1rem;
+  }
+  
+  .logoLink {
+    font-size: 1.2rem;
+  }
+  
+  .logoImage {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .navItem {
+    margin-left: 10px;
+  }
+  
+  .username {
+    display: none;
+  }
+}
