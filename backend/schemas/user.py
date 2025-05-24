@@ -37,10 +37,3 @@ class UserUpdatePassword(BaseModel):
     current_password: str
     new_password: str
     new_password_check: str
-
-
-class UserOut(UserBase):
-    id: int
-
-    class Config:
-        orm_mode = True

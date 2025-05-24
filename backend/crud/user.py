@@ -11,6 +11,7 @@ def get_user(db: Session, user_id: int):
 def create_user(db: Session, user: schemas.UserCreateWithPassword):
     hashed_pw = hash_password(user.password)
     db_user = models.User(
+        username=user.username,  # ✅ 추가된 필드
         email=user.email,
         nickname=user.nickname,
         profile_image_url=user.profile_image_url,
