@@ -10,6 +10,7 @@ class UserOut(BaseModel):
     profile_image_url: Optional[str]
     oauth_provider: Optional[str]
     oauth_id: Optional[str]
+    is_admin: bool  # ✅ 관리자 여부 추가
 
     class Config:
         orm_mode = True
