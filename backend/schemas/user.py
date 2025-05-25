@@ -37,3 +37,9 @@ class UserUpdatePassword(BaseModel):
     current_password: str
     new_password: str
     new_password_check: str
+
+
+# 관리자용 유저 정보 수정 스키마 (닉네임, 관리자 권한 수정 가능)
+class UserUpdate(BaseModel):
+    nickname: Optional[str] = None
+    is_admin: Optional[bool] = None
