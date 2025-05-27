@@ -39,3 +39,7 @@ sample_data.py
 
 # ───── 타입 정보 보완 파일 ─────
 typings/
+
+# ───── 레시피 DB ─────
+backend/data/TB_RECIPE_SEARCH-220701.csv
+backend/data/TB_RECIPE_SEARCH-20231130.csv
