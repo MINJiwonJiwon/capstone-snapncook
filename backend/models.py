@@ -1,6 +1,6 @@
 # backend/models.py
 
-from typing import Any
+from typing import Any, List
 from sqlalchemy import ForeignKey, Text, DateTime, JSON, func
 from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
 from datetime import datetime, timezone, date
@@ -75,6 +75,7 @@ class Recipe(Base, TimestampMixin):
     ingredients: Mapped[str | None] = mapped_column(Text, nullable=True)
     instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
     source_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ingredients_cleaned: Mapped[List[str]] = mapped_column(JSON, nullable=True)
 
     food: Mapped["Food"] = relationship("Food", back_populates="recipes")
     steps: Mapped[list["RecipeStep"]] = relationship("RecipeStep", back_populates="recipe")

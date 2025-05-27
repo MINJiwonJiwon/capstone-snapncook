@@ -28,6 +28,9 @@ def get_user_by_oauth(db: Session, provider: str, oauth_id: str) -> Optional[mod
         .first()
     )
 
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email == email).first()
+
 # ---------- Food ----------
 def create_food(db: Session, food: schemas.FoodCreate) -> models.Food:
     db_food = models.Food(**food.model_dump())
@@ -36,6 +39,12 @@ def create_food(db: Session, food: schemas.FoodCreate) -> models.Food:
     db.refresh(db_food)
     return db_food
 
+def get_or_create_food(db: Session, name: str) -> models.Food:
+    food = db.query(models.Food).filter(models.Food.name == name).first()
+    if food:
+        return food
+    return create_food(db, schemas.FoodCreate(name=name))
+
 # ---------- Recipe ----------
 def create_recipe(db: Session, recipe: schemas.RecipeCreate) -> models.Recipe:
     db_recipe = models.Recipe(**recipe.model_dump())
@@ -43,6 +52,18 @@ def create_recipe(db: Session, recipe: schemas.RecipeCreate) -> models.Recipe:
     db.commit()
     db.refresh(db_recipe)
     return db_recipe
+
+def get_or_create_recipe(db: Session, recipe: schemas.RecipeCreate) -> models.Recipe:
+    existing = db.query(models.Recipe).filter(
+        models.Recipe.food_id == recipe.food_id,
+        models.Recipe.title == recipe.title
+    ).first()
+    if existing:
+        return existing
+    return create_recipe(db, recipe)
+
+def get_all_recipes(db: Session) -> List[models.Recipe]:
+    return db.query(models.Recipe).all()
 
 # ---------- RecipeStep ----------
 def create_recipe_step(db: Session, step: schemas.RecipeStepCreate) -> models.RecipeStep:

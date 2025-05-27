@@ -103,6 +103,7 @@ class RecipeBase(BaseModel):
     ingredients: Optional[str] = None
     instructions: Optional[str] = None
     source_detail: Optional[str] = None
+    ingredients_cleaned: Optional[List[str]] = None
 
 class RecipeCreate(RecipeBase):
     pass
@@ -120,6 +121,7 @@ class RecipeUpdate(BaseModel):
     ingredients: Optional[str] = None
     instructions: Optional[str] = None
     source_detail: Optional[str] = None
+    ingredients_cleaned: Optional[List[str]] = None
 
 # ---------- Recipe Step ----------
 class RecipeStepBase(BaseModel):
@@ -153,6 +155,15 @@ class DetectionResultOut(DetectionResultBase):
 
     class Config:
         from_attributes = True
+
+class DetectedFood(BaseModel):
+    name: str
+    confidence: float
+    image_filename: Optional[str] = None
+
+class PredictResponse(BaseModel):
+    filename: str
+    detected: List[DetectedFood]
 
 # ---------- Review ----------
 class ReviewBase(BaseModel):

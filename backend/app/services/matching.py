@@ -2,8 +2,36 @@
 
 from backend import models
 from sqlalchemy.orm import Session
+from typing import List, Set
 
-def auto_match_foods_from_input(input_text: str, db: Session) -> list[int]:
-    ingredients = [i.strip() for i in input_text.split(",") if i.strip()]
-    matched_foods = db.query(models.Food).filter(models.Food.name.in_(ingredients)).all()
-    return [f.id for f in matched_foods]
+def clean_input_ingredients(input_text: str) -> Set[str]:
+    """
+    사용자 입력 텍스트를 파싱해서 재료 Set으로 반환
+    """
+    parts: List[str] = []
+    for line in input_text.splitlines():
+        for token in line.split(','):
+            token = token.strip()
+            if token:
+                parts.append(token)
+    return set(parts)
+
+def auto_match_foods_from_input(input_text: str, db: Session) -> List[int]:
+    """
+    사용자 입력 재료를 기반으로, ingredients_cleaned에 1개라도 포함된 레시피의 food_id를 반환
+    """
+    user_ingredients: Set[str] = clean_input_ingredients(input_text)
+    if not user_ingredients:
+        return []
+
+    matched_food_ids: Set[int] = set()
+
+    recipes: List[models.Recipe] = db.query(models.Recipe).all()
+    for recipe in recipes:
+        if not recipe.ingredients_cleaned:
+            continue
+        recipe_ingredients: Set[str] = set(recipe.ingredients_cleaned)
+        if user_ingredients & recipe_ingredients:
+            matched_food_ids.add(recipe.food_id)
+
+    return list(matched_food_ids)
