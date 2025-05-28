@@ -35,3 +35,23 @@ def auto_match_foods_from_input(input_text: str, db: Session) -> List[int]:
             matched_food_ids.add(recipe.food_id)
 
     return list(matched_food_ids)
+
+def rank_recipes_by_extra_ingredients(input_text: str, db: Session) -> List[models.Recipe]:
+    user_ingredients = clean_input_ingredients(input_text)
+    if not user_ingredients:
+        return []
+
+    ranked: List[tuple[int, models.Recipe]] = []
+
+    recipes = db.query(models.Recipe).all()
+    for recipe in recipes:
+        if not recipe.ingredients_cleaned:
+            continue
+
+        recipe_set = set(recipe.ingredients_cleaned)
+        extra_needed = len(recipe_set - user_ingredients)
+        ranked.append((extra_needed, recipe))
+
+    # 추가 재료 수 기준으로 정렬 (오름차순)
+    ranked.sort(key=lambda x: x[0])
+    return [r for _, r in ranked]

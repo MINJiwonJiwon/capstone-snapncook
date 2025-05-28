@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from backend import models, schemas
+from backend.app.services.matching import clean_input_ingredients
 from backend.db import get_db
 from backend.app.auth.dependencies import get_current_user
 
@@ -90,13 +91,14 @@ def private_recommend_by_detection(
 
 
 @router.get(
-    "/private/by-ingredient/{input_id}",
+    "/private/by-ingredient-ranked/{input_id}",
     response_model=List[schemas.RecipeOut],
-    summary="🔐 개인 - 입력 재료 기반 완전 포함 레시피 추천",
-    description="로그인한 사용자의 입력 재료가 레시피에 모두 포함된 경우에만 해당 레시피를 추천합니다. 입력 재료 중 하나라도 빠진 경우 추천에서 제외됩니다."
+    summary="🔐 개인 - 입력 재료 기반 추가 재료 적은 순 레시피 추천",
+    description="입력한 재료로 만들 수 있는 레시피를, 추가로 필요한 재료가 적은 순서대로 추천합니다. limit 파라미터로 개수 조절 가능"
 )
-def private_recommend_by_ingredient(
+def private_ranked_recommendation(
     input_id: int,
+    limit: int = 12,  # 👈 기본 20개 추천
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
@@ -104,16 +106,23 @@ def private_recommend_by_ingredient(
         models.UserIngredientInput.id == input_id,
         models.UserIngredientInput.user_id == current_user.id
     ).first()
+
     if not input_record or not input_record.matched_food_ids:
         raise HTTPException(status_code=404, detail="No matched foods for this input")
 
-    user_ingredients = set(map(str.strip, input_record.input_text.split(",")))
-    recipes = db.query(models.Recipe).filter(models.Recipe.food_id.in_(input_record.matched_food_ids)).all()
+    user_ingredients = clean_input_ingredients(input_record.input_text)
 
-    def includes_all_user_ingredients(recipe: models.Recipe) -> bool:
-        if not recipe.ingredients:
-            return False
-        recipe_ingredients = set(map(str.strip, recipe.ingredients.split(",")))
-        return user_ingredients.issubset(recipe_ingredients)
+    recipes = db.query(models.Recipe).filter(
+        models.Recipe.food_id.in_(input_record.matched_food_ids)
+    ).all()
 
-    return [r for r in recipes if includes_all_user_ingredients(r)]
+    scored: List[tuple[int, models.Recipe]] = []
+    for recipe in recipes:
+        if not recipe.ingredients_cleaned:
+            continue
+        recipe_set = set(recipe.ingredients_cleaned)
+        extra = len(recipe_set - user_ingredients)
+        scored.append((extra, recipe))
+
+    scored.sort(key=lambda x: x[0])
+    return [r for _, r in scored][:limit]
