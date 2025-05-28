@@ -6,7 +6,8 @@ from backend.models import UserIngredientInput, Recipe
 from backend.app.services.matching import auto_match_foods_from_input
 from backend.tests.test_user import test_create_user
 
-def test_recommendation_flow(input_text: str):
+def test_recommendation_flow():
+    input_text = "감자, 양파"
     db: Session = SessionLocal()
 
     try:
@@ -42,4 +43,4 @@ def test_recommendation_flow(input_text: str):
         db.close()
 
 if __name__ == "__main__":
-    test_recommendation_flow("감자, 양파")
+    test_recommendation_flow()
