@@ -43,3 +43,6 @@ typings/
 # ───── 레시피 DB ─────
 backend/data/TB_RECIPE_SEARCH-220701.csv
 backend/data/TB_RECIPE_SEARCH-20231130.csv
+
+# ───── dev에서 넘어온 것 ─────
+frontend-web

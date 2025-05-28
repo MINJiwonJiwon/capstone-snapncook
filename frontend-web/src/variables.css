@@ -1,0 +1,13 @@
+:root {
+  --main-color: #556B2F;        /* 짙은 올리브 그린 */
+  --secondary-color: #E2725B;   /* 따뜻한 테라코타 */
+  --accent-color: #FFF8DC;      /* 밝은 크림색 */
+  --text-color: #333333;        /* 짙은 차콜 그레이 */
+  --background-color: #FFFAF0;  /* 부드러운 아이보리 */
+  --light-text: #FFFFFF;        /* 밝은 텍스트용 화이트 */
+  --hover-main: #455a27;        /* 메인 컬러 호버 효과 */
+  --hover-secondary: #d5614c;   /* 보조 컬러 호버 효과 */
+  --border-color: #DDD8C4;      /* 테두리 색상 */
+  --success-color: #6B8E23;     /* 성공 메시지 */
+  --error-color: #C64F38;       /* 오류 메시지 */
+}
