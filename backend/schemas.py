@@ -144,6 +144,7 @@ class DetectionResultBase(BaseModel):
     food_id: int
     image_path: str
     confidence: float
+    image_hash: Optional[str] = None
 
 class DetectionResultCreate(DetectionResultBase):
     user_id: Optional[int] = None
@@ -160,6 +161,7 @@ class DetectedFood(BaseModel):
     name: str
     confidence: float
     image_filename: Optional[str] = None
+    food_id: int
 
 class PredictResponse(BaseModel):
     filename: str

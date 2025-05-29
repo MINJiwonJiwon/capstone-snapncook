@@ -97,10 +97,11 @@ class DetectionResult(Base, TimestampMixin):
     __tablename__ = "detection_results"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
     food_id: Mapped[int] = mapped_column(ForeignKey("foods.id"), nullable=False)
     image_path: Mapped[str] = mapped_column(nullable=False)
     confidence: Mapped[float] = mapped_column(nullable=False)
+    image_hash: Mapped[str | None] = mapped_column(nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="detection_results")
     food: Mapped["Food"] = relationship("Food", back_populates="detection_results")

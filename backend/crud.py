@@ -31,6 +31,9 @@ def get_user_by_oauth(db: Session, provider: str, oauth_id: str) -> Optional[mod
 def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
+def get_user_by_id(db: Session, user_id: int) -> models.User | None:
+    return db.query(models.User).filter(models.User.id == user_id).first()
+
 # ---------- Food ----------
 def create_food(db: Session, food: schemas.FoodCreate) -> models.Food:
     db_food = models.Food(**food.model_dump())
