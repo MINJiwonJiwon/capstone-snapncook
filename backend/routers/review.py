@@ -54,6 +54,20 @@ def get_my_reviews(
     return db.query(models.Review).filter(models.Review.user_id == current_user.id).all()
 
 
+# ✅ 레시피별 리뷰 조회 (추가 기능)
+@router.get(
+    "/recipe/{recipe_id}",
+    response_model=List[schemas.ReviewOut],
+    summary="레시피별 리뷰 조회",
+    description="특정 레시피 ID에 해당하는 음식에 대한 리뷰 목록을 조회합니다."
+)
+def get_reviews_by_recipe(recipe_id: int, db: Session = Depends(get_db)):
+    return db.query(models.Review).join(models.Food).join(models.Recipe).filter(
+        models.Recipe.id == recipe_id,
+        models.Food.id == models.Review.food_id
+    ).all()
+
+
 # 리뷰 수정
 @router.patch("/{review_id}", response_model=schemas.ReviewOut)
 def update_review(
