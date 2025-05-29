@@ -47,6 +47,7 @@ const Recipe = () => {
   } = useBookmark();
   
   useEffect(() => {
+    if (recipes.length > 0) return;
     const loadRecipeData = async () => {
       // 세션 스토리지에서 현재 이미지 가져오기
       const image = sessionStorage.getItem('currentImage');
@@ -115,7 +116,7 @@ const Recipe = () => {
     };
     
     loadRecipeData();
-  }, [navigate, fetchMyBookmarks, isLoggedIn, getRecommendationByDetection, fetchRecipeDetail]);
+  },  [recipes.length]);
   
   // 음식 ID로 레시피 목록 가져오기
   const loadRecipesByFoodId = async (foodId) => {

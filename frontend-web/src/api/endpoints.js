@@ -50,6 +50,12 @@ export const DETECTION = {
   LIST_ME: '/detection-results/me',
 };
 
+// AI 탐지 관련 엔드포인트 (추가)
+export const AI_DETECTION = {
+  UPLOAD: '/ai-detection/upload',
+  PREDICT: '/ai-detection/predict',
+};
+
 // 사용자 관련 엔드포인트
 export const USER = {
   CREATE: '/users/',
