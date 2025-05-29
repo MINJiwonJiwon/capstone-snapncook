@@ -9,10 +9,8 @@ from backend import crud, schemas, models
 from backend.app.utils.ingredient_parser import parse_agricook_ingredients
 import re
 
-# CSV 파일 경로들
+# ✅ 유효한 CSV 파일만 사용 (UTF-8 성공한 것만)
 CSV_PATHS = [
-    "backend/data/TB_RECIPE_SEARCH-220701.csv",
-    "backend/data/TB_RECIPE_SEARCH-20231130.csv",
     "backend/data/TB_RECIPE_SEARCH_241226.csv",
 ]
 
@@ -22,39 +20,31 @@ FOOD_NAMES = [
     "김밥", "김치전", "김치찌개", "미역국", "된장찌개"
 ]
 
-# 만드는법 단계 최대 20개 기준
 MAX_STEPS = 20
 
-# CSV들 불러오기 후 결합
 def load_recipes_from_csvs() -> pd.DataFrame:
-    dfs: List[Any] = []
+    dfs: List[pd.DataFrame] = []
 
     for path in CSV_PATHS:
         try:
             df = pd.read_csv(path, encoding="utf-8").fillna("") # type: ignore
             print(f"✅ {path} - UTF-8 인코딩 성공")
-        except UnicodeDecodeError:
-            try:
-                df = pd.read_csv(path, encoding="cp949").fillna("") # type: ignore
-                print(f"⚠️ {path} - UTF-8 실패 → CP949로 대체")
-            except Exception as e:
-                print(f"❌ {path} - 인코딩 실패: {e}")
-                continue
-        dfs.append(df)
+            dfs.append(df)
+        except Exception as e:
+            print(f"❌ {path} - 로딩 실패: {e}")
 
     return pd.concat(dfs, ignore_index=True)
 
-# 단계별 조리법 추출
-def extract_steps(row: Series) -> List[Dict[str, Any]]: # type: ignore
+def extract_steps(row: Series[Any]) -> List[Dict[str, Any]]:
     steps: List[Dict[str, Any]] = []
     for i in range(1, MAX_STEPS + 1):
-        desc = row.get(f"만드는법_{i:02d}") # type: ignore
-        img = row.get(f"만드는법_이미지_{i:02d}") # type: ignore
+        desc = row.get(f"만드는법_{i:02d}")
+        img = row.get(f"만드는법_이미지_{i:02d}")
         if desc:
             steps.append({
                 "order": i,
-                "description": re.sub(r"[a-cA-C]\s*$", "", str(desc)).strip(), # type: ignore
-                "image_url": img.strip() if img else None # type: ignore
+                "description": re.sub(r"[a-cA-C]\s*$", "", str(desc)).strip(),
+                "image_url": img.strip() if img else None
             })
     return steps
 
@@ -72,7 +62,6 @@ def insert_from_csv(db: Session):
 
         food = crud.get_or_create_food(db, name=food_name)
 
-        # 중복 레시피 방지
         existing = db.query(models.Recipe).filter(
             models.Recipe.food_id == food.id,
             models.Recipe.title == recipe_title
@@ -100,6 +89,7 @@ def insert_from_csv(db: Session):
                 description=step["description"],
                 image_url=step["image_url"]
             ))
+            
         inserted_count += 1
 
     print(f"✅ 총 {inserted_count}개의 레시피가 삽입되었습니다.")
