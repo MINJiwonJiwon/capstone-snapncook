@@ -43,3 +43,7 @@ typings/
 # ───── 레시피 DB ─────
 backend/data/TB_RECIPE_SEARCH-220701.csv
 backend/data/TB_RECIPE_SEARCH-20231130.csv
+
+# ───── S3 연결 전 업로드 이미지 관리리 ─────
+uploads/*
+!uploads/.gitkeep
