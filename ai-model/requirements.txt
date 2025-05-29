@@ -1,0 +1,7 @@
+ultralytics==8.3.146
+torch
+torchvision
+opencv-python
+fastapi
+uvicorn
+python-multipart

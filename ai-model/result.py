@@ -1,10 +1,12 @@
+# ai-model/result.py
+
 from ultralytics import YOLO
 import cv2 # type: ignore
 # 1. 모델 불러오기 (학습한 모델 경로)
 model = YOLO('ai-model/best.pt')  # 경로 수정 필요
 
 # 2. 테스트할 이미지 경로
-image_path = '테스트할 이미지 경로'  
+image_path = 'ai-model/tests/Img_100_0028.jpg'  
 
 # 3. 예측 수행
 results = model.predict(source=image_path, save=False, conf=0.5) # type: ignore

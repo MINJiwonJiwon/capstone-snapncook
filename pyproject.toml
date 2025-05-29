@@ -23,6 +23,9 @@ pytz = "^2025.2"
 ultralytics = "^8.3.141"
 opencv-python = "^4.11.0.86"
 email-validator = "^2.0.0"
+aiohttp = "^3.12.2"
+aiofiles = "^24.1.0"
+python-multipart = "^0.0.20"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"

@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.csv
+*.sqlite
+*.db
+*.ipynb
+*.env
+.DS_Store
+.git/
+.vscode/
+*.pt  # 모델은 볼륨 마운트 or 별도 COPY 추천
