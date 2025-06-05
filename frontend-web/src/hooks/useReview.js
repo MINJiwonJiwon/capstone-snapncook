@@ -45,19 +45,23 @@ const useReview = () => {
   };
 
   /**
-   * 음식별 리뷰 목록 가져오기 (6-3 수정: 의존성 배열에서 reviews.length 제거)
+   * 음식별 리뷰 목록 가져오기 (6-3 수정: 의존성 배열 최적화)
    * @param {number} foodId
    */
   const fetchReviewsByFood = useCallback(async (foodId) => {
     // 6-3 수정: 중복 요청 방지 로직 개선
     if (!foodId) {
-      return;
+      console.log('fetchReviewsByFood: foodId is empty, skipping');
+      return [];
     }
     
     // 현재 로딩 중이고 동일한 foodId 요청이면 중복 방지
     if (loading && lastFoodId === foodId) {
-      return;
+      console.log('fetchReviewsByFood: duplicate request prevented');
+      return [];
     }
+    
+    console.log('fetchReviewsByFood: fetching reviews for food ID:', foodId);
     
     setLoading(true);
     setError(null);
@@ -66,22 +70,24 @@ const useReview = () => {
     try {
       const result = await getReviewsByFood(foodId);
       setReviews(result || []); // 6-3 수정: null/undefined 방어 코드 추가
+      console.log('fetchReviewsByFood: success, reviews count:', (result || []).length);
       return result || [];
     } catch (err) {
       if (err.response && err.response.status === 404) {
         // 데이터가 없는 경우는 에러가 아닌 빈 배열로 처리
+        console.log('fetchReviewsByFood: no reviews found (404), returning empty array');
         setReviews([]);
         return [];
       } else {
+        console.error(`fetchReviewsByFood: error for food ID ${foodId}:`, err);
         setError(`리뷰를 가져오는 중 오류가 발생했습니다. (음식 ID: ${foodId})`);
-        console.error(`Fetch reviews by food ID ${foodId} error:`, err);
         setReviews([]);
         return [];
       }
     } finally {
       setLoading(false);
     }
-  }, [loading, lastFoodId]); // 6-3 수정: reviews.length 의존성 제거
+  }, []); // 6-3 핵심 수정: 모든 의존성 제거하여 함수가 항상 동일하게 유지
 
   /**
    * 내가 작성한 리뷰 목록 가져오기
@@ -160,15 +166,15 @@ const useReview = () => {
     }
   };
 
-  // 6-3 추가: 상태 초기화 함수
-  const clearError = () => {
+  // 6-3 추가: 상태 초기화 함수들 - useCallback으로 메모이제이션
+  const clearError = useCallback(() => {
     setError(null);
-  };
+  }, []);
 
-  const clearReviews = () => {
+  const clearReviews = useCallback(() => {
     setReviews([]);
     setLastFoodId(null);
-  };
+  }, []);
 
   return {
     reviews,

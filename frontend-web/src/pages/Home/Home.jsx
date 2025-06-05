@@ -3,26 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import RankingRecommendation from '../../components/RankingRecommendation/RankingRecommendation';
+import ImageCard from '../../components/ImageCard/ImageCard';
 import styles from './Home.module.css';
 import useAuth from '../../hooks/useAuth';
-import { saveDetectionResult } from '../../api/detection';
+import { saveDetectionResult, getMyDetectionResults } from '../../api/detection';
 import { getFoodById } from '../../api/food';
 import { uploadImage, predictImage } from '../../api/aiDetection';
 
 const Home = () => {
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  const [imageHistory, setImageHistory] = useState([]);
+  const [recentImages, setRecentImages] = useState([]); // API 기반으로 변경
   const [dragOver, setDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (isLoggedIn) {
-      const storedHistory = JSON.parse(localStorage.getItem('imageHistory')) || [];
-      setImageHistory(storedHistory);
+      loadRecentImages();
     } else {
       setImageHistory([]);
       setFile(null);
@@ -131,7 +131,20 @@ const Home = () => {
 
   const handleHistoryItemClick = (imageUrl) => {
     sessionStorage.setItem('currentImage', imageUrl);
+    if (foodName && foodName !== '이전 업로드 이미지') {
+      sessionStorage.setItem('selectedFood', foodName);
+    }
     navigate('/recipe');
+  };
+
+  // 전체 히스토리 보기 (마이페이지로 이동)
+  const handleViewAllHistory = () => {
+    if (isLoggedIn) {
+      navigate('/mypage');
+    } else {
+      alert('전체 히스토리를 보려면 로그인이 필요합니다.');
+      navigate('/login');
+    }
   };
 
   return (
@@ -190,21 +203,53 @@ const Home = () => {
           </div>
 
           <div className={styles.historyContainer}>
-            <h2>이전 업로드 이미지</h2>
-            <div className={styles.historyGallery}>
-              {!isLoggedIn ? (
-                <p>이미지 히스토리를 보려면 로그인이 필요합니다.</p>
-              ) : imageHistory.length === 0 ? (
-                <p>이전에 업로드한 이미지가 없습니다.</p>
-              ) : (
-                imageHistory.map((imageUrl, index) => (
-                  <div
-                    key={index}
-                    className={styles.historyItem}
-                    onClick={() => handleHistoryItemClick(imageUrl)}
+            <div className={styles.historyHeader}>
+              <h2>최근 업로드 이미지</h2>
+              {isLoggedIn && recentImages.length > 0 && (
+                <button 
+                  className={styles.viewAllButton}
+                  onClick={handleViewAllHistory}
+                >
+                  전체보기
+                </button>
+              )}
+            </div>
+            
+            <div className={styles.recentImagesGrid}>
+              {historyLoading ? (
+                <div className={styles.historyLoading}>
+                  <p>이미지 목록을 불러오는 중...</p>
+                </div>
+              ) : historyError ? (
+                <div className={styles.historyError}>
+                  <p>{historyError}</p>
+                </div>
+              ) : !isLoggedIn && recentImages.length === 0 ? (
+                <div className={styles.emptyHistory}>
+                  <p>이미지 히스토리를 보려면 로그인이 필요합니다.</p>
+                  <button 
+                    className={styles.loginPromptButton}
+                    onClick={() => navigate('/login')}
                   >
-                    <img src={imageUrl} alt={`이전 이미지 ${index + 1}`} />
-                  </div>
+                    로그인하기
+                  </button>
+                </div>
+              ) : recentImages.length === 0 ? (
+                <div className={styles.emptyHistory}>
+                  <p>아직 업로드한 이미지가 없습니다.</p>
+                  <p>첫 번째 음식 사진을 업로드해보세요!</p>
+                </div>
+              ) : (
+                recentImages.map((item, index) => (
+                  <ImageCard
+                    key={item.id || index}
+                    imageUrl={item.imageUrl}
+                    foodName={item.foodName}
+                    confidence={item.confidence}
+                    onClick={handleRecentImageClick}
+                    showConfidence={!!item.confidence}
+                    size="medium"
+                  />
                 ))
               )}
             </div>
