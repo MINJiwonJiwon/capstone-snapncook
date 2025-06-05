@@ -3,34 +3,105 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import RankingRecommendation from '../../components/RankingRecommendation/RankingRecommendation';
+import ImageCard from '../../components/ImageCard/ImageCard';
 import styles from './Home.module.css';
 import useAuth from '../../hooks/useAuth';
-import { saveDetectionResult } from '../../api/detection';
+import { saveDetectionResult, getMyDetectionResults } from '../../api/detection';
 import { getFoodById } from '../../api/food';
 import client from '../../api/client';
 
 const Home = () => {
   const navigate = useNavigate();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
-  const [imageHistory, setImageHistory] = useState([]);
+  const [recentImages, setRecentImages] = useState([]); // API 기반으로 변경
   const [dragOver, setDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState(null);
   
-  useEffect(() => {
-    // 로그인 상태일 때만 이미지 히스토리 가져오기
-    if (isLoggedIn) {
-      const storedHistory = JSON.parse(localStorage.getItem('imageHistory')) || [];
-      setImageHistory(storedHistory);
-    } else {
-      // 로그인 상태가 아닐 경우 이미지 히스토리와 미리보기 초기화
-      setImageHistory([]);
-      setFile(null);
-      setPreviewUrl('');
+  // 로그아웃 감지 및 백업 처리
+  const backupCurrentHistory = useCallback(() => {
+    if (user?.id && recentImages.length > 0) {
+      const fullHistory = JSON.parse(localStorage.getItem('imageHistory') || '[]');
+      localStorage.setItem(`imageHistory_${user.id}`, JSON.stringify(fullHistory));
+      console.log(`Backed up history for user ${user.id} before logout`);
     }
-  }, [isLoggedIn]);
+  }, [user?.id, recentImages]);
+
+  // 로그아웃 감지
+  useEffect(() => {
+    // 이전에 로그인된 사용자가 있었는데 지금 로그아웃된 경우
+    const prevUserId = JSON.parse(localStorage.getItem('user') || '{}').id;
+    if (prevUserId && !isLoggedIn) {
+      backupCurrentHistory();
+    }
+  }, [isLoggedIn, backupCurrentHistory]);
+
+  // 통합: API 기반 최근 이미지 로드
+  useEffect(() => {
+    if (isLoggedIn && user?.id) {
+      loadRecentImages();
+    } else {
+      // 로그인하지 않은 경우 로컬 히스토리만 표시
+      loadLocalHistory();
+    }
+  }, [isLoggedIn, user?.id]);
+
+  // API에서 최근 이미지 3개 가져오기 - 개선된 버전
+  const loadRecentImages = async () => {
+    setHistoryLoading(true);
+    setHistoryError(null);
+    
+    try {
+      const detectionResults = await getMyDetectionResults();
+      // 최신 3개만 추출
+      const recent = detectionResults.slice(0, 3).map(item => ({
+        imageUrl: item.image_path,
+        foodName: item.food_name,
+        confidence: item.confidence,
+        id: item.id
+      }));
+      setRecentImages(recent);
+      setHistoryError(null);
+      console.log(`Loaded ${recent.length} recent images from API`);
+    } catch (error) {
+      console.error('Failed to load recent images from API:', error);
+      setHistoryError('서버에서 이미지를 가져올 수 없습니다. 로컬 기록을 표시합니다.');
+      // API 실패 시 로컬 히스토리로 fallback
+      loadLocalHistory();
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // 로컬 히스토리에서 로드 (비로그인 사용자용)
+  const loadLocalHistory = () => {
+    try {
+      const localHistory = JSON.parse(localStorage.getItem('imageHistory') || '[]');
+      const recent = localHistory.slice(0, 3).map((imageUrl, index) => ({
+        imageUrl,
+        foodName: '이전 업로드 이미지',
+        id: `local-${index}`
+      }));
+      setRecentImages(recent);
+      console.log(`Loaded ${recent.length} recent images from local storage`);
+    } catch (error) {
+      console.error('Failed to load local history:', error);
+      setRecentImages([]);
+    }
+  };
+
+  // 이미지 업로드 성공 시 목록 새로고침
+  const refreshRecentImages = () => {
+    if (isLoggedIn) {
+      loadRecentImages();
+    } else {
+      loadLocalHistory();
+    }
+  };
   
   const handleFileChange = (e) => {
     if (e.target.files.length) {
@@ -67,7 +138,6 @@ const Home = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       setPreviewUrl(e.target.result);
-      // 현재 이미지 URL을 세션 스토리지에 저장
       sessionStorage.setItem('currentImage', e.target.result);
     };
     reader.readAsDataURL(file);
@@ -80,42 +150,59 @@ const Home = () => {
     setError(null);
     
     try {
-      // 실제 API 연동 - 파일 업로드 처리
       const formData = new FormData();
       formData.append('file', file);
       
-      // 파일 업로드 API 호출
       const uploadResponse = await client.post('/upload/image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
       
-      // 서버에서 이미지 분석 결과 받기
-      // 실제 구현에서는 서버로부터 응답을 받아와야 함
       const { food_id, image_path, confidence } = uploadResponse.data;
-      
-      // 탐지 결과 저장 API 호출
-      const detectionResult = await saveDetectionResult({
-        food_id,
-        image_path,
-        confidence
-      });
-      
-      // 4-4 이슈 해결: detectionId를 세션 스토리지에 저장
-      // Recipe.jsx에서 이 ID로 공개 추천 API를 호출할 수 있도록 함
-      if (detectionResult && detectionResult.id) {
-        sessionStorage.setItem('detectionId', detectionResult.id.toString());
-        console.log('Detection ID saved:', detectionResult.id);
-      }
-      
-      // 이미지를 로컬 스토리지에 저장
-      saveImageToHistory(previewUrl);
       
       // 탐지된 음식 정보 가져오기
       const foodInfo = await getFoodById(food_id);
       
-      // 세션 스토리지에 탐지된 음식 이름 저장
+      // 로그인된 경우 탐지 결과 저장
+      if (isLoggedIn) {
+        const detectionResult = await saveDetectionResult({
+          food_id,
+          image_path,
+          confidence
+        });
+        
+        if (detectionResult && detectionResult.id) {
+          sessionStorage.setItem('detectionId', detectionResult.id.toString());
+          console.log('Detection ID saved:', detectionResult.id);
+        }
+        
+        // 즉시 로컬 상태 업데이트 (개선)
+        const newItem = {
+          imageUrl: image_path,
+          foodName: foodInfo.name,
+          confidence: confidence,
+          id: detectionResult?.id || Date.now()
+        };
+        setRecentImages(prev => [newItem, ...prev.slice(0, 2)]);
+        
+        // 백그라운드에서 API 재조회로 동기화
+        setTimeout(() => {
+          refreshRecentImages();
+        }, 1000);
+      } else {
+        // 비로그인 사용자는 로컬에만 저장
+        saveToLocalHistory(previewUrl);
+        
+        // 즉시 로컬 상태 업데이트
+        const newItem = {
+          imageUrl: previewUrl,
+          foodName: foodInfo.name,
+          id: `local-${Date.now()}`
+        };
+        setRecentImages(prev => [newItem, ...prev.slice(0, 2)]);
+      }
+      
       sessionStorage.setItem('selectedFood', foodInfo.name);
       sessionStorage.setItem('selectedFoodId', food_id.toString());
       
@@ -128,33 +215,41 @@ const Home = () => {
     }
   };
   
+  // 비로그인 사용자용 로컬 히스토리 저장
+  const saveToLocalHistory = (imageUrl) => {
+    try {
+      const currentHistory = JSON.parse(localStorage.getItem('imageHistory') || '[]');
+      if (!currentHistory.includes(imageUrl)) {
+        const newHistory = [imageUrl, ...currentHistory].slice(0, 10);
+        localStorage.setItem('imageHistory', JSON.stringify(newHistory));
+      }
+    } catch (error) {
+      console.error('Failed to save to local history:', error);
+    }
+  };
+  
   const resetUpload = () => {
     setFile(null);
     setPreviewUrl('');
   };
   
-  const saveImageToHistory = (imageUrl) => {
-    // 중복 방지
-    if (!imageHistory.includes(imageUrl)) {
-      const newHistory = [imageUrl, ...imageHistory];
-      
-      // 최대 10개까지만 저장
-      const limitedHistory = newHistory.slice(0, 10);
-      setImageHistory(limitedHistory);
-      localStorage.setItem('imageHistory', JSON.stringify(limitedHistory));
-    }
-  };
-  
-  const clearHistory = () => {
-    localStorage.removeItem('imageHistory');
-    setImageHistory([]);
-    alert('업로드 기록이 삭제되었습니다.');
-  };
-  
-  const handleHistoryItemClick = (imageUrl) => {
-    // 선택한 이미지를 현재 이미지로 설정
+  // 최근 이미지 클릭 핸들러
+  const handleRecentImageClick = (imageUrl, foodName) => {
     sessionStorage.setItem('currentImage', imageUrl);
+    if (foodName && foodName !== '이전 업로드 이미지') {
+      sessionStorage.setItem('selectedFood', foodName);
+    }
     navigate('/recipe');
+  };
+
+  // 전체 히스토리 보기 (마이페이지로 이동)
+  const handleViewAllHistory = () => {
+    if (isLoggedIn) {
+      navigate('/mypage');
+    } else {
+      alert('전체 히스토리를 보려면 로그인이 필요합니다.');
+      navigate('/login');
+    }
   };
 
   return (
@@ -220,30 +315,68 @@ const Home = () => {
             )}
           </div>
           
-          {/* 오른쪽: 이전 업로드 이미지 갤러리 */}
+          {/* 오른쪽: 최근 업로드 이미지 (3개) */}
           <div className={styles.historyContainer}>
-            <h2>이전 업로드 이미지</h2>
-            <div className={styles.historyGallery}>
-              {!isLoggedIn ? (
-                <p>이미지 히스토리를 보려면 로그인이 필요합니다.</p>
-              ) : imageHistory.length === 0 ? (
-                <p>이전에 업로드한 이미지가 없습니다.</p>
-              ) : (
-                imageHistory.map((imageUrl, index) => (
-                  <div
-                    key={index}
-                    className={styles.historyItem}
-                    onClick={() => handleHistoryItemClick(imageUrl)}
+            <div className={styles.historyHeader}>
+              <h2>최근 업로드 이미지</h2>
+              {isLoggedIn && recentImages.length > 0 && (
+                <button 
+                  className={styles.viewAllButton}
+                  onClick={handleViewAllHistory}
+                >
+                  전체보기
+                </button>
+              )}
+            </div>
+            
+            <div className={styles.recentImagesGrid}>
+              {historyLoading ? (
+                <div className={styles.historyLoading}>
+                  <p>이미지 목록을 불러오는 중...</p>
+                </div>
+              ) : historyError ? (
+                <div className={styles.historyError}>
+                  <p>{historyError}</p>
+                </div>
+              ) : !isLoggedIn && recentImages.length === 0 ? (
+                <div className={styles.emptyHistory}>
+                  <p>이미지 히스토리를 보려면 로그인이 필요합니다.</p>
+                  <button 
+                    className={styles.loginPromptButton}
+                    onClick={() => navigate('/login')}
                   >
-                    <img src={imageUrl} alt={`이전 이미지 ${index + 1}`} />
-                  </div>
+                    로그인하기
+                  </button>
+                </div>
+              ) : recentImages.length === 0 ? (
+                <div className={styles.emptyHistory}>
+                  <p>아직 업로드한 이미지가 없습니다.</p>
+                  <p>첫 번째 음식 사진을 업로드해보세요!</p>
+                </div>
+              ) : (
+                recentImages.map((item, index) => (
+                  <ImageCard
+                    key={item.id || index}
+                    imageUrl={item.imageUrl}
+                    foodName={item.foodName}
+                    confidence={item.confidence}
+                    onClick={handleRecentImageClick}
+                    showConfidence={!!item.confidence}
+                    size="medium"
+                  />
                 ))
               )}
             </div>
-            {isLoggedIn && imageHistory.length > 0 && (
+            
+            {/* 비로그인 사용자용 로컬 히스토리 정리 버튼 */}
+            {!isLoggedIn && recentImages.length > 0 && (
               <button 
-                onClick={clearHistory} 
-                className={styles.clearHistory}
+                className={styles.clearLocalHistory}
+                onClick={() => {
+                  localStorage.removeItem('imageHistory');
+                  setRecentImages([]);
+                  alert('로컬 히스토리가 삭제되었습니다.');
+                }}
                 disabled={isLoading}
               >
                 기록 삭제
