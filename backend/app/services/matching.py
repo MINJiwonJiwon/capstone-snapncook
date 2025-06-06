@@ -3,6 +3,7 @@
 from backend import models
 from sqlalchemy.orm import Session
 from typing import List, Set
+from backend.app.utils.ingredient_parser import parse_agricook_ingredients, parse_openapi_ingredients
 
 def clean_input_ingredients(input_text: str) -> Set[str]:
     """
@@ -18,19 +19,28 @@ def clean_input_ingredients(input_text: str) -> Set[str]:
 
 def auto_match_foods_from_input(input_text: str, db: Session) -> List[int]:
     """
-    사용자 입력 재료를 기반으로, ingredients_cleaned에 1개라도 포함된 레시피의 food_id를 반환
+    사용자 입력 재료를 기반으로, ingredients_cleaned 또는 fallback 파싱을 통해
+    일치하는 재료가 하나라도 포함된 레시피의 food_id를 반환
     """
     user_ingredients: Set[str] = clean_input_ingredients(input_text)
     if not user_ingredients:
         return []
 
     matched_food_ids: Set[int] = set()
-
     recipes: List[models.Recipe] = db.query(models.Recipe).all()
+
     for recipe in recipes:
-        if not recipe.ingredients_cleaned:
+        if recipe.ingredients_cleaned:
+            recipe_ingredients: Set[str] = set(recipe.ingredients_cleaned)
+        elif recipe.ingredients:
+            if recipe.source_type == "agricook":
+                parsed = parse_agricook_ingredients(recipe.ingredients)
+            else:
+                parsed = parse_openapi_ingredients(recipe.ingredients)
+            recipe_ingredients = set(parsed)
+        else:
             continue
-        recipe_ingredients: Set[str] = set(recipe.ingredients_cleaned)
+
         if user_ingredients & recipe_ingredients:
             matched_food_ids.add(recipe.food_id)
 
