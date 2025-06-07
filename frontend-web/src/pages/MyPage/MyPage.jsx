@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import ProfileImage from '../../components/ProfileImage/ProfileImage';
-import ImageCard from '../../components/ImageCard/ImageCard'; // 새로 추가
 import styles from './MyPage.module.css';
 import useAuth from '../../hooks/useAuth';
 import useBookmark from '../../hooks/useBookmark';
@@ -289,16 +288,31 @@ const MyPage = () => {
                 <div className={styles.emptyGallery}>즐겨찾기한 레시피가 없습니다.</div>
               ) : (
                 pageData.bookmarks.map((bookmark, index) => (
-                  <ImageCard
-                    key={`bookmark-${index}`}
-                    imageUrl={bookmark.recipe_thumbnail || '/assets/images/default-recipe.svg'}
-                    foodName={bookmark.recipe_title}
-                    onClick={handleImageClick}
-                    showFavorite={true}
-                    isFavorite={true}
-                    onFavoriteClick={() => handleToggleFavorite(bookmark.id)}
-                    size="large"
-                  />
+                  <div key={`bookmark-${index}`} className={styles.galleryItem}>
+                    <img 
+                      src={bookmark.recipe_thumbnail || '/assets/images/default-recipe.svg'} 
+                      alt={bookmark.recipe_title} 
+                      onClick={() => handleImageClick(
+                        bookmark.recipe_thumbnail || '/assets/images/default-recipe.svg',
+                        bookmark.recipe_title
+                      )} 
+                      onError={(e) => {
+                        e.target.src = '/assets/images/default-recipe.svg';
+                      }}
+                    />
+                    <button 
+                      className={`${styles.favoriteButton} ${styles.active}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleFavorite(bookmark.id);
+                      }}
+                    >
+                      ♥
+                    </button>
+                    <div className={styles.imageInfo}>
+                      <h4>{bookmark.recipe_title}</h4>
+                    </div>
+                  </div>
                 ))
               )}
             </div>
@@ -342,18 +356,32 @@ const MyPage = () => {
                   );
                   
                   return (
-                    <ImageCard
-                      key={`detection-${index}`}
-                      imageUrl={item.image_path || '/assets/images/default-food.svg'}
-                      foodName={item.food_name || '음식 이미지'}
-                      confidence={item.confidence}
-                      onClick={handleImageClick}
-                      showFavorite={true}
-                      isFavorite={isFavorite}
-                      onFavoriteClick={() => handleToggleFavorite(item.id)}
-                      showConfidence={true}
-                      size="large"
-                    />
+                    <div key={`detection-${index}`} className={styles.galleryItem}>
+                      <img 
+                        src={item.image_path || '/assets/images/default-food.svg'} 
+                        alt={item.food_name} 
+                        onClick={() => handleImageClick(
+                          item.image_path || '/assets/images/default-food.svg',
+                          item.food_name
+                        )} 
+                        onError={(e) => {
+                          e.target.src = '/assets/images/default-food.svg';
+                        }}
+                      />
+                      <button 
+                        className={`${styles.favoriteButton} ${isFavorite ? styles.active : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleFavorite(item.id);
+                        }}
+                      >
+                        ♥
+                      </button>
+                      <div className={styles.imageInfo}>
+                        <h4>{item.food_name || '음식 이미지'}</h4>
+                        <p>정확도: {Math.round(item.confidence * 100)}%</p>
+                      </div>
+                    </div>
                   );
                 })
               )}

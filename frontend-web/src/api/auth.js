@@ -298,68 +298,41 @@ export const refreshToken = async (refreshToken) => {
 };
 
 /**
- * 로그아웃 API - 수정: 이미지 히스토리 유지
+ * 로그아웃 API
  * @param {string} refreshToken - 리프레시 토큰
  * @returns {Promise} 로그아웃 결과
  */
 export const logout = async (refreshToken) => {
   try {
-    // 로그아웃 전에 현재 사용자 정보 가져오기
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-    const userId = currentUser.id;
-    
-    // 현재 사용자의 이미지 히스토리 백업
-    const currentImageHistory = JSON.parse(localStorage.getItem('imageHistory') || '[]');
-    
     const response = await client.post(AUTH.LOGOUT, { refresh_token: refreshToken });
     
-    // 로그아웃 시 인증 관련 데이터만 정리
+    // 로그아웃 시 로컬 스토리지 정리
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('username');
     localStorage.removeItem('user');
     
-    // 세션 데이터는 여전히 삭제 (현재 선택된 이미지 등)
+    // 이미지 히스토리 초기화
+    localStorage.removeItem('imageHistory');
     sessionStorage.removeItem('currentImage');
     sessionStorage.removeItem('selectedFood');
     sessionStorage.removeItem('selectedFoodId');
-    
-    // 수정: 사용자별 이미지 히스토리로 백업 저장
-    if (userId && currentImageHistory.length > 0) {
-      localStorage.setItem(`imageHistory_${userId}`, JSON.stringify(currentImageHistory));
-      console.log(`Image history backed up for user ${userId}`);
-    }
-    
-    // 현재 imageHistory는 삭제 (로그아웃 상태에서는 표시하지 않음)
-    localStorage.removeItem('imageHistory');
     
     return response.data;
   } catch (error) {
     console.error('Logout error:', error);
     
-    // 에러가 발생해도 동일한 로직으로 로컬 데이터 정리
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-    const userId = currentUser.id;
-    const currentImageHistory = JSON.parse(localStorage.getItem('imageHistory') || '[]');
-    
-    // 인증 관련 데이터 정리
+    // 에러가 발생해도 로컬 데이터 정리
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('username');
     localStorage.removeItem('user');
-    
-    // 세션 데이터 정리
+    localStorage.removeItem('imageHistory');
     sessionStorage.removeItem('currentImage');
     sessionStorage.removeItem('selectedFood');
     sessionStorage.removeItem('selectedFoodId');
-    
-    // 이미지 히스토리 백업
-    if (userId && currentImageHistory.length > 0) {
-      localStorage.setItem(`imageHistory_${userId}`, JSON.stringify(currentImageHistory));
-    }
-    localStorage.removeItem('imageHistory');
     
     // 로그아웃은 보통 오류가 있어도 성공으로 처리
     if (error.response && error.response.status < 500) {
