@@ -96,17 +96,15 @@ const FoodReviewPage = () => {
     loadFoodData();
   }, []);
 
-  // 6-3 수정: 무한 루프 해결 - 의존성 배열에서 함수들 제거
+  // 6-3 수정: 선택된 음식이 변경될 때만 리뷰 데이터 로드 (단순화)
   useEffect(() => {
     if (selectedFood?.id) {
-      console.log('Fetching reviews for food ID:', selectedFood.id); // 디버깅 로그
       clearError(); // 이전 오류 상태 초기화
       fetchReviewsByFood(selectedFood.id);
     } else {
       clearReviews(); // 선택된 음식이 없으면 리뷰 목록 초기화
     }
-    // 6-3 핵심 수정: 의존성 배열에서 함수들 제거하고 selectedFood.id만 유지
-  }, [selectedFood?.id]);
+  }, [selectedFood?.id, fetchReviewsByFood, clearError, clearReviews]);
 
   // 음식 선택 핸들러
   const handleFoodSelect = useCallback((food) => {

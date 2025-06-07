@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar/Navbar';
 import Footer from '../../components/Footer/Footer';
 import ProfileImage from '../../components/ProfileImage/ProfileImage';
-import ImageCard from '../../components/ImageCard/ImageCard'; // 새로 추가
 import styles from './MyPage.module.css';
 import useAuth from '../../hooks/useAuth';
 import useBookmark from '../../hooks/useBookmark';
@@ -31,9 +30,18 @@ const MyPage = () => {
     reviews: { loading: false, error: null, dataLoaded: false }
   });
   
-  // 6-3 수정: 마이페이지 데이터 로드 함수를 useCallback으로 메모이제이션
-  const loadMyPageData = useCallback(async () => {
-    console.log('loadMyPageData: starting data load'); // 디버깅 로그
+  // 로그인 상태 확인 및 데이터 로드
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+    
+    loadMyPageData();
+  }, [isLoggedIn, navigate]);
+  
+  // 마이페이지 데이터 로드 - 6-6 개선 버전
+  const loadMyPageData = async () => {
     setLoading(true);
     setError(null);
     
@@ -66,14 +74,8 @@ const MyPage = () => {
           detections: { loading: false, error: null, dataLoaded: hasDetections },
           reviews: { loading: false, error: null, dataLoaded: hasReviews }
         }));
-        
-        console.log('loadMyPageData: summary API success', {
-          hasBookmarks,
-          hasDetections,
-          hasReviews
-        }); // 디버깅 로그
       } catch (summaryError) {
-        console.error('loadMyPageData: summary fetch error:', summaryError);
+        console.error('Summary fetch error:', summaryError);
         
         // 요약 API 실패 시 개별 API 호출로 대체
         await fetchFallbackData();
@@ -82,21 +84,21 @@ const MyPage = () => {
       setLoading(false);
     } catch (err) {
       // 전체적인 오류 처리
-      console.error('loadMyPageData: general error:', err);
       setError('데이터를 불러오는 중 오류가 발생했습니다.');
       setLoading(false);
+      console.error('Load mypage data error:', err);
     }
-  }, []); // 6-3 핵심 수정: 의존성 배열을 빈 배열로 하여 함수가 항상 동일하게 유지
-
+  };
+  
   // 6-6 개선: 요약 API 실패 시 개별 API 호출
-  const fetchFallbackData = useCallback(async () => {
-    console.log('fetchFallbackData: falling back to individual API calls');
+  const fetchFallbackData = async () => {
+    console.log('Falling back to individual API calls');
     
     // Promise.allSettled를 사용하여 모든 API 요청을 독립적으로 처리
     const [bookmarksResult, detectionsResult] = await Promise.allSettled([
       // 북마크 목록 가져오기
       fetchMyBookmarks().catch(err => {
-        console.error('fetchFallbackData: fetch bookmarks error:', err);
+        console.error('Fetch bookmarks error:', err);
         setSectionStatus(prev => ({
           ...prev,
           bookmarks: { loading: false, error: '북마크를 불러오는 중 오류가 발생했습니다.', dataLoaded: false }
@@ -106,7 +108,7 @@ const MyPage = () => {
       
       // 탐지 결과 목록 가져오기
       getMyDetectionResults().catch(err => {
-        console.error('fetchFallbackData: get detection results error:', err);
+        console.error('Get detection results error:', err);
         // 404 에러는 데이터 없음으로 처리
         if (err.response && err.response.status === 404) {
           setSectionStatus(prev => ({
@@ -159,21 +161,10 @@ const MyPage = () => {
       ...prev,
       reviews: { loading: false, error: null, dataLoaded: false }
     }));
-  }, [fetchMyBookmarks]); // fetchMyBookmarks 의존성 추가
-
-  // 6-3 수정: 로그인 상태 확인 및 데이터 로드 - 의존성 배열 최적화
-  useEffect(() => {
-    if (!isLoggedIn) {
-      navigate('/login');
-      return;
-    }
-    
-    console.log('MyPage useEffect: user logged in, loading data'); // 디버깅 로그
-    loadMyPageData();
-  }, [isLoggedIn, navigate]); // 6-3 핵심 수정: loadMyPageData 의존성 제거
+  };
   
   // 북마크 토글 핸들러
-  const handleToggleFavorite = useCallback(async (bookmarkId) => {
+  const handleToggleFavorite = async (bookmarkId) => {
     try {
       await removeBookmark(bookmarkId);
       // 데이터 새로고침
@@ -181,10 +172,10 @@ const MyPage = () => {
     } catch (err) {
       console.error('Toggle bookmark error:', err);
     }
-  }, [removeBookmark, loadMyPageData]);
+  };
   
   // 이미지 클릭 핸들러
-  const handleImageClick = useCallback((imageUrl, foodName) => {
+  const handleImageClick = (imageUrl, foodName) => {
     // 선택한 이미지를 현재 이미지로 설정
     sessionStorage.setItem('currentImage', imageUrl);
     
@@ -194,12 +185,12 @@ const MyPage = () => {
     }
     
     navigate('/recipe');
-  }, [navigate]);
+  };
   
   // 프로필 수정 페이지로 이동
-  const handleEditProfile = useCallback(() => {
+  const handleEditProfile = () => {
     navigate('/mypage/profile');
-  }, [navigate]);
+  };
   
   // 전체 로딩 중 표시
   if (loading) {
@@ -289,16 +280,31 @@ const MyPage = () => {
                 <div className={styles.emptyGallery}>즐겨찾기한 레시피가 없습니다.</div>
               ) : (
                 pageData.bookmarks.map((bookmark, index) => (
-                  <ImageCard
-                    key={`bookmark-${index}`}
-                    imageUrl={bookmark.recipe_thumbnail || '/assets/images/default-recipe.svg'}
-                    foodName={bookmark.recipe_title}
-                    onClick={handleImageClick}
-                    showFavorite={true}
-                    isFavorite={true}
-                    onFavoriteClick={() => handleToggleFavorite(bookmark.id)}
-                    size="large"
-                  />
+                  <div key={`bookmark-${index}`} className={styles.galleryItem}>
+                    <img 
+                      src={bookmark.recipe_thumbnail || '/assets/images/default-recipe.svg'} 
+                      alt={bookmark.recipe_title} 
+                      onClick={() => handleImageClick(
+                        bookmark.recipe_thumbnail || '/assets/images/default-recipe.svg',
+                        bookmark.recipe_title
+                      )} 
+                      onError={(e) => {
+                        e.target.src = '/assets/images/default-recipe.svg';
+                      }}
+                    />
+                    <button 
+                      className={`${styles.favoriteButton} ${styles.active}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleFavorite(bookmark.id);
+                      }}
+                    >
+                      ♥
+                    </button>
+                    <div className={styles.imageInfo}>
+                      <h4>{bookmark.recipe_title}</h4>
+                    </div>
+                  </div>
                 ))
               )}
             </div>
@@ -342,18 +348,32 @@ const MyPage = () => {
                   );
                   
                   return (
-                    <ImageCard
-                      key={`detection-${index}`}
-                      imageUrl={item.image_path || '/assets/images/default-food.svg'}
-                      foodName={item.food_name || '음식 이미지'}
-                      confidence={item.confidence}
-                      onClick={handleImageClick}
-                      showFavorite={true}
-                      isFavorite={isFavorite}
-                      onFavoriteClick={() => handleToggleFavorite(item.id)}
-                      showConfidence={true}
-                      size="large"
-                    />
+                    <div key={`detection-${index}`} className={styles.galleryItem}>
+                      <img 
+                        src={item.image_path || '/assets/images/default-food.svg'} 
+                        alt={item.food_name} 
+                        onClick={() => handleImageClick(
+                          item.image_path || '/assets/images/default-food.svg',
+                          item.food_name
+                        )} 
+                        onError={(e) => {
+                          e.target.src = '/assets/images/default-food.svg';
+                        }}
+                      />
+                      <button 
+                        className={`${styles.favoriteButton} ${isFavorite ? styles.active : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleFavorite(item.id);
+                        }}
+                      >
+                        ♥
+                      </button>
+                      <div className={styles.imageInfo}>
+                        <h4>{item.food_name || '음식 이미지'}</h4>
+                        <p>정확도: {Math.round(item.confidence * 100)}%</p>
+                      </div>
+                    </div>
                   );
                 })
               )}

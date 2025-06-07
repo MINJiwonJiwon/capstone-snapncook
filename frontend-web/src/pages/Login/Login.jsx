@@ -48,68 +48,12 @@ const Login = () => {
       setFormError(err.message || `${provider} 로그인을 시작할 수 없습니다. 잠시 후 다시 시도해주세요.`);
     }
   };
-
-  // 1-3 수정: 에러 메시지 정제 함수
-  const cleanErrorMessage = (message) => {
-    if (!message) return '';
-    
-    // "Value error," 제거 (대소문자 구분 없이)
-    let cleanedMessage = message.replace(/^Value\s+error,?\s*/i, '');
-    
-    // "validation error," 제거
-    cleanedMessage = cleanedMessage.replace(/^Validation\s+error,?\s*/i, '');
-    
-    // "pydantic" 관련 기술적 용어 제거
-    cleanedMessage = cleanedMessage.replace(/pydantic[^:]*:\s*/i, '');
-    
-    // FastAPI 관련 기술적 용어 제거
-    cleanedMessage = cleanedMessage.replace(/FastAPI[^:]*:\s*/i, '');
-    
-    // 첫 글자 대문자로 변환
-    if (cleanedMessage.length > 0) {
-      cleanedMessage = cleanedMessage.charAt(0).toUpperCase() + cleanedMessage.slice(1);
-    }
-    
-    return cleanedMessage || message; // 정제 후 빈 문자열이면 원본 반환
-  };
-
-  // 1-6 수정: 로그인 에러 구체화 함수
-  const getSpecificLoginError = (originalError, email) => {
-    const message = originalError.message || '';
-    
-    // "이메일 또는 비밀번호가 올바르지 않습니다" 메시지를 더 구체적으로 분기
-    if (message === '이메일 또는 비밀번호가 올바르지 않습니다.' ||
-        message.includes('Invalid credentials') ||
-        message.includes('Invalid email or password')) {
-      
-      // 이메일 형식이 올바르지 않으면 이메일 문제로 간주
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return '올바른 이메일 형식이 아닙니다.';
-      }
-      
-      // 일반적인 이메일 도메인이 아니면 이메일 문제 가능성 높음
-      const commonDomains = ['gmail.com', 'naver.com', 'daum.net', 'kakao.com', 'outlook.com', 'hotmail.com', 'yahoo.com'];
-      const emailDomain = email.split('@')[1]?.toLowerCase();
-      
-      if (emailDomain && !commonDomains.includes(emailDomain)) {
-        // 일반적이지 않은 도메인이면 더 자세한 안내
-        return '이메일 또는 비밀번호를 확인해주세요. 이메일이 정확한지 다시 한번 확인해보세요.';
-      }
-      
-      // 기본적으로는 원래 메시지 유지하되 좀 더 친화적으로
-      return '이메일 또는 비밀번호가 일치하지 않습니다. 다시 확인해주세요.';
-    }
-    
-    // 다른 에러는 그대로 반환
-    return message;
-  };
   
   /**
-   * 1-2, 1-3, 1-5, 1-6 통합 해결: 통합 오류 처리 함수 - 개선 버전
+   * 1-2, 1-3, 1-5, 1-6 통합 해결: 통합 오류 처리 함수
    * auth.js에서 이미 적절한 Error 객체로 변환된 메시지를 처리
    */
-  const handleAuthError = (err, context = '', userEmail = '') => {
+  const handleAuthError = (err, context = '') => {
     // 개발 환경에서 디버깅 정보 출력
     if (process.env.NODE_ENV === 'development') {
       console.log(`${context} error details:`, {
@@ -122,18 +66,11 @@ const Login = () => {
     
     // 1순위: auth.js에서 이미 처리된 Error 객체의 메시지 사용
     if (err instanceof Error && err.message) {
-      let message = err.message;
-      
-      // 1-3 수정: 기술적 용어 제거 및 메시지 정제
-      message = cleanErrorMessage(message);
-      
-      // 1-6 수정: 로그인 에러의 경우 구체화
-      if (context === 'login' && userEmail) {
-        message = getSpecificLoginError(err, userEmail);
-      }
-      
       // 메시지가 너무 기술적이거나 길면 사용자 친화적으로 변환
-      if (message.includes('HTTP') || message.includes('API') || message.includes('axios') || message.length > 200) {
+      const message = err.message;
+      
+      // 일반적인 기술적 용어를 사용자 친화적으로 변환
+      if (message.includes('HTTP') || message.includes('API') || message.includes('axios')) {
         setFormError(context === 'signup' 
           ? '회원가입 중 오류가 발생했습니다. 입력 정보를 확인해주세요.'
           : '로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
@@ -187,8 +124,8 @@ const Login = () => {
       });
       navigate('/');
     } catch (err) {
-      // 1-5, 1-6 이슈 해결: 로그인 오류 통합 처리 (이메일 정보 포함)
-      handleAuthError(err, 'login', loginEmail);
+      // 1-5, 1-6 이슈 해결: 로그인 오류 통합 처리
+      handleAuthError(err, 'login');
     }
   };
   
@@ -237,29 +174,10 @@ const Login = () => {
       return;
     }
     
-    // 1-3 개선: 비밀번호 강도 검사 메시지 개선
-    if (signupPassword.length < 8) {
-      setFormError('비밀번호는 최소 8자 이상이어야 합니다.');
-      return;
-    }
-    
-    const hasLetter = /[A-Za-z]/.test(signupPassword);
-    const hasNumber = /\d/.test(signupPassword);
-    
-    if (!hasLetter) {
-      setFormError('비밀번호에는 최소 1개의 문자가 포함되어야 합니다.');
-      return;
-    }
-    
-    if (!hasNumber) {
-      setFormError('비밀번호에는 최소 1개의 숫자가 포함되어야 합니다.');
-      return;
-    }
-    
-    // 특수문자 검사 (백엔드에서 요구하는 경우)
-    const hasSpecialChar = /[@$!%*#?&]/.test(signupPassword);
-    if (!hasSpecialChar) {
-      setFormError('비밀번호에는 최소 1개의 특수문자(@$!%*#?&)가 포함되어야 합니다.');
+    // 비밀번호 강도 검사
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+    if (!passwordRegex.test(signupPassword)) {
+      setFormError('비밀번호는 최소 8자 이상이며, 문자와 숫자를 포함해야 합니다.');
       return;
     }
     
@@ -309,7 +227,7 @@ const Login = () => {
             </button>
           </div>
           
-          {/* 에러 메시지 표시 - 1-3, 1-6 개선: 정제된 메시지 표시 */}
+          {/* 에러 메시지 표시 */}
           {(formError || error) && (
             <div className={styles.errorMessage}>
               {formError || error}
@@ -430,8 +348,7 @@ const Login = () => {
                   required 
                   disabled={loading}
                 />
-                {/* 1-3 개선: 더 구체적인 안내 메시지 */}
-                <small className={styles.fieldHint}>8자 이상, 문자, 숫자, 특수문자(@$!%*#?&)를 포함해야 합니다.</small>
+                <small className={styles.fieldHint}>8자 이상, 문자와 숫자를 포함해야 합니다.</small>
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="signup-password-check">비밀번호 확인</label>
