@@ -50,10 +50,11 @@ export const DETECTION = {
   LIST_ME: '/detection-results/me',
 };
 
-// AI 탐지 관련 엔드포인트 (추가)
+// 🚀 AI 탐지 관련 엔드포인트 (새로 추가)
 export const AI_DETECTION = {
-  UPLOAD: '/ai-detection/upload',
-  PREDICT: '/ai-detection/predict',
+  UPLOAD: '/ai-detection/upload',           // 이미지 업로드만
+  PREDICT: '/ai-detection/predict',         // 이미지 업로드 + AI 예측
+  RESULTS: '/ai-detection/results',         // 전체 감지 결과 조회
 };
 
 // 사용자 관련 엔드포인트

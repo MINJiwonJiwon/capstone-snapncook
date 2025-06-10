@@ -78,57 +78,116 @@ const Home = () => {
     setError(null);
 
     try {
-      // 실제 API 연동 - 파일 업로드 처리
+      // 🚀 수정된 부분: AI 모델 API 연동
       const formData = new FormData();
       formData.append('file', file);
       
-      // 파일 업로드 API 호출
-      const uploadResponse = await client.post('/upload/image', formData, {
+      // AI 이미지 분석 API 호출 - 업데이트된 엔드포인트 사용
+      const aiResponse = await client.post('/ai-detection/predict', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
       
-      // 서버에서 이미지 분석 결과 받기
-      // 실제 구현에서는 서버로부터 응답을 받아와야 함
-      const { food_id, image_path, confidence } = uploadResponse.data;
+      console.log('AI 분석 응답:', aiResponse.data);
       
-      // 탐지 결과 저장 API 호출
-      const detectionResult = await saveDetectionResult({
-        food_id,
-        image_path,
-        confidence
-      });
+      // API 명세서에 따른 응답 구조 처리
+      const { filename, detected } = aiResponse.data;
       
-      // 4-4 이슈 해결: detectionId를 세션 스토리지에 저장
-      // Recipe.jsx에서 이 ID로 공개 추천 API를 호출할 수 있도록 함
-      if (detectionResult && detectionResult.id) {
-        sessionStorage.setItem('detectionId', detectionResult.id.toString());
-        console.log('Detection ID saved:', detectionResult.id);
+      if (!detected || detected.length === 0) {
+        throw new Error('음식을 인식할 수 없습니다. 다른 이미지를 시도해주세요.');
       }
       
-      // 이미지를 로컬 스토리지에 저장
-      saveImageToHistory(previewUrl);
+      // 첫 번째 탐지 결과 사용 (신뢰도가 가장 높은 결과)
+      const detectedFood = detected[0];
+      const { name, confidence, food_id, image_filename } = detectedFood;
       
-      // 탐지된 음식 정보 가져오기
-      const foodInfo = await getFoodById(food_id);
+      // 신뢰도가 너무 낮은 경우 경고
+      if (confidence < 0.5) {
+        console.warn(`낮은 신뢰도: ${confidence}`);
+      }
       
-      // 세션 스토리지에 탐지된 음식 이름 저장
+      // 탐지 결과를 백엔드에 저장 (로그인 상태인 경우에만)
+      let detectionResult = null;
+      if (isLoggedIn) {
+        try {
+          detectionResult = await saveDetectionResult({
+            food_id: food_id,
+            image_path: image_filename,
+            confidence: confidence
+          });
+          
+          // detectionId를 세션 스토리지에 저장
+          if (detectionResult && detectionResult.id) {
+            sessionStorage.setItem('detectionId', detectionResult.id.toString());
+            console.log('Detection ID saved:', detectionResult.id);
+          }
+        } catch (saveError) {
+          console.warn('탐지 결과 저장 실패 (계속 진행):', saveError);
+        }
+      }
+      
+      // 이미지를 히스토리에 저장 (로그인 상태인 경우에만)
+      if (isLoggedIn) {
+        saveImageToHistory(previewUrl);
+      }
+      
+      // 음식 정보 가져오기
+      let foodInfo;
+      try {
+        foodInfo = await getFoodById(food_id);
+      } catch (foodError) {
+        console.warn('음식 정보 조회 실패, AI 응답 사용:', foodError);
+        foodInfo = { name: name }; // AI 응답의 이름 사용
+      }
+      
+      // 세션 스토리지에 탐지된 음식 정보 저장
       sessionStorage.setItem('selectedFood', foodInfo.name);
       sessionStorage.setItem('selectedFoodId', food_id.toString());
+      sessionStorage.setItem('analysisResult', JSON.stringify({
+        food_name: foodInfo.name,
+        confidence: confidence,
+        food_id: food_id,
+        image_filename: image_filename
+      }));
       
       setIsLoading(false);
       navigate('/recipe');
+      
     } catch (err) {
-      setError('이미지 분석 중 오류가 발생했습니다.');
+      console.error('이미지 분석 오류:', err);
+      
+      // 상세한 오류 메시지 설정
+      let errorMessage = '이미지 분석 중 오류가 발생했습니다.';
+      
+      if (err.response) {
+        const status = err.response.status;
+        switch (status) {
+          case 400:
+            errorMessage = '지원하지 않는 이미지 형식입니다. JPG, PNG 파일을 사용해주세요.';
+            break;
+          case 502:
+            errorMessage = 'AI 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
+            break;
+          case 500:
+            errorMessage = '서버에서 이미지 처리 중 오류가 발생했습니다.';
+            break;
+          default:
+            errorMessage = `서버 오류가 발생했습니다. (코드: ${status})`;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
       setIsLoading(false);
-      console.error('Image analysis error:', err);
     }
   };
   
   const resetUpload = () => {
     setFile(null);
     setPreviewUrl('');
+    setError(null);
   };
   
   const saveImageToHistory = (imageUrl) => {
