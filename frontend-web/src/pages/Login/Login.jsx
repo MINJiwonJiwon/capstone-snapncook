@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import styles from './Login.module.css';
 import useAuth from '../../hooks/useAuth';
 import { redirectToSocialLogin } from '../../api/oauth';
+import OAuthButton from '../../components/OAuthButton/OAuthButton';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const Login = () => {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupPasswordCheck, setSignupPasswordCheck] = useState('');
   const [formError, setFormError] = useState('');
+  const [socialLoading, setSocialLoading] = useState(null); // 소셜 로그인 로딩 상태
   
   // 이미 로그인된 경우 홈으로 리다이렉트
   useEffect(() => {
@@ -34,10 +36,11 @@ const Login = () => {
     clearErrors();
   };
   
-  // 1-14 이슈 해결: 소셜 로그인 핸들러 (직접 리디렉션)
+  // 소셜 로그인 핸들러
   const handleSocialLogin = (provider) => {
     try {
       clearErrors();
+      setSocialLoading(provider); // 해당 버튼만 로딩 상태로
       console.log(`${provider} 로그인 시도...`);
       
       // 직접 리디렉션 방식 사용
@@ -46,10 +49,11 @@ const Login = () => {
     } catch (err) {
       console.error(`${provider} 로그인 오류:`, err);
       setFormError(err.message || `${provider} 로그인을 시작할 수 없습니다. 잠시 후 다시 시도해주세요.`);
+      setSocialLoading(null); // 로딩 상태 해제
     }
   };
 
-  // 1-3 수정: 에러 메시지 정제 함수
+  // 에러 메시지 정제 함수
   const cleanErrorMessage = (message) => {
     if (!message) return '';
     
@@ -73,7 +77,7 @@ const Login = () => {
     return cleanedMessage || message; // 정제 후 빈 문자열이면 원본 반환
   };
 
-  // 1-6 수정: 로그인 에러 구체화 함수
+  // 로그인 에러 구체화 함수
   const getSpecificLoginError = (originalError, email) => {
     const message = originalError.message || '';
     
@@ -106,8 +110,7 @@ const Login = () => {
   };
   
   /**
-   * 1-2, 1-3, 1-5, 1-6 통합 해결: 통합 오류 처리 함수 - 개선 버전
-   * auth.js에서 이미 적절한 Error 객체로 변환된 메시지를 처리
+   * 통합 오류 처리 함수
    */
   const handleAuthError = (err, context = '', userEmail = '') => {
     // 개발 환경에서 디버깅 정보 출력
@@ -124,10 +127,10 @@ const Login = () => {
     if (err instanceof Error && err.message) {
       let message = err.message;
       
-      // 1-3 수정: 기술적 용어 제거 및 메시지 정제
+      // 기술적 용어 제거 및 메시지 정제
       message = cleanErrorMessage(message);
       
-      // 1-6 수정: 로그인 에러의 경우 구체화
+      // 로그인 에러의 경우 구체화
       if (context === 'login' && userEmail) {
         message = getSpecificLoginError(err, userEmail);
       }
@@ -187,7 +190,6 @@ const Login = () => {
       });
       navigate('/');
     } catch (err) {
-      // 1-5, 1-6 이슈 해결: 로그인 오류 통합 처리 (이메일 정보 포함)
       handleAuthError(err, 'login', loginEmail);
     }
   };
@@ -237,7 +239,7 @@ const Login = () => {
       return;
     }
     
-    // 1-3 개선: 비밀번호 강도 검사 메시지 개선
+    // 비밀번호 강도 검사 메시지 개선
     if (signupPassword.length < 8) {
       setFormError('비밀번호는 최소 8자 이상이어야 합니다.');
       return;
@@ -279,7 +281,6 @@ const Login = () => {
       
       alert('회원가입이 완료되었습니다. 로그인해주세요.');
     } catch (err) {
-      // 1-2, 1-3 이슈 해결: 회원가입 오류 통합 처리
       handleAuthError(err, 'signup');
     }
   };
@@ -309,7 +310,7 @@ const Login = () => {
             </button>
           </div>
           
-          {/* 에러 메시지 표시 - 1-3, 1-6 개선: 정제된 메시지 표시 */}
+          {/* 에러 메시지 표시 */}
           {(formError || error) && (
             <div className={styles.errorMessage}>
               {formError || error}
@@ -362,31 +363,27 @@ const Login = () => {
             <div className={styles.oauthContainer}>
               <p>또는 소셜 계정으로 로그인</p>
               <div className={styles.oauthButtons}>
-                {/* 1-14 이슈 해결: 직접 리디렉션 방식으로 변경 */}
-                <button 
-                  className={`${styles.oauthButton} ${styles.google}`}
-                  type="button"
-                  onClick={() => handleSocialLogin('google')}
-                  disabled={loading}
-                >
-                  G
-                </button>
-                <button 
-                  className={`${styles.oauthButton} ${styles.kakao}`}
-                  type="button"
-                  onClick={() => handleSocialLogin('kakao')}
-                  disabled={loading}
-                >
-                  K
-                </button>
-                <button 
-                  className={`${styles.oauthButton} ${styles.naver}`}
-                  type="button"
-                  onClick={() => handleSocialLogin('naver')}
-                  disabled={loading}
-                >
-                  N
-                </button>
+                <OAuthButton
+                  provider="google"
+                  onClick={handleSocialLogin}
+                  disabled={loading || socialLoading !== null}
+                  loading={socialLoading === 'google'}
+                  size="medium"
+                />
+                <OAuthButton
+                  provider="kakao"
+                  onClick={handleSocialLogin}
+                  disabled={loading || socialLoading !== null}
+                  loading={socialLoading === 'kakao'}
+                  size="medium"
+                />
+                <OAuthButton
+                  provider="naver"
+                  onClick={handleSocialLogin}
+                  disabled={loading || socialLoading !== null}
+                  loading={socialLoading === 'naver'}
+                  size="medium"
+                />
               </div>
             </div>
           </div>
@@ -430,7 +427,6 @@ const Login = () => {
                   required 
                   disabled={loading}
                 />
-                {/* 1-3 개선: 더 구체적인 안내 메시지 */}
                 <small className={styles.fieldHint}>8자 이상, 문자, 숫자, 특수문자(@$!%*#?&)를 포함해야 합니다.</small>
               </div>
               <div className={styles.formGroup}>
