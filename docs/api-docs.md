@@ -1980,3 +1980,84 @@ Authorization: Bearer <access_token>
   }
 ]
 ```
+
+---
+
+### 🧠 [AI 탐지]
+
+#### POST /ai-detection/upload
+
+> 📌 이미지 업로드 (예측 없음)
+
+**Request**
+
+- Form Data:
+  - `file`: 이미지 파일 (필수)
+
+**Response**
+
+```json
+{
+  "filename": "upload_103045_dish.jpg",
+  "message": "업로드 성공"
+}
+```
+
+---
+
+#### POST /ai-detection/predict
+
+> 📌 AI 예측 수행
+
+**Request**
+
+- Form Data:
+  - `file`: 이미지 파일 (필수)
+- Header:
+  - `Authorization: Bearer <access_token>` (선택)
+
+**Response**
+
+```json
+{
+  "filename": "upload_103045_dish.jpg",
+  "detected": [
+    {
+      "name": "김치찌개",
+      "confidence": 0.89,
+      "image_filename": "upload_103045_dish.jpg",
+      "food_id": 1
+    }
+  ]
+}
+```
+
+※ 예외 응답  
+- `502 Bad Gateway`: AI 서버 통신 실패  
+- `500 Internal Server Error`: 예측 처리 중 오류
+
+---
+
+#### GET /ai-detection/results
+
+> 📌 전체 감지 결과 조회
+
+**Request**
+
+- 없음 ❌
+
+**Response**
+
+```json
+[
+  {
+    "id": 1,
+    "user_id": 2,
+    "food_id": 1,
+    "image_path": "upload_103045_dish.jpg",
+    "confidence": 0.89,
+    "created_at": "2025-06-10T10:30:00",
+    "updated_at": "2025-06-10T10:30:00"
+  }
+]
+```
