@@ -1,0 +1,251 @@
+/* 기본 OAuth 버튼 스타일 */
+.oauthButton {
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.oauthButton:hover:not(.disabled):not(.loading) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.oauthButton:active:not(.disabled):not(.loading) {
+  transform: translateY(0);
+}
+
+.oauthButton:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+}
+
+/* 버튼 크기 변형 */
+.small {
+  width: 40px;
+  height: 40px;
+}
+
+.medium {
+  width: 48px;
+  height: 48px;
+}
+
+.large {
+  width: 56px;
+  height: 56px;
+}
+
+/* 버튼 아이콘 스타일 */
+.buttonIcon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.small .buttonIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.medium .buttonIcon {
+  width: 32px;
+  height: 32px;
+}
+
+.large .buttonIcon {
+  width: 40px;
+  height: 40px;
+}
+
+/* 카카오 버튼 특별 처리 - 이미지가 직사각형인 경우 좌측 부분만 표시 */
+.kakaoButton .buttonIcon {
+  object-fit: cover;
+  object-position: left center;
+}
+
+/* 브랜드별 스타일 */
+.googleButton {
+  background: white;
+  border: 1px solid #dadce0;
+}
+
+.googleButton:hover:not(.disabled):not(.loading) {
+  background: #f8f9fa;
+  border-color: #d2d3d4;
+}
+
+.kakaoButton {
+  background: #fee500;
+  border: 1px solid #fee500;
+}
+
+.kakaoButton:hover:not(.disabled):not(.loading) {
+  background: #fdd835;
+  border-color: #fdd835;
+}
+
+.naverButton {
+  background: #03c75a;
+  border: 1px solid #03c75a;
+}
+
+.naverButton:hover:not(.disabled):not(.loading) {
+  background: #02b351;
+  border-color: #02b351;
+}
+
+/* 비활성화 상태 */
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 로딩 상태 */
+.loading {
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.loading .buttonIcon {
+  display: none;
+}
+
+/* 로딩 스피너 */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.small .spinner {
+  width: 16px;
+  height: 16px;
+  border-width: 1.5px;
+}
+
+.medium .spinner {
+  width: 20px;
+  height: 20px;
+  border-width: 2px;
+}
+
+.large .spinner {
+  width: 24px;
+  height: 24px;
+  border-width: 2.5px;
+}
+
+/* 구글 버튼 스피너 색상 */
+.googleButton .spinner {
+  border-top-color: #4285f4;
+}
+
+/* 카카오 버튼 스피너 색상 */
+.kakaoButton .spinner {
+  border-top-color: #191919;
+}
+
+/* 네이버 버튼 스피너 색상 */
+.naverButton .spinner {
+  border-top-color: white;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fallback 텍스트 스타일 */
+.fallbackText {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.small .fallbackText {
+  font-size: 12px;
+}
+
+.medium .fallbackText {
+  font-size: 14px;
+}
+
+.large .fallbackText {
+  font-size: 16px;
+}
+
+.googleButton .fallbackText {
+  color: #4285f4;
+}
+
+.kakaoButton .fallbackText {
+  color: #191919;
+}
+
+.naverButton .fallbackText {
+  color: white;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 480px) {
+  .oauthButton {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .buttonIcon {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .spinner {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .oauthButton,
+  .spinner {
+    animation: none;
+    transition: none;
+  }
+  
+  .oauthButton:hover {
+    transform: none;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  .oauthButton {
+    border-width: 2px;
+  }
+  
+  .googleButton {
+    border-color: #333;
+  }
+  
+  .kakaoButton {
+    border-color: #000;
+  }
+  
+  .naverButton {
+    border-color: #000;
+  }
+}
