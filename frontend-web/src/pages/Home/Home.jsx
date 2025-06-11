@@ -18,98 +18,88 @@ const Home = () => {
   const [dragOver, setDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   useEffect(() => {
     // 로그인 상태일 때만 이미지 히스토리 가져오기
     if (isLoggedIn) {
       const storedHistory = JSON.parse(localStorage.getItem('imageHistory')) || [];
       setImageHistory(storedHistory);
     } else {
-      // 로그인 상태가 아닐 경우 이미지 히스토리와 미리보기 초기화
       setImageHistory([]);
       setFile(null);
       setPreviewUrl('');
     }
   }, [isLoggedIn]);
-  
+
   const handleFileChange = (e) => {
     if (e.target.files.length) {
       handleFile(e.target.files[0]);
     }
   };
-  
+
   const handleDragOver = (e) => {
     e.preventDefault();
     setDragOver(true);
   };
-  
+
   const handleDragLeave = () => {
     setDragOver(false);
   };
-  
+
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    
+
     if (e.dataTransfer.files.length) {
       handleFile(e.dataTransfer.files[0]);
     }
   };
-  
+
   const handleFile = (file) => {
     if (!file.type.match('image.*')) {
       alert('이미지 파일만 업로드할 수 있습니다.');
       return;
     }
-    
     setFile(file);
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       setPreviewUrl(e.target.result);
-      // 현재 이미지 URL을 세션 스토리지에 저장
       sessionStorage.setItem('currentImage', e.target.result);
     };
     reader.readAsDataURL(file);
   };
-  
+
   const handleUpload = async () => {
-    if (!previewUrl || !file) return;
-    
+    if (!file) {
+      setError("이미지 파일을 선택하세요.");
+      return;
+    }
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      // 🚀 수정된 부분: AI 모델 API 연동
       const formData = new FormData();
       formData.append('file', file);
-      
-      // AI 이미지 분석 API 호출 - 업데이트된 엔드포인트 사용
+
       const aiResponse = await client.post('/ai-detection/predict', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
-      console.log('AI 분석 응답:', aiResponse.data);
-      
-      // API 명세서에 따른 응답 구조 처리
+
       const { filename, detected } = aiResponse.data;
-      
+
       if (!detected || detected.length === 0) {
         throw new Error('음식을 인식할 수 없습니다. 다른 이미지를 시도해주세요.');
       }
-      
-      // 첫 번째 탐지 결과 사용 (신뢰도가 가장 높은 결과)
+
       const detectedFood = detected[0];
       const { name, confidence, food_id, image_filename } = detectedFood;
-      
-      // 신뢰도가 너무 낮은 경우 경고
+
       if (confidence < 0.5) {
         console.warn(`낮은 신뢰도: ${confidence}`);
       }
-      
-      // 탐지 결과를 백엔드에 저장 (로그인 상태인 경우에만)
+
+      // 탐지 결과를 백엔드에 저장 (로그인 상태일 때만)
       let detectionResult = null;
       if (isLoggedIn) {
         try {
@@ -118,32 +108,28 @@ const Home = () => {
             image_path: image_filename,
             confidence: confidence
           });
-          
-          // detectionId를 세션 스토리지에 저장
           if (detectionResult && detectionResult.id) {
             sessionStorage.setItem('detectionId', detectionResult.id.toString());
-            console.log('Detection ID saved:', detectionResult.id);
           }
         } catch (saveError) {
-          console.warn('탐지 결과 저장 실패 (계속 진행):', saveError);
+          console.warn('탐지 결과 저장 실패:', saveError);
         }
       }
-      
-      // 이미지를 히스토리에 저장 (로그인 상태인 경우에만)
+
+      // 이미지 히스토리 저장
       if (isLoggedIn) {
         saveImageToHistory(previewUrl);
       }
-      
+
       // 음식 정보 가져오기
       let foodInfo;
       try {
         foodInfo = await getFoodById(food_id);
       } catch (foodError) {
-        console.warn('음식 정보 조회 실패, AI 응답 사용:', foodError);
-        foodInfo = { name: name }; // AI 응답의 이름 사용
+        foodInfo = { name: name };
       }
-      
-      // 세션 스토리지에 탐지된 음식 정보 저장
+
+      // 세션스토리지에 음식/분석 결과 저장
       sessionStorage.setItem('selectedFood', foodInfo.name);
       sessionStorage.setItem('selectedFoodId', food_id.toString());
       sessionStorage.setItem('analysisResult', JSON.stringify({
@@ -152,16 +138,12 @@ const Home = () => {
         food_id: food_id,
         image_filename: image_filename
       }));
-      
+
       setIsLoading(false);
       navigate('/recipe');
-      
+
     } catch (err) {
-      console.error('이미지 분석 오류:', err);
-      
-      // 상세한 오류 메시지 설정
       let errorMessage = '이미지 분석 중 오류가 발생했습니다.';
-      
       if (err.response) {
         const status = err.response.status;
         switch (status) {
@@ -180,38 +162,33 @@ const Home = () => {
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
       setError(errorMessage);
       setIsLoading(false);
     }
   };
-  
+
   const resetUpload = () => {
     setFile(null);
     setPreviewUrl('');
     setError(null);
   };
-  
+
   const saveImageToHistory = (imageUrl) => {
-    // 중복 방지
     if (!imageHistory.includes(imageUrl)) {
       const newHistory = [imageUrl, ...imageHistory];
-      
-      // 최대 10개까지만 저장
       const limitedHistory = newHistory.slice(0, 10);
       setImageHistory(limitedHistory);
       localStorage.setItem('imageHistory', JSON.stringify(limitedHistory));
     }
   };
-  
+
   const clearHistory = () => {
     localStorage.removeItem('imageHistory');
     setImageHistory([]);
     alert('업로드 기록이 삭제되었습니다.');
   };
-  
+
   const handleHistoryItemClick = (imageUrl) => {
-    // 선택한 이미지를 현재 이미지로 설정
     sessionStorage.setItem('currentImage', imageUrl);
     navigate('/recipe');
   };
@@ -220,21 +197,16 @@ const Home = () => {
     <>
       <Navbar />
       <RankingRecommendation />
-      
+
       <div className={styles.container}>
         <h1>음식 레시피 찾기</h1>
-        
         {error && (
-          <div className={styles.errorMessage}>
-            {error}
-          </div>
+          <div className={styles.errorMessage}>{error}</div>
         )}
-        
         <div className={styles.mainContainer}>
-          {/* 왼쪽: 이미지 업로드 영역 */}
+          {/* 왼쪽: 이미지 업로드 */}
           <div className={styles.uploadContainer}>
             <h2>음식 사진 업로드</h2>
-            
             {!previewUrl ? (
               <div
                 className={`${styles.uploadArea} ${dragOver ? styles.dragover : ''}`}
@@ -261,14 +233,11 @@ const Home = () => {
               <div className={styles.previewContainer}>
                 <img src={previewUrl} alt="미리보기" className={styles.previewImage} />
                 <div className={styles.buttonGroup}>
-                  <button 
-                    onClick={handleUpload} 
-                    disabled={isLoading}
-                  >
+                  <button onClick={handleUpload} disabled={isLoading}>
                     {isLoading ? '분석중...' : '분석하기'}
                   </button>
-                  <button 
-                    onClick={resetUpload} 
+                  <button
+                    onClick={resetUpload}
                     className={styles.cancelButton}
                     disabled={isLoading}
                   >
@@ -278,8 +247,7 @@ const Home = () => {
               </div>
             )}
           </div>
-          
-          {/* 오른쪽: 이전 업로드 이미지 갤러리 */}
+          {/* 오른쪽: 이미지 히스토리 */}
           <div className={styles.historyContainer}>
             <h2>이전 업로드 이미지</h2>
             <div className={styles.historyGallery}>
@@ -300,8 +268,8 @@ const Home = () => {
               )}
             </div>
             {isLoggedIn && imageHistory.length > 0 && (
-              <button 
-                onClick={clearHistory} 
+              <button
+                onClick={clearHistory}
                 className={styles.clearHistory}
                 disabled={isLoading}
               >
@@ -311,7 +279,6 @@ const Home = () => {
           </div>
         </div>
       </div>
-      
       <Footer />
     </>
   );
