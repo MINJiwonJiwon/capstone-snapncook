@@ -9,9 +9,41 @@ import useBookmark from '../../hooks/useBookmark';
 import { getMyDetectionResults } from '../../api/detection';
 import { getMypageSummary } from '../../api/mypage';
 
+const resolveImageUrl = (path) => {
+  if (!path) return '/assets/images/default-food.svg';
+  if (path.startsWith('http')) return path;
+  // uploads로 시작 안 하면 앞에 붙여
+  if (!path.startsWith('uploads')) {
+    path = `uploads/${path}`;
+  }
+  return `http://localhost:8000/${path}`;
+};
+
+
+const SafeImage = ({ src, alt, className, ...props }) => {
+  const [imgSrc, setImgSrc] = useState(src || '/assets/images/default-food.svg');
+  const [isLoading, setIsLoading] = useState(true);
+
+  return (
+    <div className={`${styles.safeImageWrapper} ${className || ''}`} {...props}>
+      {isLoading && <div className={styles.imageLoader}>로딩 중...</div>}
+      <img
+        src={imgSrc}
+        alt={alt}
+        onLoad={() => setIsLoading(false)}
+        onError={() => {
+          setImgSrc('/assets/images/default-food.svg');
+          setIsLoading(false);
+        }}
+        style={{ opacity: isLoading ? 0 : 1 }}
+      />
+    </div>
+  );
+};
+
 const MyPage = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, loading: authLoading } = useAuth(); 
   const { bookmarks, fetchMyBookmarks, removeBookmark, isBookmarked } = useBookmark();
   
   const [detectionResults, setDetectionResults] = useState([]);
@@ -162,14 +194,16 @@ const MyPage = () => {
 
   // 6-3 수정: 로그인 상태 확인 및 데이터 로드 - 의존성 배열 최적화
   useEffect(() => {
+    if (authLoading) return; // ✅ 로그인 상태 아직 확인 중이면 아무 것도 하지 않음
+
     if (!isLoggedIn) {
       navigate('/login');
       return;
     }
     
-    console.log('MyPage useEffect: user logged in, loading data'); // 디버깅 로그
+    console.log('MyPage useEffect: user logged in, loading data');
     loadMyPageData();
-  }, [isLoggedIn, navigate]); // 6-3 핵심 수정: loadMyPageData 의존성 제거
+  }, [isLoggedIn, authLoading, navigate]); // 6-3 핵심 수정: loadMyPageData 의존성 제거
   
   // 북마크 토글 핸들러
   const handleToggleFavorite = useCallback(async (bookmarkId) => {
@@ -289,16 +323,14 @@ const MyPage = () => {
               ) : (
                 pageData.bookmarks.map((bookmark, index) => (
                   <div key={`bookmark-${index}`} className={styles.galleryItem}>
-                    <img 
-                      src={bookmark.recipe_thumbnail || '/assets/images/default-recipe.svg'} 
-                      alt={bookmark.recipe_title} 
+                    <SafeImage
+                      src={bookmark.recipe_thumbnail}
+                      alt={bookmark.recipe_title}
+                      className={styles.fixedImage}
                       onClick={() => handleImageClick(
                         bookmark.recipe_thumbnail || '/assets/images/default-recipe.svg',
                         bookmark.recipe_title
-                      )} 
-                      onError={(e) => {
-                        e.target.src = '/assets/images/default-recipe.svg';
-                      }}
+                      )}
                     />
                     <button 
                       className={`${styles.favoriteButton} ${styles.active}`}
@@ -357,16 +389,14 @@ const MyPage = () => {
                   
                   return (
                     <div key={`detection-${index}`} className={styles.galleryItem}>
-                      <img 
-                        src={item.image_path || '/assets/images/default-food.svg'} 
-                        alt={item.food_name} 
+                      <SafeImage
+                        src={resolveImageUrl(item.image_path)}
+                        alt={item.food_name}
+                        className={styles.fixedImage}
                         onClick={() => handleImageClick(
-                          item.image_path || '/assets/images/default-food.svg',
+                          resolveImageUrl(item.image_path),
                           item.food_name
-                        )} 
-                        onError={(e) => {
-                          e.target.src = '/assets/images/default-food.svg';
-                        }}
+                        )}
                       />
                       <button 
                         className={`${styles.favoriteButton} ${isFavorite ? styles.active : ''}`}
@@ -439,13 +469,10 @@ const MyPage = () => {
                     <div className={styles.reviewContent}>
                       {review.food_image_url && (
                         <div className={styles.reviewImageContainer}>
-                          <img 
-                            src={review.food_image_url} 
-                            alt={review.food_name} 
+                          <SafeImage
+                            src={review.food_image_url}
+                            alt={review.food_name}
                             className={styles.reviewImage}
-                            onError={(e) => {
-                              e.target.src = '/assets/images/default-food.svg';
-                            }}
                           />
                         </div>
                       )}

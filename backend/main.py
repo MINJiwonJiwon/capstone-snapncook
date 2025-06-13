@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from backend.db import get_db 
 from backend.routers import admin, ai_detection, home, mypage, user, food, recipe, recipestep, detectionresult, review, userlog, useringredientinput, useringredientinputrecipe, recommend, bookmark
@@ -31,10 +32,16 @@ app.add_middleware(
 # ✅ 미들웨어 추가
 app.add_middleware(SessionMiddleware, secret_key=os.getenv("SESSION_SECRET_KEY", "super-secret"))
 
+print("✅ loaded SESSION_SECRET_KEY:", os.getenv("SESSION_SECRET_KEY"))
+
 # ✅ DB 연결 확인용 테스트 엔드포인트
 @app.get("/")
 def read_root(db: Session = Depends(get_db)):
     return {"message": "DB 연결 테스트 성공!"}
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+print("📁 현재 작업 디렉토리:", os.getcwd())
 
 # 라우터 등록
 app.include_router(user.router, prefix="/api")

@@ -8,6 +8,7 @@ import useAuth from '../../hooks/useAuth';
 import { saveDetectionResult } from '../../api/detection';
 import { getFoodById } from '../../api/food';
 import { uploadImage, predictImage } from '../../api/aiDetection';
+import client from '../../api/client';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -71,99 +72,82 @@ const Home = () => {
   };
 
   const handleUpload = async () => {
-    if (!file) {
-      setError("이미지 파일을 선택하세요.");
-      return;
+  if (!file) {
+    setError("이미지 파일을 선택하세요.");
+    return;
+  }
+  setIsLoading(true);
+  setError(null);
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const aiResponse = await client.post('/ai-detection/predict', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+
+    const { filename, detected } = aiResponse.data;
+
+    if (!detected || detected.length === 0) {
+      throw new Error('음식을 인식할 수 없습니다. 다른 이미지를 시도해주세요.');
     }
-    setIsLoading(true);
-    setError(null);
 
+    const detectedFood = detected[0];
+    const { name, confidence, food_id, image_filename, id } = detectedFood;
+
+    if (confidence < 0.5) {
+      console.warn(`낮은 신뢰도: ${confidence}`);
+    }
+
+    // ❌ 이 부분 삭제: saveDetectionResult 중복 저장 막음
+    // ✅ 로그인 사용자에 한해, 유효한 id만 저장
+    if (isLoggedIn && id && !isNaN(id)) {
+      sessionStorage.setItem('detectionId', id.toString());
+    }
+
+    if (isLoggedIn) {
+      saveImageToHistory(previewUrl);
+    }
+
+    let foodInfo;
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      foodInfo = await getFoodById(food_id);
+    } catch (foodError) {
+      foodInfo = { name: name };
+    }
 
-      const aiResponse = await client.post('/ai-detection/predict', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+    sessionStorage.setItem('selectedFood', foodInfo.name);
+    sessionStorage.setItem('selectedFoodId', food_id.toString());
+    sessionStorage.setItem('analysisResult', JSON.stringify({
+      food_name: foodInfo.name,
+      confidence: confidence,
+      food_id: food_id,
+      image_filename: image_filename
+    }));
 
-      const { filename, detected } = aiResponse.data;
+    setIsLoading(false);
+    navigate('/recipe');
 
-      if (!detected || detected.length === 0) {
-        throw new Error('음식을 인식할 수 없습니다. 다른 이미지를 시도해주세요.');
+  } catch (err) {
+    let errorMessage = '이미지 분석 중 오류가 발생했습니다.';
+    if (err.response) {
+      const status = err.response.status;
+      switch (status) {
+        case 400:
+          errorMessage = '지원하지 않는 이미지 형식입니다.';
+          break;
+        case 500:
+          errorMessage = '서버에서 이미지 처리 중 오류가 발생했습니다.';
+          break;
+        default:
+          errorMessage = `서버 오류가 발생했습니다. (코드: ${status})`;
       }
-
-      const detectedFood = detected[0];
-      const { name, confidence, food_id, image_filename } = detectedFood;
-
-      if (confidence < 0.5) {
-        console.warn(`낮은 신뢰도: ${confidence}`);
-      }
-
-      // 탐지 결과를 백엔드에 저장 (로그인 상태일 때만)
-      let detectionResult = null;
-      if (isLoggedIn) {
-        try {
-          detectionResult = await saveDetectionResult({
-            food_id: food_id,
-            image_path: image_filename,
-            confidence: confidence
-          });
-          if (detectionResult && detectionResult.id) {
-            sessionStorage.setItem('detectionId', detectionResult.id.toString());
-          }
-        } catch (saveError) {
-          console.warn('탐지 결과 저장 실패:', saveError);
-        }
-      }
-
-      // 이미지 히스토리 저장
-      if (isLoggedIn) {
-        saveImageToHistory(previewUrl);
-      }
-
-      // 음식 정보 가져오기
-      let foodInfo;
-      try {
-        foodInfo = await getFoodById(food_id);
-      } catch (foodError) {
-        foodInfo = { name: name };
-      }
-
-      // 세션스토리지에 음식/분석 결과 저장
-      sessionStorage.setItem('selectedFood', foodInfo.name);
-      sessionStorage.setItem('selectedFoodId', food_id.toString());
-      sessionStorage.setItem('analysisResult', JSON.stringify({
-        food_name: foodInfo.name,
-        confidence: confidence,
-        food_id: food_id,
-        image_filename: image_filename
-      }));
-
-      setIsLoading(false);
-      navigate('/recipe');
-
-    } catch (err) {
-      let errorMessage = '이미지 분석 중 오류가 발생했습니다.';
-      if (err.response) {
-        const status = err.response.status;
-        switch (status) {
-          case 400:
-            errorMessage = '지원하지 않는 이미지 형식입니다. JPG, PNG 파일을 사용해주세요.';
-            break;
-          case 502:
-            errorMessage = 'AI 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.';
-            break;
-          case 500:
-            errorMessage = '서버에서 이미지 처리 중 오류가 발생했습니다.';
-            break;
-          default:
-            errorMessage = `서버 오류가 발생했습니다. (코드: ${status})`;
-        }
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      setError(errorMessage);
-      setIsLoading(false);
+    } else if (err.message) {
+      errorMessage = err.message;
+    }
+    setError(errorMessage);
+    setIsLoading(false);
     }
   };
 

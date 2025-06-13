@@ -77,12 +77,21 @@ def create_recipe_step(db: Session, step: schemas.RecipeStepCreate) -> models.Re
     return db_step
 
 # ---------- DetectionResult ----------
-def create_detection_result(db: Session, result: schemas.DetectionResultCreate) -> models.DetectionResult:
-    db_result = models.DetectionResult(**result.model_dump())
-    db.add(db_result)
+def create_detection_result(db: Session, detection: schemas.DetectionResultCreate):
+    exists = db.query(models.DetectionResult).filter_by(
+        image_hash=detection.image_hash,
+        user_id=detection.user_id,
+        food_id=detection.food_id,
+        image_path=detection.image_path
+    ).first()
+    if exists:
+        return exists  # 이미 존재하면 새로 만들지 않음
+
+    db_obj = models.DetectionResult(**detection.dict())  # type: ignore
+    db.add(db_obj)
     db.commit()
-    db.refresh(db_result)
-    return db_result
+    db.refresh(db_obj)
+    return db_obj
 
 # ---------- Review ----------
 def create_review(db: Session, review: schemas.ReviewCreate) -> models.Review:

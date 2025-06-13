@@ -46,7 +46,7 @@ export const RECIPE_STEP = {
 
 // 탐지 결과 관련 엔드포인트
 export const DETECTION = {
-  CREATE: '/detection-results/',
+  CREATE: '/detection-results/me',
   LIST_ME: '/detection-results/me',
 };
 

@@ -34,7 +34,7 @@ const OAuthCallback = () => {
             result = await handleGoogleCallback(code, state);
             break;
           case 'kakao':
-            result = await handleKakaoCallback(code);
+            result = await handleKakaoCallback(code, state);
             break;
           case 'naver':
             result = await handleNaverCallback(code, state);

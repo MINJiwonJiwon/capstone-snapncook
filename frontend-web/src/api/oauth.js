@@ -160,10 +160,10 @@ export const handleGoogleCallback = async (code, state) => {
  * @param {string} code - 인증 코드
  * @returns {Promise} 인증 토큰 정보
  */
-export const handleKakaoCallback = async (code) => {
+export const handleKakaoCallback = async (code, state) => {
   try {
     // 쿼리 파라미터를 URL에 포함
-    const response = await client.get(`${OAUTH.KAKAO_CALLBACK}?code=${encodeURIComponent(code)}`);
+    const response = await client.get(`${OAUTH.KAKAO_CALLBACK}?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`);
     
     // 토큰 저장
     const { access_token, refresh_token } = response.data;

@@ -24,7 +24,12 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 AI_SERVER_URL = os.getenv("AI_SERVER_URL", "http://ai-server:8001/predict")
 logger = logging.getLogger(__name__)
 
-async def save_upload_file(file: UploadFile) -> Tuple[str, str]:
+def calculate_hash_from_content(content: bytes) -> str:
+    hasher = hashlib.sha256()
+    hasher.update(content)
+    return hasher.hexdigest()
+
+async def save_upload_file_with_content(file: UploadFile, content: bytes) -> Tuple[str, str]:
     today = datetime.now()
     subdir = os.path.join("uploads", today.strftime("%Y"), today.strftime("%m"), today.strftime("%d"))
     os.makedirs(subdir, exist_ok=True)
@@ -33,12 +38,47 @@ async def save_upload_file(file: UploadFile) -> Tuple[str, str]:
     filename = f"upload_{today.strftime('%H%M%S')}_{safe_filename}"
     filepath = os.path.join(subdir, filename)
 
+    print("📁 실제 저장 경로:", filepath)
+
     async with aiofiles.open(filepath, "wb") as out_file:
-        content = await file.read()
         await out_file.write(content)
 
-    await file.seek(0)
-    return filename, filepath
+    # ✅ 저장 후 파일 존재 여부 확인 로그
+    print("📦 저장 완료 여부 체크:", os.path.exists(filepath))
+
+    image_path = f"{today.strftime('%Y')}/{today.strftime('%m')}/{today.strftime('%d')}/{filename}"
+    return image_path, filepath
+
+async def save_upload_file(file: UploadFile) -> Tuple[str, str]:
+    print("💥 파일 저장 진입")
+    today = datetime.now()
+    subdir = os.path.join("uploads", today.strftime("%Y"), today.strftime("%m"), today.strftime("%d"))
+    os.makedirs(subdir, exist_ok=True)
+
+    safe_filename = os.path.basename(file.filename or "unnamed.jpg")
+    filename = f"upload_{today.strftime('%H%M%S')}_{safe_filename}"
+    filepath = os.path.join(subdir, filename)
+
+    print("📂 현재 작업 디렉토리:", os.getcwd())
+    print("🔥 저장할 전체 경로:", os.path.abspath(filepath))
+
+    try:
+        content = await file.read()
+        print("📦 읽은 파일 크기:", len(content))
+
+        async with aiofiles.open(filepath, "wb") as out_file:
+            await out_file.write(content)
+            print("✅ 파일 저장 완료")
+
+        await file.seek(0)
+
+    except Exception as e:
+        print("❌ 파일 저장 중 오류:", str(e))
+
+    image_path = f"{today.strftime('%Y')}/{today.strftime('%m')}/{today.strftime('%d')}/{filename}"
+    print("🧾 최종 image_path:", image_path)
+
+    return image_path, filepath
 
 async def calculate_hash(file: UploadFile) -> str:
     hasher = hashlib.sha256()
@@ -69,35 +109,54 @@ async def predict_image(
 ):
     current_user: Optional[models.User] = None
     try:
-        # Authorization 헤더 직접 확인
-        token = request.headers.get("Authorization")
-        current_user = None
+        print("📨 AI 예측 진입, 파일 해시 확인 전")
 
+        # 🔐 Authorization 헤더에서 사용자 정보 추출
+        token = request.headers.get("Authorization")
         if token and token.startswith("Bearer"):
             try:
                 current_user = await get_current_user_from_request(request)
             except Exception:
-                pass  # 유효하지 않거나 만료된 토큰은 무시
-    
-        image_hash = await calculate_hash(file)
+                pass  # 유효하지 않은 토큰은 무시
 
-        # 캐시 확인
+        # 📦 파일 내용 읽기 및 해시 계산
+        content = await file.read()
+        await file.seek(0)
+        image_hash = calculate_hash_from_content(content)
+
+        # 🧠 캐시 확인
         existing = db.query(models.DetectionResult).filter(
             models.DetectionResult.image_hash == image_hash
         ).first()
-        if existing:
+
+        if existing and existing.user_id == (current_user.id if current_user else None):
             food = db.query(models.Food).filter(models.Food.id == existing.food_id).first()
             if not food:
                 raise HTTPException(status_code=404, detail="Food not found")
-            detected = [DetectedFood(name=food.name, confidence=existing.confidence, image_filename=existing.image_path, food_id=food.id )]
+            detected = [DetectedFood(
+                name=food.name,
+                confidence=existing.confidence,
+                image_filename=existing.image_path,
+                food_id=food.id,
+                id=existing.id  # ✅ 여기서 기존 감지결과 id 전달 # type: ignore
+            )]
+            print("📦 캐시된 결과 존재, DB에서 결과 반환")
             return schemas.PredictResponse(filename=existing.image_path, detected=detected)
 
-        filename, filepath = await save_upload_file(file)
 
+        # 🗃️ 중복 없으면 파일 저장
+        image_path, filepath = await save_upload_file_with_content(file, content)
+        print("🔥 최종 저장될 image_path:", image_path)
+
+        # 🤖 AI 서버에 이미지 전송
         async with aiohttp.ClientSession() as session:
             form = aiohttp.FormData()
             async with aiofiles.open(filepath, "rb") as image_file:
-                form.add_field("file", await image_file.read(), filename=filename, content_type=file.content_type)
+                form.add_field(
+                    "file", await image_file.read(),
+                    filename=os.path.basename(image_path),
+                    content_type=file.content_type
+                )
 
             async with session.post(AI_SERVER_URL, data=form) as response:
                 if response.status == 200:
@@ -108,19 +167,19 @@ async def predict_image(
                         detection_data = schemas.DetectionResultCreate(
                             user_id=current_user.id if current_user else None,
                             food_id=food.id,
-                            image_path=filename,
+                            image_path=image_path,
                             confidence=item["confidence"],
                             image_hash=image_hash
                         )
-                        crud.create_detection_result(db, detection_data)
+                        created_result = crud.create_detection_result(db, detection_data)
                         detected_items.append(schemas.DetectedFood(
                             name=item["name"],
                             confidence=item["confidence"],
-                            image_filename=filename,
-                            food_id=food.id  # 🔥 명시적으로 추가
+                            image_filename=image_path,
+                            food_id=food.id,
+                            id=created_result.id  # ✅ 이게 실제 DB id # type: ignore
                         ))
-
-                    return schemas.PredictResponse(filename=filename, detected=detected_items)
+                    return schemas.PredictResponse(filename=image_path, detected=detected_items)
                 else:
                     error_msg = await response.text()
                     raise HTTPException(status_code=response.status, detail=f"AI 서버 오류: {error_msg}")

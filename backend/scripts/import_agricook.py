@@ -35,16 +35,16 @@ def load_recipes_from_csvs() -> pd.DataFrame:
 
     return pd.concat(dfs, ignore_index=True)
 
-def extract_steps(row: Series[Any]) -> List[Dict[str, Any]]:
+def extract_steps(row: Series) -> List[Dict[str, Any]]: # type: ignore
     steps: List[Dict[str, Any]] = []
     for i in range(1, MAX_STEPS + 1):
-        desc = row.get(f"만드는법_{i:02d}")
-        img = row.get(f"만드는법_이미지_{i:02d}")
+        desc = row.get(f"만드는법_{i:02d}") # type: ignore
+        img = row.get(f"만드는법_이미지_{i:02d}") # type: ignore
         if desc:
             steps.append({
                 "order": i,
-                "description": re.sub(r"[a-cA-C]\s*$", "", str(desc)).strip(),
-                "image_url": img.strip() if img else None
+                "description": re.sub(r"[a-cA-C]\s*$", "", str(desc)).strip(), # type: ignore
+                "image_url": img.strip() if img else None # type: ignore
             })
     return steps
 
